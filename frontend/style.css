@@ -1050,4 +1050,271 @@ body {
   transform: translateY(-1px);
 }
 
+/* =========================================
+   REPORTS & ANALYTICS WIDGETS
+   ========================================= */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(25px);
+  border: 1px solid var(--surface-border);
+  border-radius: 24px;
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--surface-shadow);
+}
+
+.panel-header {
+  margin-bottom: 1.5rem;
+}
+
+.panel-header h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+  margin-top: 0.4rem;
+}
+
+.panel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 50px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-badge.pending {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.panel-badge.approved {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.panel-badge.total {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--primary);
+}
+
+.panel-badge.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.panel-badge.danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+}
+
+/* Upcoming Bookings Widget */
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upcoming-card {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  padding: 1.15rem 1.35rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.25s ease;
+}
+
+.upcoming-card:hover {
+  transform: translateX(4px);
+  border-color: rgba(37, 99, 235, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+
+.upcoming-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.upcoming-facility {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.upcoming-purpose {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.upcoming-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.upcoming-datetime {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.upcoming-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Most Booked (Leaderboard) */
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.leaderboard-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.leaderboard-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.leaderboard-name {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.leaderboard-count {
+  color: var(--text-muted);
+}
+
+.leaderboard-bar-bg {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.leaderboard-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, #3b82f6 100%);
+  border-radius: 4px;
+  width: 0; /* Animated dynamically */
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Peak Timings Chart */
+.peak-timings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.peak-time-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.peak-time-label {
+  width: 90px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.peak-time-bar-container {
+  flex-grow: 1;
+  height: 20px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.peak-time-bar-fill {
+  height: 100%;
+  background: rgba(37, 99, 235, 0.7);
+  border-radius: 6px;
+  width: 0; /* Animated dynamically */
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.peak-time-percentage {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.peak-time-bar-container.active .peak-time-bar-fill {
+  background: linear-gradient(90deg, #f59e0b 0%, #eab308 100%);
+}
+
+.peak-time-bar-container.active .peak-time-percentage {
+  color: #78350f;
+}
+
+/* Cancellation Card */
+.cancellation-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cancellation-log-card {
+  background: rgba(239, 68, 68, 0.03);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+.cancellation-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  color: #ef4444;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.cancellation-log-body {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+
 

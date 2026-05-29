@@ -78,62 +78,110 @@
           <i data-lucide="shield"></i>
           <span>Admin Control Center</span>
         </div>
-        <h1 class="animate-slide-up">Portal Control Center</h1>
-        <p class="animate-slide-up delay-1">Manage space reservations, approve incoming requests, and monitor campus operations in real-time.</p>
+        <h1 class="animate-slide-up">Campus Space Analytics</h1>
+        <p class="animate-slide-up delay-1">Monitor occupancy levels, view utilization statistics, check peak reservation timings, and review rejections.</p>
       </header>
 
       <div class="content-container animate-fade delay-2">
         <!-- Admin Stats Row -->
         <div class="stats-grid">
           <div class="stat-card">
+            <div class="stat-icon total"><i data-lucide="bar-chart-3"></i></div>
+            <div class="stat-details">
+              <span class="stat-label">Space Utilization</span>
+              <span class="stat-val" id="utilizationRate">74.2%</span>
+            </div>
+          </div>
+          <div class="stat-card">
             <div class="stat-icon pending"><i data-lucide="clock-4"></i></div>
             <div class="stat-details">
-              <span class="stat-label">Pending Reviews</span>
-              <span class="stat-val" id="statPending">0</span>
+              <span class="stat-label">Peak Timings</span>
+              <span class="stat-val" style="font-size: 1.35rem; font-weight: 800; margin-top: 0.2rem;" id="peakTimingVal">10 AM – 1 PM</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon approved"><i data-lucide="check-circle-2"></i></div>
+            <div class="stat-icon approved"><i data-lucide="alert-octagon"></i></div>
             <div class="stat-details">
-              <span class="stat-label">Approved Bookings</span>
-              <span class="stat-val" id="statApproved">0</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon total"><i data-lucide="calendar"></i></div>
-            <div class="stat-details">
-              <span class="stat-label">Total Requests</span>
-              <span class="stat-val" id="statTotal">0</span>
+              <span class="stat-label">Rejection Rate</span>
+              <span class="stat-val" id="cancellationRate">12.5%</span>
             </div>
           </div>
         </div>
 
-        <!-- Review Queue Section -->
-        <div class="admin-operations">
-          <div class="feed-header" style="text-align: left; margin-bottom: 2rem;">
-            <div class="feed-badge">
-              <i data-lucide="layers"></i>
-              <span>Reservation Requests</span>
+        <!-- Admin Control Columns -->
+        <div class="admin-grid">
+          <!-- Left Column (Actions & Upcoming) -->
+          <div class="admin-main-col">
+            <!-- Pending Approvals Review Queue -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge pending"><i data-lucide="inbox"></i> Pending Decisions</div>
+                <h3>Approval Queue</h3>
+              </div>
+              <div class="admin-table-container">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Requester</th>
+                      <th>Facility</th>
+                      <th>Purpose</th>
+                      <th>Attendees</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminPendingList">
+                    <!-- Rendered dynamically -->
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <h2 style="font-size: 1.75rem;">Pending Approvals</h2>
+
+            <!-- Upcoming Bookings (Approved schedule) -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge approved"><i data-lucide="calendar-range"></i> Operations Timeline</div>
+                <h3>Upcoming Bookings</h3>
+              </div>
+              <div class="upcoming-list" id="adminUpcomingList">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
           </div>
 
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Requester</th>
-                  <th>Facility</th>
-                  <th>Purpose</th>
-                  <th>Date & Time</th>
-                  <th>Attendees</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminPendingList">
+          <!-- Right Column (Reports & Leaderboards) -->
+          <div class="admin-side-col">
+            <!-- Most Booked Facilities -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge total"><i data-lucide="trophy"></i> Popularity Index</div>
+                <h3>Most Booked Facilities</h3>
+              </div>
+              <div class="leaderboard" id="mostBookedList">
                 <!-- Rendered dynamically -->
-              </tbody>
-            </table>
+              </div>
+            </div>
+
+            <!-- Peak Usage Timings Distribution -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge warning"><i data-lucide="activity"></i> Loading Distribution</div>
+                <h3>Peak Usage Timings</h3>
+              </div>
+              <div class="peak-timings" id="peakTimingsDistribution">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Cancellation Reports Summary -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge danger"><i data-lucide="x-circle"></i> Cancellation Logs</div>
+                <h3>Rejections & Cancellations</h3>
+              </div>
+              <div class="cancellation-summary" id="cancellationLogs">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
           </div>
         </div>
       </div>

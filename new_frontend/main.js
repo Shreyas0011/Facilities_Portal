@@ -25,11 +25,15 @@ const bookings = [
 ];
 
 let activeCategory = "all";
+let selectedFacilityId = null;
 
 // Elements
 const filtersContainer = document.getElementById("categoryFilters");
 const gridContainer = document.getElementById("facilitiesGrid");
 const feedContainer = document.getElementById("feedList");
+const bookingModal = document.getElementById("bookingModal");
+const closeModalBtn = document.getElementById("closeModal");
+const bookingForm = document.getElementById("bookingForm");
 
 function renderFilters() {
   filtersContainer.innerHTML = categories.map(cat => `
@@ -40,7 +44,7 @@ function renderFilters() {
 
   document.querySelectorAll(".filter-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      activeCategory = e.target.dataset.id;
+      activeCategory = e.currentTarget.dataset.id;
       renderFilters();
       renderGrid();
     });
@@ -74,13 +78,22 @@ function renderGrid() {
             <i data-lucide="users" style="width: 14px; height: 14px;"></i>
             ${fac.capacity === "Open Space" ? fac.capacity : fac.capacity + " Seats"}
           </div>
-          <button class="btn btn-primary" style="width: 100%;">Reserve Space <i data-lucide="chevron-right" style="width: 16px;"></i></button>
+          <button class="btn btn-primary btn-reserve" data-id="${fac.id}" style="width: 100%;">
+            Reserve Space <i data-lucide="chevron-right" style="width: 16px;"></i>
+          </button>
         </div>
       </div>
     </div>
   `).join("");
 
-  // Re-initialize lucide icons for newly injected HTML
+  // Attach event listeners to Reserve buttons
+  document.querySelectorAll(".btn-reserve").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const facilityId = e.currentTarget.dataset.id;
+      openBookingModal(facilityId);
+    });
+  });
+
   lucide.createIcons();
 }
 
@@ -108,6 +121,172 @@ function renderFeed() {
   lucide.createIcons();
 }
 
+// District App Style Date Generator (Upcoming 7 days)
+function initDateSelector() {
+  const selector = document.getElementById("dateSelector");
+  const dateInput = document.getElementById("selectedDate");
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  let html = "";
+  const today = new Date();
+  
+  for (let i = 0; i < 7; i++) {
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + i);
+    
+    const dayName = days[futureDate.getDay()];
+    const dateNum = futureDate.getDate();
+    const monthName = months[futureDate.getMonth()];
+    const ISOString = futureDate.toISOString().split("T")[0];
+    
+    html += `
+      <div class="date-card ${i === 0 ? 'active' : ''}" data-val="${ISOString}">
+        <div class="date-card-day">${dayName}</div>
+        <div class="date-card-num">${dateNum}</div>
+        <div class="date-card-month">${monthName}</div>
+      </div>
+    `;
+    
+    if (i === 0) {
+      dateInput.value = ISOString;
+    }
+  }
+  
+  selector.innerHTML = html;
+  
+  // Date selection cards interaction
+  document.querySelectorAll(".date-card").forEach(card => {
+    card.addEventListener("click", (e) => {
+      document.querySelectorAll(".date-card").forEach(c => c.classList.remove("active"));
+      const clickedCard = e.currentTarget;
+      clickedCard.classList.add("active");
+      dateInput.value = clickedCard.dataset.val;
+    });
+  });
+}
+
+function openBookingModal(facilityId) {
+  selectedFacilityId = facilityId;
+  const fac = facilities.find(f => f.id === facilityId);
+  if (!fac) return;
+
+  document.getElementById("modalFacilityTitle").innerText = fac.label;
+  document.getElementById("modalFacilityCapacity").innerHTML = `
+    <i data-lucide="users" style="width: 14px; height: 14px;"></i> Capacity: ${fac.capacity === "Open Space" ? fac.capacity : fac.capacity + " Seats"}
+  `;
+  
+  // Initialize dynamic components
+  initDateSelector();
+  
+  // Open dialog with smooth fade in
+  bookingModal.classList.add("active");
+  lucide.createIcons();
+}
+
+function closeBookingModal() {
+  bookingModal.classList.remove("active");
+  selectedFacilityId = null;
+}
+
+// Form Submission & simulated approval dispatch
+bookingForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  
+  const fac = facilities.find(f => f.id === selectedFacilityId);
+  if (!fac) return;
+
+  const rawDate = document.getElementById("selectedDate").value;
+  const dateObj = new Date(rawDate);
+  const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const startTime = document.getElementById("startTime").value;
+  const endTime = document.getElementById("endTime").value;
+  const purpose = document.getElementById("bookingPurpose").value;
+  const attendees = document.getElementById("attendeeCount").value;
+
+  // Append new simulated booking as PENDING approval
+  const newBooking = {
+    id: bookings.length + 1,
+    facility: fac.label,
+    purpose: purpose,
+    status: "PENDING",
+    date: formattedDate,
+    time: `${startTime} – ${endTime}`,
+    attendees: parseInt(attendees)
+  };
+
+  bookings.unshift(newBooking); // Add to the top of feed
+  
+  // Rerender layout
+  renderFeed();
+  closeBookingModal();
+  
+  // Premium toast notification simulation
+  showToast(`Approval sent for ${fac.label}!`);
+});
+
+// Toast system
+function showToast(message) {
+  let container = document.getElementById("toastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.style.cssText = `
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    `;
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.style.cssText = `
+    background: #0f172a;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.1);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+  `;
+  toast.innerHTML = `<i data-lucide="check-circle" style="color:#10b981; width:16px;"></i> <span>${message}</span>`;
+  container.appendChild(toast);
+  lucide.createIcons();
+
+  // trigger animation
+  setTimeout(() => {
+    toast.style.transform = "translateY(0)";
+    toast.style.opacity = "1";
+  }, 50);
+
+  // remove toast after 3 seconds
+  setTimeout(() => {
+    toast.style.transform = "translateY(20px)";
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Close events
+closeModalBtn.addEventListener("click", closeBookingModal);
+bookingModal.addEventListener("click", (e) => {
+  if (e.target === bookingModal) {
+    closeBookingModal();
+  }
+});
+
 // Init
 document.addEventListener("DOMContentLoaded", () => {
   renderFilters();
@@ -115,3 +294,4 @@ document.addEventListener("DOMContentLoaded", () => {
   renderFeed();
   lucide.createIcons();
 });
+

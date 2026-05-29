@@ -85,6 +85,73 @@
     </div>
   </main>
 
+  <!-- Premium Glassmorphic Booking Modal -->
+  <div class="modal-overlay" id="bookingModal">
+    <div class="modal">
+      <button class="modal-close" id="closeModal">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="modal-header">
+        <div class="modal-badge">
+          <i data-lucide="calendar-plus"></i>
+          <span>Reservation System</span>
+        </div>
+        <h3 id="modalFacilityTitle">Classroom</h3>
+        <p id="modalFacilityCapacity"><i data-lucide="users"></i> Capacity: 50 Seats</p>
+      </div>
+
+      <form id="bookingForm" class="modal-form">
+        <!-- Date Selection Section (District App Style) -->
+        <div class="form-group">
+          <label>Select Date</label>
+          <div class="date-selector" id="dateSelector">
+            <!-- Rendered dynamically (Upcoming 7 Days) -->
+          </div>
+          <input type="hidden" id="selectedDate" required />
+        </div>
+
+        <!-- Time Slots Selection -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startTime">Start Time</label>
+            <div class="input-wrapper">
+              <i data-lucide="clock"></i>
+              <input type="time" id="startTime" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="endTime">End Time</label>
+            <div class="input-wrapper">
+              <i data-lucide="clock"></i>
+              <input type="time" id="endTime" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bookingPurpose">Purpose of Booking</label>
+          <div class="input-wrapper">
+            <i data-lucide="file-text"></i>
+            <input type="text" id="bookingPurpose" placeholder="e.g., Guest Lecture / Team Workshop" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="attendeeCount">Number of Attendees</label>
+          <div class="input-wrapper">
+            <i data-lucide="users"></i>
+            <input type="number" id="attendeeCount" placeholder="e.g., 25" min="1" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-submit">
+          <span>Send Approval for Booking</span>
+          <i data-lucide="send"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <script type="module" src="./main.js"></script>
 </body>
 </html>

@@ -1,0 +1,119 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  password    String?
+  googleId    String?   @unique
+  role        String    @default("STUDENT")
+  department  String?
+  avatar      String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  bookings      Booking[]
+  approvals     Approval[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Facility {
+  id                String       @id @default(cuid())
+  name              String
+  description       String
+  type              String
+  capacity          Int
+  location          String
+  building          String?
+  floor             String?
+  amenities         String       @default("[]")
+  images            String       @default("[]")
+  rules             String       @default("[]")
+  availabilityStart String       // "08:00"
+  availabilityEnd   String       // "22:00"
+  isActive          Boolean      @default(true)
+  requiresApproval  Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  bookings          Booking[]
+  maintenanceBlocks MaintenanceBlock[]
+
+  @@map("facilities")
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  facilityId      String
+  userId          String
+  date            DateTime
+  startTime       String        // "10:00"
+  endTime         String        // "12:00"
+  purpose         String
+  attendeesCount  Int
+  notes           String?
+  status          String        @default("PENDING")
+  approvalRequired Boolean      @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  facility  Facility   @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approval  Approval?
+
+  @@map("bookings")
+}
+
+model Approval {
+  id          String         @id @default(cuid())
+  bookingId   String         @unique
+  approvedById String
+  status      String         @default("PENDING")
+  remarks     String?
+  timestamp   DateTime       @default(now())
+
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  approvedBy  User    @relation(fields: [approvedById], references: [id])
+
+  @@map("approvals")
+}
+
+model MaintenanceBlock {
+  id          String   @id @default(cuid())
+  facilityId  String
+  blockedDate DateTime
+  startTime   String
+  endTime     String
+  reason      String
+  createdAt   DateTime @default(now())
+
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@map("maintenance_blocks")
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  title      String
+  message    String
+  readStatus Boolean  @default(false)
+  type       String   @default("info")
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transcend Space Hub</title>
+  <link rel="stylesheet" href="./style.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- Ambient Premium Background -->
+  <div class="bg-mesh"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <div class="logo-icon">
+          <i data-lucide="building-2"></i>
+        </div>
+        <span class="logo-text">Transcend</span>
+      </div>
+      <div class="nav-links">
+        <a href="#" class="active">Facilities</a>
+        <a href="#">Calendar</a>
+        <a href="#">My Bookings</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-ghost">Log In</button>
+        <button class="btn btn-primary">Sign Up</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero Section -->
+    <header class="hero">
+      <div class="hero-badge animate-fade">
+        <i data-lucide="sparkles"></i>
+        <span>Premium Space Hub</span>
+      </div>
+      <h1 class="animate-slide-up">Reserve Your Space</h1>
+      <p class="animate-slide-up delay-1">Access high-tech labs, stunning auditoriums, and collaborative hubs instantly with our intelligent campus booking system.</p>
+    </header>
+
+    <!-- Content Container -->
+    <div class="content-container animate-fade delay-2">
+      <!-- Filters -->
+      <div class="filters-container">
+        <div class="filters" id="categoryFilters">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Facilities Grid -->
+      <div class="facilities-grid" id="facilitiesGrid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Live Activity Feed -->
+      <div class="feed-section">
+        <div class="feed-header">
+          <div class="feed-badge">
+            <i data-lucide="zap"></i>
+            <span>Live Activity Feed</span>
+          </div>
+          <h2>Campus Operations</h2>
+        </div>
+        
+        <div class="feed-container">
+          <div class="feed-line"></div>
+          <div class="feed-list" id="feedList">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

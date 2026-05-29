@@ -1,0 +1,11 @@
+{
+  "name": "facility-portal-root",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix new_frontend\"",
+    "install:all": "npm install --prefix backend && npm install --prefix new_frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

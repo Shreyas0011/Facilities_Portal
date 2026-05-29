@@ -18,7 +18,6 @@
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
 
-  <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="nav-container">
       <div class="logo">
@@ -27,206 +26,63 @@
         </div>
         <span class="logo-text">Transcend</span>
       </div>
-
-      <!-- App Tabs -->
       <div class="nav-links">
-        <button class="tab-link active" data-tab="facilities"><i data-lucide="layout-grid"></i> Facilities</button>
-        <button class="tab-link" data-tab="calendar"><i data-lucide="calendar"></i> Master Calendar</button>
-        <button class="tab-link" data-tab="my-bookings"><i data-lucide="clock-3"></i> My Bookings <span class="badge-count" id="userBookingCount">0</span></button>
-        <button class="tab-link admin-only" data-tab="admin-dashboard" style="display: none;"><i data-lucide="bar-chart-3"></i> Admin Console</button>
+        <a href="#" class="active">Facilities</a>
+        <a href="#">Calendar</a>
+        <a href="#">My Bookings</a>
       </div>
-
-      <!-- User Role Selector & Actions -->
       <div class="nav-actions">
-        <div class="role-selector-container">
-          <label for="roleSelect"><i data-lucide="user-cog"></i> Mode</label>
-          <select id="roleSelect" class="role-select">
-            <option value="student">Student</option>
-            <option value="faculty">Faculty</option>
-            <option value="admin">Admin</option>
-            <option value="super_admin">Super Admin</option>
-          </select>
-        </div>
+        <button class="btn btn-ghost">Log In</button>
+        <button class="btn btn-primary">Sign Up</button>
       </div>
     </div>
   </nav>
 
-  <!-- Main Content Wrapper -->
-  <main class="app-main">
-    
+  <main>
     <!-- Hero Section -->
-    <header class="hero" id="appHero">
+    <header class="hero">
       <div class="hero-badge animate-fade">
         <i data-lucide="sparkles"></i>
-        <span>College Facility Booking Platform</span>
+        <span>Premium Space Hub</span>
       </div>
-      <h1 class="animate-slide-up">Reserve Campus Spaces</h1>
-      <p class="animate-slide-up delay-1">Avoid double bookings and manual approvals. Instantly request class halls, labs, auditoriums, and high-end equipment.</p>
+      <h1 class="animate-slide-up">Reserve Your Space</h1>
+      <p class="animate-slide-up delay-1">Access high-tech labs, stunning auditoriums, and collaborative hubs instantly with our intelligent campus booking system.</p>
     </header>
 
-    <!-- SECTION: FACILITIES DIRECTORY -->
-    <section id="tab-facilities" class="tab-content active">
-      <div class="content-container">
-        <div class="filters-container">
-          <div class="filters" id="categoryFilters">
-            <!-- Rendered dynamically -->
-          </div>
-        </div>
-        <div class="facilities-grid" id="facilitiesGrid">
-          <!-- Rendered dynamically -->
+    <!-- Content Container -->
+    <div class="content-container animate-fade delay-2">
+      <!-- Filters -->
+      <div class="filters-container">
+        <div class="filters" id="categoryFilters">
+          <!-- Rendered via JS -->
         </div>
       </div>
-    </section>
 
-    <!-- SECTION: MASTER CALENDAR -->
-    <section id="tab-calendar" class="tab-content">
-      <div class="content-container">
-        <div class="calendar-header">
-          <h2>Master Campus Schedule</h2>
-          <p>Real-time availability of all facilities across departments</p>
-        </div>
-        <div class="calendar-wrapper">
-          <div class="calendar-sidebar">
-            <h3>Filter Calendar</h3>
-            <div class="calendar-filters" id="calendarFacilityFilters">
-              <!-- Checkboxes for filtering calendar events by facility type -->
-            </div>
+      <!-- Facilities Grid -->
+      <div class="facilities-grid" id="facilitiesGrid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Live Activity Feed -->
+      <div class="feed-section">
+        <div class="feed-header">
+          <div class="feed-badge">
+            <i data-lucide="zap"></i>
+            <span>Live Activity Feed</span>
           </div>
-          <div class="calendar-body-custom">
-            <div class="calendar-days-header" id="calendarDaysHeader">
-              <!-- Dynamic day headers -->
-            </div>
-            <div class="calendar-grid-timeline" id="calendarGridTimeline">
-              <!-- Hourly grid cells with events -->
-            </div>
+          <h2>Campus Operations</h2>
+        </div>
+        
+        <div class="feed-container">
+          <div class="feed-line"></div>
+          <div class="feed-list" id="feedList">
+            <!-- Rendered via JS -->
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- SECTION: MY BOOKINGS -->
-    <section id="tab-my-bookings" class="tab-content">
-      <div class="content-container">
-        <div class="section-title-wrapper">
-          <h2>Your Reservation Dashboard</h2>
-          <p>Track approval workflow status, print QR code passes, and manage requests.</p>
-        </div>
-        <div class="bookings-layout">
-          <div class="bookings-list-container">
-            <h3>Active Bookings</h3>
-            <div class="bookings-list" id="myBookingsList">
-              <!-- User bookings rendered here -->
-            </div>
-          </div>
-          <div class="booking-detail-card" id="bookingDetailPanel">
-            <div class="empty-detail-state">
-              <i data-lucide="info" style="width: 48px; height: 48px; color: var(--text-muted);"></i>
-              <p>Select a booking to view approval path details and QR ticket</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION: ADMIN CONSOLE -->
-    <section id="tab-admin-dashboard" class="tab-content">
-      <div class="content-container">
-        <div class="admin-grid-top">
-          <!-- Metric Cards -->
-          <div class="metric-card">
-            <div class="metric-icon"><i data-lucide="activity"></i></div>
-            <div class="metric-value" id="statUtilization">74%</div>
-            <div class="metric-label">Average Utilization</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-icon"><i data-lucide="check-circle2"></i></div>
-            <div class="metric-value" id="statPendingCount">0</div>
-            <div class="metric-label">Pending Approval Requests</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-icon"><i data-lucide="alert-triangle"></i></div>
-            <div class="metric-value" id="statBlocked">2</div>
-            <div class="metric-label">Blocked Maintenance Slots</div>
-          </div>
-        </div>
-
-        <div class="admin-columns">
-          <!-- Pending Approvals Queue -->
-          <div class="admin-column-left">
-            <div class="card-admin-panel">
-              <div class="panel-header">
-                <h3>Pending Approval Queue</h3>
-                <span class="badge-pending" id="queueCount">0 Requests</span>
-              </div>
-              <div class="approvals-queue" id="approvalsQueue">
-                <!-- Rendered dynamically -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Analytics & Maintenance Blocker -->
-          <div class="admin-column-right">
-            <!-- Analytics Utilization Chart mockup -->
-            <div class="card-admin-panel">
-              <div class="panel-header">
-                <h3>Resource Analytics</h3>
-              </div>
-              <div class="analytics-content">
-                <div class="chart-mockup">
-                  <div class="chart-bar-container">
-                    <span class="chart-bar-label">Auditorium</span>
-                    <div class="chart-bar-track"><div class="chart-bar-fill" style="width: 85%;"></div></div>
-                    <span class="chart-bar-val">85%</span>
-                  </div>
-                  <div class="chart-bar-container">
-                    <span class="chart-bar-label">Classrooms</span>
-                    <div class="chart-bar-track"><div class="chart-bar-fill" style="width: 62%;"></div></div>
-                    <span class="chart-bar-val">62%</span>
-                  </div>
-                  <div class="chart-bar-container">
-                    <span class="chart-bar-label">Sports Turf</span>
-                    <div class="chart-bar-track"><div class="chart-bar-fill" style="width: 78%;"></div></div>
-                    <span class="chart-bar-val">78%</span>
-                  </div>
-                  <div class="chart-bar-container">
-                    <span class="chart-bar-label">Podcast Lab</span>
-                    <div class="chart-bar-track"><div class="chart-bar-fill" style="width: 90%;"></div></div>
-                    <span class="chart-bar-val">90%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Maintenance Blocker -->
-            <div class="card-admin-panel block-maintenance-panel">
-              <div class="panel-header">
-                <h3>Block Maintenance Slot</h3>
-              </div>
-              <form id="maintenanceForm" class="maintenance-form">
-                <div class="form-group">
-                  <label for="blockFacility">Select Facility</label>
-                  <select id="blockFacility" required>
-                    <!-- Options populated via JS -->
-                  </select>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="blockDate">Date</label>
-                    <input type="date" id="blockDate" required />
-                  </div>
-                  <div class="form-group">
-                    <label for="blockReason">Reason</label>
-                    <input type="text" id="blockReason" placeholder="e.g. Electric Work" required />
-                  </div>
-                </div>
-                <button type="submit" class="btn btn-danger">Block Slot <i data-lucide="lock"></i></button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
+    </div>
   </main>
 
   <!-- Premium Glassmorphic Booking Modal -->
@@ -238,19 +94,10 @@
       <div class="modal-header">
         <div class="modal-badge">
           <i data-lucide="calendar-plus"></i>
-          <span id="workflowBadge">Reservation System</span>
+          <span>Reservation System</span>
         </div>
         <h3 id="modalFacilityTitle">Classroom</h3>
         <p id="modalFacilityCapacity"><i data-lucide="users"></i> Capacity: 50 Seats</p>
-      </div>
-
-      <!-- Guidelines Drawer inside Modal -->
-      <div class="rules-box">
-        <h4><i data-lucide="alert-circle"></i> Booking Rules & Guidelines</h4>
-        <ul id="modalGuidelines">
-          <li>Must book at least 2 hours in advance.</li>
-          <li>Clean up food waste after event.</li>
-        </ul>
       </div>
 
       <form id="bookingForm" class="modal-form">
@@ -285,7 +132,7 @@
           <label for="bookingPurpose">Purpose of Booking</label>
           <div class="input-wrapper">
             <i data-lucide="file-text"></i>
-            <input type="text" id="bookingPurpose" placeholder="e.g. Club workshop, project meet" required />
+            <input type="text" id="bookingPurpose" placeholder="e.g., Guest Lecture / Team Workshop" required />
           </div>
         </div>
 
@@ -297,32 +144,11 @@
           </div>
         </div>
 
-        <!-- Conflict Warning Indicator (Hidden by default) -->
-        <div class="conflict-alert" id="conflictAlert" style="display: none;">
-          <i data-lucide="alert-triangle"></i>
-          <div>
-            <strong>Booking Overlap Detected!</strong>
-            <p>This slot is already reserved or blocked for maintenance.</p>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-submit" id="submitBookingBtn">
+        <button type="submit" class="btn btn-primary btn-submit">
           <span>Send Approval for Booking</span>
           <i data-lucide="send"></i>
         </button>
       </form>
-    </div>
-  </div>
-
-  <!-- Detailed Facility Info Modal -->
-  <div class="modal-overlay" id="infoModal">
-    <div class="modal modal-wide">
-      <button class="modal-close" id="closeInfoModal">
-        <i data-lucide="x"></i>
-      </button>
-      <div id="infoModalContent">
-        <!-- Rendered dynamically -->
-      </div>
     </div>
   </div>
 

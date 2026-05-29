@@ -19,14 +19,15 @@ const categories = [
 ];
 
 const bookings = [
-  { id: 1, facility: "Main Auditorium", purpose: "TEDx Campus Presentation Preparation", status: "APPROVED", date: "Oct 24, 2026", time: "09:00 – 12:00", attendees: 150, requester: "Sarah Jenkins", requesterRole: "Student Lead" },
-  { id: 2, facility: "Podcast Studio", purpose: "Tech Talks Podcast Episode 4", status: "PENDING", date: "Oct 25, 2026", time: "14:00 – 15:30", attendees: 4, requester: "Alex Mercer", requesterRole: "AV Coordinator" },
-  { id: 3, facility: "Lecture Hall 101", purpose: "Robotics Club Weekly Meet", status: "APPROVED", date: "Oct 23, 2026", time: "11:00 – 13:00", attendees: 25, requester: "Dr. Aris", requesterRole: "Faculty Sponsor" },
+  { id: 1, facility: "Main Auditorium", purpose: "Annual Research Colloquium Keynote", status: "APPROVED", date: "Oct 24, 2026", time: "09:00 – 12:00", attendees: 150, requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair" },
+  { id: 2, facility: "Podcast Studio", purpose: "Micro-Lecture Series Recording", status: "PENDING", date: "Oct 25, 2026", time: "14:00 – 15:30", attendees: 4, requester: "Prof. Alex Mercer", requesterRole: "Media Studies" },
+  { id: 3, facility: "Lecture Hall 101", purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "Oct 23, 2026", time: "11:00 – 13:00", attendees: 25, requester: "Dr. Aris Thorne", requesterRole: "Physics Professor" },
 ];
 
 let activeCategory = "all";
 let selectedFacilityId = null;
-let currentView = "student";
+let currentView = "login"; // "login", "faculty", or "admin"
+let activeRole = "faculty"; // "faculty" or "admin" (tab switcher state)
 
 // Elements
 const filtersContainer = document.getElementById("categoryFilters");
@@ -35,25 +36,112 @@ const feedContainer = document.getElementById("feedList");
 const bookingModal = document.getElementById("bookingModal");
 const closeModalBtn = document.getElementById("closeModal");
 const bookingForm = document.getElementById("bookingForm");
-const viewToggleBtn = document.getElementById("viewToggleBtn");
-const studentView = document.getElementById("studentView");
+
+// Adaptive Portal Elements
+const mainNavbar = document.getElementById("mainNavbar");
+const navLinks = document.getElementById("navLinks");
+const navUserBadge = document.getElementById("navUserBadge");
+const logoutBtn = document.getElementById("logoutBtn");
+
+const loginView = document.getElementById("loginView");
+const facultyView = document.getElementById("facultyView");
 const adminView = document.getElementById("adminView");
+const activityFeedSection = document.getElementById("activityFeedSection");
+
+const tabFaculty = document.getElementById("tabFaculty");
+const tabAdmin = document.getElementById("tabAdmin");
+const loginForm = document.getElementById("loginForm");
+const loginEmailInput = document.getElementById("loginEmail");
 const adminPendingListEl = document.getElementById("adminPendingList");
 
-// View Toggle Handler
-viewToggleBtn.addEventListener("click", () => {
-  if (currentView === "student") {
-    currentView = "admin";
-    studentView.classList.add("hidden");
-    adminView.classList.remove("hidden");
-    viewToggleBtn.innerHTML = `<i data-lucide="user"></i> <span>Student View</span>`;
-    renderAdminDashboard();
-  } else {
-    currentView = "student";
+/* =========================================
+   AUTHENTICATION & PORTAL GATEWAY GATE
+   ========================================= */
+tabFaculty.addEventListener("click", () => {
+  tabFaculty.classList.add("active");
+  tabAdmin.classList.remove("active");
+  loginEmailInput.value = "faculty@campus.edu";
+  activeRole = "faculty";
+});
+
+tabAdmin.addEventListener("click", () => {
+  tabAdmin.classList.add("active");
+  tabFaculty.classList.remove("active");
+  loginEmailInput.value = "admin@campus.edu";
+  activeRole = "admin";
+});
+
+loginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  
+  // Set current view
+  currentView = activeRole;
+  
+  // Hide login gate
+  loginView.classList.add("hidden");
+  
+  // Show Main Navigation Bar
+  mainNavbar.classList.remove("hidden");
+  
+  // Show bottom activity feed
+  activityFeedSection.classList.remove("hidden");
+
+  // Render role layout
+  if (currentView === "faculty") {
+    facultyView.classList.remove("hidden");
     adminView.classList.add("hidden");
-    studentView.classList.remove("hidden");
-    viewToggleBtn.innerHTML = `<i data-lucide="shield-check"></i> <span>Admin View</span>`;
+    
+    // Set navbar profile
+    navUserBadge.innerHTML = `
+      <i data-lucide="user"></i>
+      <span>Dr. Sarah Jenkins</span>
+    `;
+    
+    // Set navbar tabs
+    navLinks.innerHTML = `
+      <a href="#" class="active"><i data-lucide="layout-grid" style="width:14px; margin-right:4px;"></i> Amenities</a>
+      <a href="#"><i data-lucide="calendar" style="width:14px; margin-right:4px;"></i> Schedule</a>
+    `;
+    
+    renderGrid();
+  } else if (currentView === "admin") {
+    adminView.classList.remove("hidden");
+    facultyView.classList.add("hidden");
+    
+    // Set navbar profile
+    navUserBadge.innerHTML = `
+      <i data-lucide="shield"></i>
+      <span>Admin Console</span>
+    `;
+    
+    // Set navbar tabs
+    navLinks.innerHTML = `
+      <a href="#" class="active"><i data-lucide="bar-chart-3" style="width:14px; margin-right:4px;"></i> Dashboard</a>
+      <a href="#"><i data-lucide="settings" style="width:14px; margin-right:4px;"></i> Settings</a>
+    `;
+    
+    renderAdminDashboard();
   }
+  
+  renderFeed();
+  showToast(`Successfully logged in as ${currentView.toUpperCase()}`);
+  lucide.createIcons();
+});
+
+logoutBtn.addEventListener("click", () => {
+  // Reset states
+  currentView = "login";
+  
+  // Hide views
+  mainNavbar.classList.add("hidden");
+  facultyView.classList.add("hidden");
+  adminView.classList.add("hidden");
+  activityFeedSection.classList.add("hidden");
+  
+  // Show login gate
+  loginView.classList.remove("hidden");
+  
+  showToast("Logged out successfully");
   lucide.createIcons();
 });
 
@@ -236,8 +324,8 @@ bookingForm.addEventListener("submit", (e) => {
     date: formattedDate,
     time: `${startTime} – ${endTime}`,
     attendees: parseInt(attendees),
-    requester: "You (Student)",
-    requesterRole: "Student"
+    requester: "Dr. Sarah Jenkins",
+    requesterRole: "Dept. Chair"
   };
 
   bookings.unshift(newBooking); // Add to the top of feed

@@ -13,12 +13,13 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <!-- Ambient Premium Background -->
+  <!-- Mesh background elements -->
   <div class="bg-mesh"></div>
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
 
-  <nav class="navbar">
+  <!-- Adaptive Navbar (Hidden during Login) -->
+  <nav class="navbar hidden" id="mainNavbar">
     <div class="nav-container">
       <div class="logo">
         <div class="logo-icon">
@@ -26,32 +27,74 @@
         </div>
         <span class="logo-text">Transcend</span>
       </div>
-      <div class="nav-links">
-        <a href="#" class="active">Facilities</a>
-        <a href="#">Calendar</a>
-        <a href="#">My Bookings</a>
+      <div class="nav-links" id="navLinks">
+        <!-- Dynamically rendered based on active role -->
       </div>
       <div class="nav-actions">
-        <button class="btn btn-ghost" id="viewToggleBtn">
-          <i data-lucide="shield-check"></i>
-          <span>Admin View</span>
+        <div class="user-badge" id="navUserBadge">
+          <!-- Profile indicator -->
+        </div>
+        <button class="btn btn-ghost" id="logoutBtn" style="padding: 0.5rem 1rem;">
+          <i data-lucide="log-out" style="width: 16px;"></i>
+          <span>Log Out</span>
         </button>
-        <button class="btn btn-primary">Sign Up</button>
       </div>
     </div>
   </nav>
 
   <main>
-    <!-- Student Portal Content -->
-    <div id="studentView">
+    <!-- Login Gate View -->
+    <div id="loginView" class="login-container">
+      <div class="login-card animate-slide-up">
+        <div class="login-logo">
+          <div class="logo-icon">
+            <i data-lucide="building-2"></i>
+          </div>
+          <span class="logo-text">Transcend</span>
+        </div>
+        <h2>Campus Facility Portal</h2>
+        <p class="login-subtitle">Access space reservations and administrative controls</p>
+        
+        <div class="login-tabs">
+          <button class="login-tab active" id="tabFaculty" type="button">Faculty Gate</button>
+          <button class="login-tab" id="tabAdmin" type="button">Admin Console</button>
+        </div>
+
+        <form id="loginForm" class="login-form">
+          <div class="form-group">
+            <label for="loginEmail">Institutional Email</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="loginEmail" value="faculty@campus.edu" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Security Credentials</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="loginPassword" value="password123" required />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-submit" style="width: 100%; margin-top: 1rem;">
+            Access Portal <i data-lucide="chevron-right" style="width: 16px;"></i>
+          </button>
+        </form>
+        <div class="login-footer">
+          Secured by Transcend Identity Services &copy; 2026
+        </div>
+      </div>
+    </div>
+
+    <!-- Faculty Portal View (Exclusively Faculty Bookings) -->
+    <div id="facultyView" class="hidden">
       <!-- Hero Section -->
       <header class="hero">
         <div class="hero-badge animate-fade">
           <i data-lucide="sparkles"></i>
-          <span>Premium Space Hub</span>
+          <span>Faculty Space Reservation Hub</span>
         </div>
-        <h1 class="animate-slide-up">Reserve Your Space</h1>
-        <p class="animate-slide-up delay-1">Access high-tech labs, stunning auditoriums, and collaborative hubs instantly with our intelligent campus booking system.</p>
+        <h1 class="animate-slide-up">Reserve Academic Spaces</h1>
+        <p class="animate-slide-up delay-1">Access advanced lecture halls, research facilities, and seminar spaces. Instantly request administrative approval for courses and events.</p>
       </header>
 
       <!-- Content Container -->
@@ -187,8 +230,8 @@
       </div>
     </div>
 
-    <!-- Common Operations Feed -->
-    <div class="content-container animate-fade delay-2" style="padding-top: 0;">
+    <!-- Common Operations Feed (Visible to both Faculty & Admin, adjusted styling) -->
+    <div id="activityFeedSection" class="content-container animate-fade delay-2 hidden" style="padding-top: 0;">
       <div class="divider"></div>
 
       <!-- Live Activity Feed -->

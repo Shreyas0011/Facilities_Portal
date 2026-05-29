@@ -12,6 +12,7 @@ const bookingSchema = z.object({
   purpose: z.string().min(5, 'Purpose must be at least 5 characters'),
   attendeesCount: z.number().min(1),
   notes: z.string().optional(),
+  requirements: z.string().optional(),
 });
 
 const timeToMinutes = (time: string): number => {
@@ -139,6 +140,7 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
         purpose: validated.purpose,
         attendeesCount: validated.attendeesCount,
         notes: validated.notes,
+        requirements: validated.requirements || null,
         status: approvalRequired ? 'PENDING' : 'APPROVED',
         approvalRequired,
       },

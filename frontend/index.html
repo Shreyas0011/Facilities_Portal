@@ -183,52 +183,115 @@
           </div>
         </div>
 
-        <!-- Approval Queue Panel -->
-        <div class="admin-panel">
-          <div class="panel-header">
-            <div class="panel-badge pending">
-              <i data-lucide="inbox"></i> Pending Decisions
+        <div class="admin-grid">
+          <!-- Left Column: Queue & History -->
+          <div class="admin-main">
+            <!-- Approval Queue Panel -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge pending">
+                  <i data-lucide="inbox"></i> Pending Decisions
+                </div>
+                <h3>Approval Queue</h3>
+              </div>
+              <div class="admin-table-container">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Requester</th>
+                      <th>Facility</th>
+                      <th>Purpose</th>
+                      <th>Date &amp; Time</th>
+                      <th>Attendees</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminPendingList"></tbody>
+                </table>
+              </div>
             </div>
-            <h3>Approval Queue</h3>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Requester</th>
-                  <th>Facility</th>
-                  <th>Purpose</th>
-                  <th>Date &amp; Time</th>
-                  <th>Attendees</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminPendingList"></tbody>
-            </table>
-          </div>
-        </div>
 
-        <!-- All Requests Panel -->
-        <div class="admin-panel" style="margin-top: 2rem;">
-          <div class="panel-header">
-            <div class="panel-badge total">
-              <i data-lucide="layers"></i> All Requests
+            <!-- All Requests Panel -->
+            <div class="admin-panel" style="margin-top: 2rem;">
+              <div class="panel-header">
+                <div class="panel-badge total">
+                  <i data-lucide="layers"></i> All Requests
+                </div>
+                <h3>Booking History</h3>
+              </div>
+              <div class="admin-table-container">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Requester</th>
+                      <th>Facility</th>
+                      <th>Purpose</th>
+                      <th>Date &amp; Time</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminAllList"></tbody>
+                </table>
+              </div>
             </div>
-            <h3>Booking History</h3>
           </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Requester</th>
-                  <th>Facility</th>
-                  <th>Purpose</th>
-                  <th>Date &amp; Time</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="adminAllList"></tbody>
-            </table>
+
+          <!-- Right Column: Analytics & Reports -->
+          <div class="admin-sidebar">
+            <!-- Upcoming Bookings Panel -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge total">
+                  <i data-lucide="calendar"></i> Upcoming
+                </div>
+                <h3>Upcoming Bookings</h3>
+              </div>
+              <div class="upcoming-list" id="adminUpcomingList"></div>
+            </div>
+
+            <!-- Utilization Reports Panel -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge approved">
+                  <i data-lucide="activity"></i> Utilization
+                </div>
+                <h3>Utilization Reports</h3>
+              </div>
+              <div class="leaderboard" id="adminUtilizationList"></div>
+            </div>
+
+            <!-- Peak Usage Timings Panel -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge warning">
+                  <i data-lucide="bar-chart-3"></i> Peak Hours
+                </div>
+                <h3>Peak Usage Timings</h3>
+              </div>
+              <div class="peak-timings" id="adminPeakTimings"></div>
+            </div>
+
+            <!-- Most Booked Facilities Panel -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge approved">
+                  <i data-lucide="award"></i> Leaderboard
+                </div>
+                <h3>Most Booked Facilities</h3>
+              </div>
+              <div class="leaderboard" id="adminLeaderboard"></div>
+            </div>
+
+            <!-- Cancellation Reports Panel -->
+            <div class="admin-panel">
+              <div class="panel-header">
+                <div class="panel-badge danger">
+                  <i data-lucide="x-circle"></i> Cancellations
+                </div>
+                <h3>Cancellation Reports</h3>
+              </div>
+              <div class="cancellation-summary" id="adminCancellationSummary"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -288,6 +351,14 @@
           <div class="input-wrapper">
             <i data-lucide="users"></i>
             <input type="number" id="attendeeCount" placeholder="e.g., 25" min="1" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bookingRequirements">Venue Requirements (Optional)</label>
+          <div class="input-wrapper">
+            <i data-lucide="sliders"></i>
+            <input type="text" id="bookingRequirements" placeholder="e.g., Projector, whiteboard, collar mic, extra chairs" />
           </div>
         </div>
 

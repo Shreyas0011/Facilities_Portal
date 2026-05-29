@@ -22,9 +22,13 @@ const categories = [
 
 // Shared bookings store
 const bookings = [
-  { id: 1, facility: "Auditorium",     purpose: "Annual Research Colloquium Keynote",    status: "APPROVED", date: "2026-10-24", time: "09:00 – 12:00", attendees: 150, requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair",      facilityId: "auditorium" },
-  { id: 2, facility: "Podcast Studio", purpose: "Micro-Lecture Series Recording",        status: "PENDING",  date: "2026-10-25", time: "14:00 – 15:30", attendees: 4,   requester: "Prof. Alex Mercer",  requesterRole: "Media Studies",    facilityId: "podcast_studio" },
-  { id: 3, facility: "Seminar Halls",  purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "2026-10-26", time: "11:00 – 13:00", attendees: 25,  requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "seminar_hall" },
+  { id: 1, facility: "Auditorium",     purpose: "Annual Research Colloquium Keynote",    status: "APPROVED", date: "2026-10-24", time: "09:00 – 12:00", attendees: 150, requirements: "Stage setup, wireless microphones, slide clicker", requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair",      facilityId: "auditorium" },
+  { id: 2, facility: "Podcast Studio", purpose: "Micro-Lecture Series Recording",        status: "PENDING",  date: "2026-10-25", time: "14:00 – 15:30", attendees: 4,   requirements: "High-quality audio interface, 2 condenser microphones", requester: "Prof. Alex Mercer",  requesterRole: "Media Studies",    facilityId: "podcast_studio" },
+  { id: 3, facility: "Seminar Halls",  purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "2026-10-26", time: "11:00 – 13:00", attendees: 25,  requirements: "Projector, whiteboard markers", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "seminar_hall" },
+  { id: 4, facility: "Classrooms",     purpose: "Makeup Class for Applied Machine Learning", status: "APPROVED", date: "2026-10-27", time: "10:00 – 12:00", attendees: 45,  requirements: "Projector, whiteboard, slide clicker", requester: "Prof. Alex Mercer",  requesterRole: "Computer Science", facilityId: "classroom" },
+  { id: 5, facility: "Sports Facilities", purpose: "Inter-department Basketball Match",  status: "APPROVED", date: "2026-10-28", time: "17:00 – 19:30", attendees: 80,  requirements: "Scoreboard access, extra chairs", requester: "Dr. Sarah Jenkins", requesterRole: "Athletics Board", facilityId: "sports" },
+  { id: 6, facility: "Classrooms",     purpose: "Student Club Brainstorming Session",     status: "CANCELLED", date: "2026-10-22", time: "15:00 – 17:00", attendees: 15,  requirements: "None", requester: "Prof. Alex Mercer",  requesterRole: "Club Advisor",    facilityId: "classroom" },
+  { id: 7, facility: "Professional Classrooms", purpose: "Corporate Tech Seminar",       status: "REJECTED",  date: "2026-10-20", time: "09:00 – 13:00", attendees: 110, requirements: "Dual screen projector, premium audio", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "prof_classroom" }
 ];
 
 /* =========================================
@@ -314,6 +318,11 @@ function renderMyBookings() {
           <span><i data-lucide="clock" style="width:13px;height:13px;"></i> ${b.time}</span>
           <span><i data-lucide="users" style="width:13px;height:13px;"></i> ${b.attendees} Attendees</span>
         </div>
+        ${b.requirements ? `
+        <div class="my-booking-requirements" style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;display:flex;align-items:center;gap:0.35rem;">
+          <i data-lucide="sliders" style="width:13px;height:13px;color:var(--primary);"></i>
+          <span><strong>Requirements:</strong> ${b.requirements}</span>
+        </div>` : ''}
       </div>
       <div class="my-booking-status-col">
         <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
@@ -393,7 +402,8 @@ bookingForm.addEventListener("submit", e => {
   const end      = document.getElementById("endTime").value;
   const purpose  = document.getElementById("bookingPurpose").value;
   const count    = parseInt(document.getElementById("attendeeCount").value);
-
+  const requirements = document.getElementById("bookingRequirements").value.trim();
+  
   const newBooking = {
     id: bookings.length + 1,
     facility:      selectedFacility.label,
@@ -403,6 +413,7 @@ bookingForm.addEventListener("submit", e => {
     date,
     time:          `${start} – ${end}`,
     attendees:     count,
+    requirements:  requirements || null,
     requester:     "Faculty User",
     requesterRole: "Faculty",
   };
@@ -445,7 +456,14 @@ function renderAdminDashboard() {
           <div class="requester-role">${b.requesterRole}</div>
         </td>
         <td style="font-weight:700;">${b.facility}</td>
-        <td>${b.purpose}</td>
+        <td>
+          <div style="font-weight:600;">${b.purpose}</div>
+          ${b.requirements ? `
+          <div style="font-size:0.75rem;color:var(--primary);margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;">
+            <i data-lucide="sliders" style="width:11px;height:11px;"></i>
+            <span><strong>Req:</strong> ${b.requirements}</span>
+          </div>` : ""}
+        </td>
         <td>
           <div style="font-weight:600;">${formatDate(b.date)}</div>
           <div style="font-size:0.78rem;color:var(--text-muted);">${b.time}</div>
@@ -472,7 +490,6 @@ function renderAdminDashboard() {
     });
   }
 
-  // All Requests History
   adminAllList.innerHTML = bookings.map(b => `
     <tr>
       <td>
@@ -480,7 +497,14 @@ function renderAdminDashboard() {
         <div class="requester-role">${b.requesterRole}</div>
       </td>
       <td style="font-weight:700;">${b.facility}</td>
-      <td>${b.purpose}</td>
+      <td>
+        <div style="font-weight:600;">${b.purpose}</div>
+        ${b.requirements ? `
+        <div style="font-size:0.75rem;color:var(--primary);margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;">
+          <i data-lucide="sliders" style="width:11px;height:11px;"></i>
+          <span><strong>Req:</strong> ${b.requirements}</span>
+        </div>` : ""}
+      </td>
       <td>
         <div style="font-weight:600;">${formatDate(b.date)}</div>
         <div style="font-size:0.78rem;color:var(--text-muted);">${b.time}</div>
@@ -489,7 +513,189 @@ function renderAdminDashboard() {
     </tr>
   `).join("");
 
+  renderUpcomingBookings();
+  renderUtilizationReports();
+  renderPeakUsageTimings();
+  renderMostBookedFacilities();
+  renderCancellationReports();
+
   lucide.createIcons();
+}
+
+function renderUpcomingBookings() {
+  const upcomingList = document.getElementById("adminUpcomingList");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcoming = bookings
+    .filter(b => b.status === "APPROVED" && new Date(b.date) >= today)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  if (!upcoming.length) {
+    upcomingList.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1.5rem;">No upcoming approved bookings.</p>`;
+    return;
+  }
+
+  upcomingList.innerHTML = upcoming.map(b => `
+    <div class="upcoming-card">
+      <div class="upcoming-main-info">
+        <div class="upcoming-facility">${b.facility}</div>
+        <div class="upcoming-purpose">${b.purpose}</div>
+      </div>
+      <div class="upcoming-meta">
+        <div class="upcoming-datetime">
+          <div>${formatDate(b.date)}</div>
+          <div class="upcoming-time">${b.time}</div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderUtilizationReports() {
+  const utilizationList = document.getElementById("adminUtilizationList");
+  const approvedBookings = bookings.filter(b => b.status === "APPROVED");
+  
+  const facilityCounts = {};
+  facilities.forEach(f => {
+    facilityCounts[f.label] = 0;
+  });
+
+  approvedBookings.forEach(b => {
+    if (facilityCounts[b.facility] !== undefined) {
+      facilityCounts[b.facility]++;
+    }
+  });
+
+  const items = Object.entries(facilityCounts)
+    .map(([name, count]) => {
+      const rate = Math.min(Math.round((count / 4) * 100), 100) || 15;
+      return { name, rate };
+    })
+    .sort((a, b) => b.rate - a.rate)
+    .slice(0, 3);
+
+  utilizationList.innerHTML = items.map(item => `
+    <div class="leaderboard-item">
+      <div class="leaderboard-info">
+        <span class="leaderboard-name">${item.name}</span>
+        <span class="leaderboard-count">${item.rate}% Utilized</span>
+      </div>
+      <div class="leaderboard-bar-bg">
+        <div class="leaderboard-bar-fill" style="width: ${item.rate}%; background: linear-gradient(90deg, var(--success) 0%, #10b981 100%);"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderPeakUsageTimings() {
+  const peakContainer = document.getElementById("adminPeakTimings");
+  const approved = bookings.filter(b => b.status === "APPROVED");
+
+  let morning = 0;
+  let afternoon = 0;
+  let evening = 0;
+
+  approved.forEach(b => {
+    const startHour = parseInt(b.time.split(":")[0]);
+    if (startHour < 12) {
+      morning++;
+    } else if (startHour < 16) {
+      afternoon++;
+    } else {
+      evening++;
+    }
+  });
+
+  const total = morning + afternoon + evening || 1;
+  const morningPct = Math.round((morning / total) * 100) || 30;
+  const afternoonPct = Math.round((afternoon / total) * 100) || 50;
+  const eveningPct = Math.round((evening / total) * 100) || 20;
+
+  const maxPct = Math.max(morningPct, afternoonPct, eveningPct);
+
+  const data = [
+    { label: "Morning (8AM-12PM)", pct: morningPct, isActive: morningPct === maxPct },
+    { label: "Afternoon (12PM-4PM)", pct: afternoonPct, isActive: afternoonPct === maxPct },
+    { label: "Evening (4PM-8PM)", pct: eveningPct, isActive: eveningPct === maxPct }
+  ];
+
+  peakContainer.innerHTML = data.map(d => `
+    <div class="peak-time-row">
+      <div class="peak-time-label" style="font-size:0.72rem;">${d.label}</div>
+      <div class="peak-time-bar-container ${d.isActive ? 'active' : ''}">
+        <div class="peak-time-bar-fill" style="width: ${d.pct}%;"></div>
+        <span class="peak-time-percentage">${d.pct}%</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderMostBookedFacilities() {
+  const leaderboardList = document.getElementById("adminLeaderboard");
+
+  const counts = {};
+  bookings.filter(b => b.status === "APPROVED").forEach(b => {
+    counts[b.facility] = (counts[b.facility] || 0) + 1;
+  });
+
+  facilities.forEach(f => {
+    if (!counts[f.label]) {
+      counts[f.label] = f.label === "Classrooms" ? 2 : f.label === "Seminar Halls" ? 1 : 0;
+    }
+  });
+
+  const sorted = Object.entries(counts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  const maxCount = sorted[0]?.count || 1;
+
+  leaderboardList.innerHTML = sorted.map(item => {
+    const width = Math.round((item.count / maxCount) * 100) || 10;
+    return `
+      <div class="leaderboard-item">
+        <div class="leaderboard-info">
+          <span class="leaderboard-name">${item.name}</span>
+          <span class="leaderboard-count">${item.count} Bookings</span>
+        </div>
+        <div class="leaderboard-bar-bg">
+          <div class="leaderboard-bar-fill" style="width: ${width}%;"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderCancellationReports() {
+  const cancellationSummary = document.getElementById("adminCancellationSummary");
+  const cancelled = bookings.filter(b => b.status === "CANCELLED" || b.status === "REJECTED");
+
+  if (!cancelled.length) {
+    cancellationSummary.innerHTML = `
+      <div class="cancellation-log-card" style="border-color:var(--surface-border);background:transparent;padding:1.5rem;">
+        <div class="cancellation-log-body" style="text-align:center;color:var(--text-muted);font-weight:500;">No cancellations recorded.</div>
+      </div>`;
+    return;
+  }
+
+  cancellationSummary.innerHTML = cancelled.slice(0, 3).map(b => `
+    <div class="cancellation-log-card" style="margin-bottom:0.75rem;">
+      <div class="cancellation-log-header">
+        <span>${b.facility}</span>
+        <span style="font-size:0.65rem;text-transform:uppercase;padding:0.15rem 0.4rem;border-radius:50px;font-weight:700;letter-spacing:0.5px;
+          background:${b.status === 'REJECTED' ? 'rgba(239,68,68,0.1)' : 'rgba(100,116,139,0.1)'};
+          color:${b.status === 'REJECTED' ? '#ef4444' : 'var(--text-muted)'};">${b.status}</span>
+      </div>
+      <div class="cancellation-log-body">
+        Requested by <strong>${b.requester}</strong> for ${formatDate(b.date)} (${b.time}).
+        <div style="color:var(--text-muted);font-style:italic;margin-top:0.25rem;">
+          Reason: ${b.status === 'REJECTED' ? 'Declined by Admin' : 'Cancelled by Faculty'}
+        </div>
+      </div>
+    </div>
+  `).join("");
 }
 
 function updateStatus(id, status) {

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transcend Space Hub</title>
+  <link rel="stylesheet" href="./style.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- Ambient Premium Background -->
+  <div class="bg-mesh"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <div class="logo-icon">
+          <i data-lucide="building-2"></i>
+        </div>
+        <span class="logo-text">Transcend</span>
+      </div>
+      <div class="nav-links">
+        <a href="#" class="active">Facilities</a>
+        <a href="#">Calendar</a>
+        <a href="#">My Bookings</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-ghost" id="viewToggleBtn">
+          <i data-lucide="shield-check"></i>
+          <span>Admin View</span>
+        </button>
+        <button class="btn btn-primary">Sign Up</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Student Portal Content -->
+    <div id="studentView">
+      <!-- Hero Section -->
+      <header class="hero">
+        <div class="hero-badge animate-fade">
+          <i data-lucide="sparkles"></i>
+          <span>Premium Space Hub</span>
+        </div>
+        <h1 class="animate-slide-up">Reserve Your Space</h1>
+        <p class="animate-slide-up delay-1">Access high-tech labs, stunning auditoriums, and collaborative hubs instantly with our intelligent campus booking system.</p>
+      </header>
+
+      <!-- Content Container -->
+      <div class="content-container animate-fade delay-2">
+        <!-- Filters -->
+        <div class="filters-container">
+          <div class="filters" id="categoryFilters">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Facilities Grid -->
+        <div class="facilities-grid" id="facilitiesGrid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Portal Content -->
+    <div id="adminView" class="hidden">
+      <!-- Hero Section -->
+      <header class="hero">
+        <div class="hero-badge animate-fade">
+          <i data-lucide="shield"></i>
+          <span>Admin Control Center</span>
+        </div>
+        <h1 class="animate-slide-up">Portal Control Center</h1>
+        <p class="animate-slide-up delay-1">Manage space reservations, approve incoming requests, and monitor campus operations in real-time.</p>
+      </header>
+
+      <div class="content-container animate-fade delay-2">
+        <!-- Admin Stats Row -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon pending"><i data-lucide="clock-4"></i></div>
+            <div class="stat-details">
+              <span class="stat-label">Pending Reviews</span>
+              <span class="stat-val" id="statPending">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon approved"><i data-lucide="check-circle-2"></i></div>
+            <div class="stat-details">
+              <span class="stat-label">Approved Bookings</span>
+              <span class="stat-val" id="statApproved">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon total"><i data-lucide="calendar"></i></div>
+            <div class="stat-details">
+              <span class="stat-label">Total Requests</span>
+              <span class="stat-val" id="statTotal">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review Queue Section -->
+        <div class="admin-operations">
+          <div class="feed-header" style="text-align: left; margin-bottom: 2rem;">
+            <div class="feed-badge">
+              <i data-lucide="layers"></i>
+              <span>Reservation Requests</span>
+            </div>
+            <h2 style="font-size: 1.75rem;">Pending Approvals</h2>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Requester</th>
+                  <th>Facility</th>
+                  <th>Purpose</th>
+                  <th>Date & Time</th>
+                  <th>Attendees</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminPendingList">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Common Operations Feed -->
+    <div class="content-container animate-fade delay-2" style="padding-top: 0;">
+      <div class="divider"></div>
+
+      <!-- Live Activity Feed -->
+      <div class="feed-section">
+        <div class="feed-header">
+          <div class="feed-badge">
+            <i data-lucide="zap"></i>
+            <span>Live Activity Feed</span>
+          </div>
+          <h2>Campus Operations</h2>
+        </div>
+        
+        <div class="feed-container">
+          <div class="feed-line"></div>
+          <div class="feed-list" id="feedList">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Premium Glassmorphic Booking Modal -->
+  <div class="modal-overlay" id="bookingModal">
+    <div class="modal">
+      <button class="modal-close" id="closeModal">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="modal-header">
+        <div class="modal-badge">
+          <i data-lucide="calendar-plus"></i>
+          <span>Reservation System</span>
+        </div>
+        <h3 id="modalFacilityTitle">Classroom</h3>
+        <p id="modalFacilityCapacity"><i data-lucide="users"></i> Capacity: 50 Seats</p>
+      </div>
+
+      <form id="bookingForm" class="modal-form">
+        <!-- Date Selection Section (District App Style) -->
+        <div class="form-group">
+          <label>Select Date</label>
+          <div class="date-selector" id="dateSelector">
+            <!-- Rendered dynamically (Upcoming 7 Days) -->
+          </div>
+          <input type="hidden" id="selectedDate" required />
+        </div>
+
+        <!-- Time Slots Selection -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startTime">Start Time</label>
+            <div class="input-wrapper">
+              <i data-lucide="clock"></i>
+              <input type="time" id="startTime" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="endTime">End Time</label>
+            <div class="input-wrapper">
+              <i data-lucide="clock"></i>
+              <input type="time" id="endTime" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bookingPurpose">Purpose of Booking</label>
+          <div class="input-wrapper">
+            <i data-lucide="file-text"></i>
+            <input type="text" id="bookingPurpose" placeholder="e.g., Guest Lecture / Team Workshop" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="attendeeCount">Number of Attendees</label>
+          <div class="input-wrapper">
+            <i data-lucide="users"></i>
+            <input type="number" id="attendeeCount" placeholder="e.g., 25" min="1" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-submit">
+          <span>Send Approval for Booking</span>
+          <i data-lucide="send"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

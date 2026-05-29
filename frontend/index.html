@@ -3,39 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Transcend Space Hub</title>
+  <title>Transcend – Campus Facility Portal</title>
   <link rel="stylesheet" href="./style.css" />
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <!-- Mesh background elements -->
   <div class="bg-mesh"></div>
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
 
-  <!-- Adaptive Navbar (Hidden during Login) -->
+  <!-- ── NAVBAR (hidden until logged in) ── -->
   <nav class="navbar hidden" id="mainNavbar">
     <div class="nav-container">
       <div class="logo">
-        <div class="logo-icon">
-          <i data-lucide="building-2"></i>
-        </div>
+        <div class="logo-icon"><i data-lucide="building-2"></i></div>
         <span class="logo-text">Transcend</span>
       </div>
-      <div class="nav-links" id="navLinks">
-        <!-- Dynamically rendered based on active role -->
-      </div>
+      <!-- Faculty tabs -->
+      <div class="nav-links" id="navLinks"></div>
       <div class="nav-actions">
-        <div class="user-badge" id="navUserBadge">
-          <!-- Profile indicator -->
-        </div>
-        <button class="btn btn-ghost" id="logoutBtn" style="padding: 0.5rem 1rem;">
-          <i data-lucide="log-out" style="width: 16px;"></i>
+        <div class="user-badge" id="navUserBadge"></div>
+        <button class="btn btn-ghost" id="logoutBtn">
+          <i data-lucide="log-out" style="width:16px;height:16px;"></i>
           <span>Log Out</span>
         </button>
       </div>
@@ -43,218 +35,208 @@
   </nav>
 
   <main>
-    <!-- Login Gate View -->
+
+    <!-- ══════════════════════════════════════
+         LOGIN GATE
+    ══════════════════════════════════════ -->
     <div id="loginView" class="login-container">
       <div class="login-card animate-slide-up">
         <div class="login-logo">
-          <div class="logo-icon">
-            <i data-lucide="building-2"></i>
-          </div>
+          <div class="logo-icon"><i data-lucide="building-2"></i></div>
           <span class="logo-text">Transcend</span>
         </div>
         <h2>Campus Facility Portal</h2>
-        <p class="login-subtitle">Access space reservations and administrative controls</p>
-        
-        <div class="login-tabs">
-          <button class="login-tab active" id="tabFaculty" type="button">Faculty Gate</button>
-          <button class="login-tab" id="tabAdmin" type="button">Admin Console</button>
-        </div>
+        <p class="login-subtitle">Choose your access level to continue</p>
 
-        <form id="loginForm" class="login-form">
-          <div class="form-group">
-            <label for="loginEmail">Institutional Email</label>
-            <div class="input-wrapper">
-              <i data-lucide="mail"></i>
-              <input type="email" id="loginEmail" value="faculty@campus.edu" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="loginPassword">Security Credentials</label>
-            <div class="input-wrapper">
-              <i data-lucide="lock"></i>
-              <input type="password" id="loginPassword" value="password123" required />
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary btn-submit" style="width: 100%; margin-top: 1rem;">
-            Access Portal <i data-lucide="chevron-right" style="width: 16px;"></i>
+        <div class="role-selector">
+          <button class="role-card" id="btnFacultyLogin">
+            <div class="role-icon faculty-icon"><i data-lucide="user-check"></i></div>
+            <div class="role-label">Faculty</div>
+            <div class="role-desc">Book amenities &amp; manage reservations</div>
+            <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
           </button>
-        </form>
-        <div class="login-footer">
-          Secured by Transcend Identity Services &copy; 2026
+          <button class="role-card" id="btnAdminLogin">
+            <div class="role-icon admin-icon"><i data-lucide="shield-check"></i></div>
+            <div class="role-label">Admin</div>
+            <div class="role-desc">Review &amp; approve booking requests</div>
+            <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
+          </button>
         </div>
+
+        <div class="login-footer">Transcend Identity Services &copy; 2026</div>
       </div>
     </div>
 
-    <!-- Faculty Portal View (Exclusively Faculty Bookings) -->
-    <div id="facultyView" class="hidden">
-      <!-- Hero Section -->
-      <header class="hero">
-        <div class="hero-badge animate-fade">
-          <i data-lucide="sparkles"></i>
-          <span>Faculty Space Reservation Hub</span>
-        </div>
-        <h1 class="animate-slide-up">Reserve Academic Spaces</h1>
-        <p class="animate-slide-up delay-1">Access advanced lecture halls, research facilities, and seminar spaces. Instantly request administrative approval for courses and events.</p>
-      </header>
+    <!-- ══════════════════════════════════════
+         FACULTY PORTAL
+         Pages: amenities | calendar | my-bookings
+    ══════════════════════════════════════ -->
+    <div id="facultyPortal" class="hidden">
 
-      <!-- Content Container -->
-      <div class="content-container animate-fade delay-2">
-        <!-- Filters -->
-        <div class="filters-container">
-          <div class="filters" id="categoryFilters">
-            <!-- Rendered via JS -->
+      <!-- PAGE: Amenities -->
+      <div id="pageFacultyAmenities">
+        <header class="hero">
+          <div class="hero-badge animate-fade">
+            <i data-lucide="sparkles"></i>
+            <span>Faculty Space Reservation Hub</span>
+          </div>
+          <h1 class="animate-slide-up">Reserve Academic Spaces</h1>
+          <p class="animate-slide-up delay-1">Select a facility, pick a date and time slot, and send your booking for admin approval.</p>
+        </header>
+
+        <div class="content-container animate-fade delay-2">
+          <!-- Category Filters -->
+          <div class="filters-container">
+            <div class="filters" id="categoryFilters"></div>
+          </div>
+          <!-- Facilities Grid -->
+          <div class="facilities-grid" id="facilitiesGrid"></div>
+
+          <!-- Recent Bookings (below grid) -->
+          <div class="recent-section">
+            <div class="section-header">
+              <div class="feed-badge">
+                <i data-lucide="history"></i>
+                <span>Recent Activity</span>
+              </div>
+              <h2>Recent Bookings</h2>
+            </div>
+            <div class="recent-list" id="recentBookingsList"></div>
           </div>
         </div>
+      </div>
 
-        <!-- Facilities Grid -->
-        <div class="facilities-grid" id="facilitiesGrid">
-          <!-- Rendered via JS -->
+      <!-- PAGE: Calendar -->
+      <div id="pageFacultyCalendar" class="hidden">
+        <header class="hero">
+          <div class="hero-badge animate-fade">
+            <i data-lucide="calendar"></i>
+            <span>Booking Schedule</span>
+          </div>
+          <h1 class="animate-slide-up">My Calendar</h1>
+          <p class="animate-slide-up delay-1">All your approved and pending reservations at a glance.</p>
+        </header>
+        <div class="content-container animate-fade delay-2">
+          <div id="calendarContainer"></div>
         </div>
       </div>
-    </div>
 
-    <!-- Admin Portal Content -->
-    <div id="adminView" class="hidden">
-      <!-- Hero Section -->
+      <!-- PAGE: My Bookings -->
+      <div id="pageFacultyMyBookings" class="hidden">
+        <header class="hero">
+          <div class="hero-badge animate-fade">
+            <i data-lucide="bookmark"></i>
+            <span>My Reservations</span>
+          </div>
+          <h1 class="animate-slide-up">My Bookings</h1>
+          <p class="animate-slide-up delay-1">Track the status of all your facility reservation requests.</p>
+        </header>
+        <div class="content-container animate-fade delay-2">
+          <div class="my-bookings-filters">
+            <button class="filter-btn active" data-status="all">All</button>
+            <button class="filter-btn" data-status="PENDING">Pending</button>
+            <button class="filter-btn" data-status="APPROVED">Approved</button>
+            <button class="filter-btn" data-status="REJECTED">Rejected</button>
+          </div>
+          <div id="myBookingsList"></div>
+        </div>
+      </div>
+
+    </div><!-- /facultyPortal -->
+
+    <!-- ══════════════════════════════════════
+         ADMIN PORTAL – Approval Queue Only
+    ══════════════════════════════════════ -->
+    <div id="adminPortal" class="hidden">
       <header class="hero">
         <div class="hero-badge animate-fade">
           <i data-lucide="shield"></i>
           <span>Admin Control Center</span>
         </div>
-        <h1 class="animate-slide-up">Campus Space Analytics</h1>
-        <p class="animate-slide-up delay-1">Monitor occupancy levels, view utilization statistics, check peak reservation timings, and review rejections.</p>
+        <h1 class="animate-slide-up">Booking Approval Queue</h1>
+        <p class="animate-slide-up delay-1">Review incoming facility reservation requests and approve or reject them.</p>
       </header>
 
       <div class="content-container animate-fade delay-2">
-        <!-- Admin Stats Row -->
+        <!-- Quick Stats Row -->
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon total"><i data-lucide="bar-chart-3"></i></div>
-            <div class="stat-details">
-              <span class="stat-label">Space Utilization</span>
-              <span class="stat-val" id="utilizationRate">74.2%</span>
-            </div>
-          </div>
           <div class="stat-card">
             <div class="stat-icon pending"><i data-lucide="clock-4"></i></div>
             <div class="stat-details">
-              <span class="stat-label">Peak Timings</span>
-              <span class="stat-val" style="font-size: 1.35rem; font-weight: 800; margin-top: 0.2rem;" id="peakTimingVal">10 AM – 1 PM</span>
+              <span class="stat-label">Pending</span>
+              <span class="stat-val" id="adminStatPending">0</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon approved"><i data-lucide="alert-octagon"></i></div>
+            <div class="stat-icon approved"><i data-lucide="check-circle-2"></i></div>
             <div class="stat-details">
-              <span class="stat-label">Rejection Rate</span>
-              <span class="stat-val" id="cancellationRate">12.5%</span>
+              <span class="stat-label">Approved</span>
+              <span class="stat-val" id="adminStatApproved">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon danger"><i data-lucide="x-circle"></i></div>
+            <div class="stat-details">
+              <span class="stat-label">Rejected</span>
+              <span class="stat-val" id="adminStatRejected">0</span>
             </div>
           </div>
         </div>
 
-        <!-- Admin Control Columns -->
-        <div class="admin-grid">
-          <!-- Left Column (Actions & Upcoming) -->
-          <div class="admin-main-col">
-            <!-- Pending Approvals Review Queue -->
-            <div class="admin-panel">
-              <div class="panel-header">
-                <div class="panel-badge pending"><i data-lucide="inbox"></i> Pending Decisions</div>
-                <h3>Approval Queue</h3>
-              </div>
-              <div class="admin-table-container">
-                <table class="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Requester</th>
-                      <th>Facility</th>
-                      <th>Purpose</th>
-                      <th>Attendees</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="adminPendingList">
-                    <!-- Rendered dynamically -->
-                  </tbody>
-                </table>
-              </div>
+        <!-- Approval Queue Panel -->
+        <div class="admin-panel">
+          <div class="panel-header">
+            <div class="panel-badge pending">
+              <i data-lucide="inbox"></i> Pending Decisions
             </div>
-
-            <!-- Upcoming Bookings (Approved schedule) -->
-            <div class="admin-panel">
-              <div class="panel-header">
-                <div class="panel-badge approved"><i data-lucide="calendar-range"></i> Operations Timeline</div>
-                <h3>Upcoming Bookings</h3>
-              </div>
-              <div class="upcoming-list" id="adminUpcomingList">
-                <!-- Rendered dynamically -->
-              </div>
-            </div>
+            <h3>Approval Queue</h3>
           </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Requester</th>
+                  <th>Facility</th>
+                  <th>Purpose</th>
+                  <th>Date &amp; Time</th>
+                  <th>Attendees</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminPendingList"></tbody>
+            </table>
+          </div>
+        </div>
 
-          <!-- Right Column (Reports & Leaderboards) -->
-          <div class="admin-side-col">
-            <!-- Most Booked Facilities -->
-            <div class="admin-panel">
-              <div class="panel-header">
-                <div class="panel-badge total"><i data-lucide="trophy"></i> Popularity Index</div>
-                <h3>Most Booked Facilities</h3>
-              </div>
-              <div class="leaderboard" id="mostBookedList">
-                <!-- Rendered dynamically -->
-              </div>
+        <!-- All Requests Panel -->
+        <div class="admin-panel" style="margin-top: 2rem;">
+          <div class="panel-header">
+            <div class="panel-badge total">
+              <i data-lucide="layers"></i> All Requests
             </div>
-
-            <!-- Peak Usage Timings Distribution -->
-            <div class="admin-panel">
-              <div class="panel-header">
-                <div class="panel-badge warning"><i data-lucide="activity"></i> Loading Distribution</div>
-                <h3>Peak Usage Timings</h3>
-              </div>
-              <div class="peak-timings" id="peakTimingsDistribution">
-                <!-- Rendered dynamically -->
-              </div>
-            </div>
-
-            <!-- Cancellation Reports Summary -->
-            <div class="admin-panel">
-              <div class="panel-header">
-                <div class="panel-badge danger"><i data-lucide="x-circle"></i> Cancellation Logs</div>
-                <h3>Rejections & Cancellations</h3>
-              </div>
-              <div class="cancellation-summary" id="cancellationLogs">
-                <!-- Rendered dynamically -->
-              </div>
-            </div>
+            <h3>Booking History</h3>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Requester</th>
+                  <th>Facility</th>
+                  <th>Purpose</th>
+                  <th>Date &amp; Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminAllList"></tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
+    </div><!-- /adminPortal -->
 
-    <!-- Common Operations Feed (Visible to both Faculty & Admin, adjusted styling) -->
-    <div id="activityFeedSection" class="content-container animate-fade delay-2 hidden" style="padding-top: 0;">
-      <div class="divider"></div>
-
-      <!-- Live Activity Feed -->
-      <div class="feed-section">
-        <div class="feed-header">
-          <div class="feed-badge">
-            <i data-lucide="zap"></i>
-            <span>Live Activity Feed</span>
-          </div>
-          <h2>Campus Operations</h2>
-        </div>
-        
-        <div class="feed-container">
-          <div class="feed-line"></div>
-          <div class="feed-list" id="feedList">
-            <!-- Rendered via JS -->
-          </div>
-        </div>
-      </div>
-    </div>
   </main>
 
-  <!-- Premium Glassmorphic Booking Modal -->
+  <!-- ── BOOKING MODAL ── -->
   <div class="modal-overlay" id="bookingModal">
     <div class="modal">
       <button class="modal-close" id="closeModal">
@@ -263,23 +245,19 @@
       <div class="modal-header">
         <div class="modal-badge">
           <i data-lucide="calendar-plus"></i>
-          <span>Reservation System</span>
+          <span>Reservation Request</span>
         </div>
-        <h3 id="modalFacilityTitle">Classroom</h3>
-        <p id="modalFacilityCapacity"><i data-lucide="users"></i> Capacity: 50 Seats</p>
+        <h3 id="modalFacilityTitle">Facility</h3>
+        <p id="modalFacilityCapacity"></p>
       </div>
 
       <form id="bookingForm" class="modal-form">
-        <!-- Date Selection Section (District App Style) -->
         <div class="form-group">
           <label>Select Date</label>
-          <div class="date-selector" id="dateSelector">
-            <!-- Rendered dynamically (Upcoming 7 Days) -->
-          </div>
+          <div class="date-selector" id="dateSelector"></div>
           <input type="hidden" id="selectedDate" required />
         </div>
 
-        <!-- Time Slots Selection -->
         <div class="form-row">
           <div class="form-group">
             <label for="startTime">Start Time</label>
@@ -314,7 +292,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary btn-submit">
-          <span>Send Approval for Booking</span>
+          <span>Send for Approval</span>
           <i data-lucide="send"></i>
         </button>
       </form>

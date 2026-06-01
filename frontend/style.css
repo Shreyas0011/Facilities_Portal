@@ -2316,4 +2316,32 @@ body {
   justify-content: center;
 }
 
+/* ── RECURRING WEEKDAY BUTTONS ── */
+.recurring-day-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--surface-border);
+  background: white;
+  color: var(--text-main);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.recurring-day-btn:hover {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.04);
+}
+.recurring-day-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
 

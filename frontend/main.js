@@ -2,15 +2,15 @@
    DATA
    ========================================= */
 const facilities = [
-  { id: "classroom",           label: "Classrooms",           icon: "book-open",       capacity: "50",         available: true,  category: "academic", desc: "Standard classrooms with whiteboards, projectors, and audio assistance." },
-  { id: "prof_classroom",      label: "Professional Classrooms", icon: "graduation-cap", capacity: "100",        available: true,  category: "academic", desc: "Smart lecture halls with tier seating, dual-screen projectors, and AV controls." },
-  { id: "seminar_hall",        label: "Seminar Halls",         icon: "calendar-days",  capacity: "300",         available: false, category: "academic", desc: "Tiered halls with podium mic arrays, ideal for guest talks and workshops." },
-  { id: "theatre",             label: "Theatre",               icon: "clapperboard",   capacity: "100",         available: true,  category: "media",    desc: "Black-box theatre with stage lighting, custom acoustics, and flexible seating." },
-  { id: "auditorium",          label: "Auditorium",            icon: "mic-2",          capacity: "500",         available: false, category: "media",    desc: "Grand auditorium with 500-seat capacity, surround PA system, and backstage." },
-  { id: "lab",                 label: "Labs",                  icon: "flask-conical",  capacity: "45",          available: true,  category: "academic", desc: "Fully equipped labs for science, computing, and engineering experimentation." },
-  { id: "sports",              label: "Sports Facilities",     icon: "dumbbell",       capacity: "Open Space",  available: true,  category: "recreation", desc: "Indoor courts and outdoor turf for sports clubs and recreation sessions." },
-  { id: "music_dance",         label: "Music / Dance Rooms",   icon: "music",          capacity: "30",          available: false, category: "media",    desc: "Soundproofed practice rooms with mirrors, flooring, and pre-installed instruments." },
-  { id: "podcast_studio",      label: "Podcast Studio",        icon: "radio",          capacity: "8",           available: true,  category: "media",    desc: "Professional recording booth with acoustic foam, mixers, and multi-microphone setup." },
+  { id: "classroom",           label: "Classrooms",           icon: "book-open",       capacity: "50",         available: true,  category: "academic", desc: "Standard classrooms with whiteboards, projectors, and audio assistance.", image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=600&q=80" },
+  { id: "prof_classroom",      label: "Professional Classrooms", icon: "graduation-cap", capacity: "100",        available: true,  category: "academic", desc: "Smart lecture halls with tier seating, dual-screen projectors, and AV controls.", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80" },
+  { id: "seminar_hall",        label: "Seminar Halls",         icon: "calendar-days",  capacity: "300",         available: false, category: "academic", desc: "Tiered halls with podium mic arrays, ideal for guest talks and workshops.", image: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=600&q=80" },
+  { id: "theatre",             label: "Theatre",               icon: "clapperboard",   capacity: "100",         available: true,  category: "media",    desc: "Black-box theatre with stage lighting, custom acoustics, and flexible seating.", image: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=600&q=80" },
+  { id: "auditorium",          label: "Auditorium",            icon: "mic-2",          capacity: "500",         available: false, category: "media",    desc: "Grand auditorium with 500-seat capacity, surround PA system, and backstage.", image: "https://images.unsplash.com/photo-1585699324551-f6c309eed262?auto=format&fit=crop&w=600&q=80" },
+  { id: "lab",                 label: "Labs",                  icon: "flask-conical",  capacity: "45",          available: true,  category: "academic", desc: "Fully equipped labs for science, computing, and engineering experimentation.", image: "https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=600&q=80" },
+  { id: "sports",              label: "Sports Facilities",     icon: "dumbbell",       capacity: "Open Space",  available: true,  category: "recreation", desc: "Indoor courts and outdoor turf for sports clubs and recreation sessions.", image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=600&q=80" },
+  { id: "music_dance",         label: "Music / Dance Rooms",   icon: "music",          capacity: "30",          available: false, category: "media",    desc: "Soundproofed practice rooms with mirrors, flooring, and pre-installed instruments.", image: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=600&q=80" },
+  { id: "podcast_studio",      label: "Podcast Studio",        icon: "radio",          capacity: "8",           available: true,  category: "media",    desc: "Professional recording booth with acoustic foam, mixers, and multi-microphone setup.", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80" },
 ];
 
 const categories = [
@@ -48,6 +48,7 @@ let adminPage         = "queue";      // "queue" | "calendar"
 let myBookingsFilter  = "all";
 let pendingCancellationBookingId = null;
 let pendingCancellationStatus = "REJECTED";
+let uploadedVenueImageBase64 = null;
 
 /* =========================================
    DOM REFS
@@ -277,12 +278,12 @@ function renderGrid() {
 
     return `
       <div class="card animate-slide-up" style="animation-delay:${i * 0.05}s">
-        <div class="card-image">
+        <div class="card-image" style="${f.image ? `background-image: url('${f.image}'); background-size: cover; background-position: center; height: 160px;` : 'height: 160px;'}">
           <div class="status-badge ${f.available ? 'available' : 'reserved'}">
             <div class="status-dot ${f.available ? 'available' : 'reserved'}"></div>
             ${f.available ? 'Available' : 'Reserved'}
           </div>
-          <div class="card-icon"><i data-lucide="${f.icon}"></i></div>
+          ${f.image ? '' : `<div class="card-icon"><i data-lucide="${f.icon}"></i></div>`}
         </div>
         <div class="card-body">
           <h3 class="card-title">
@@ -788,6 +789,117 @@ function renderMyBookings() {
   lucide.createIcons();
 }
 
+/* ── RECURRING BOOKING HELPERS ── */
+function syncRecurringWeekdayFromDate() {
+  const dateStr = document.getElementById("selectedDate").value;
+  if (!dateStr) return;
+  
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  const dayOfWeek = dateObj.getDay();
+  
+  document.querySelectorAll(".recurring-day-btn").forEach(btn => {
+    btn.classList.remove("active");
+    if (parseInt(btn.dataset.day) === dayOfWeek) {
+      btn.classList.add("active");
+    }
+  });
+}
+
+function formatRecurringDate(dateObj) {
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const day = days[dateObj.getDay()];
+  const m = dateObj.getMonth() + 1;
+  const d = dateObj.getDate();
+  const y = dateObj.getFullYear();
+  return `${day} ${m}/${d}/${y}`;
+}
+
+function formatTimeTo12Hour(timeStr) {
+  if (!timeStr) return "";
+  let [h, m] = timeStr.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  h = h ? h : 12;
+  const mStr = String(m).padStart(2, '0');
+  return `${h}:${mStr} ${ampm}`;
+}
+
+function updateRecurringSummary() {
+  const recurringCheckbox = document.getElementById("bookingRecurring");
+  if (!recurringCheckbox) return;
+  
+  const recurringPanel = document.getElementById("recurringOptionsPanel");
+  const summarySpan = document.getElementById("recurringSummarySpan");
+  if (!summarySpan) return;
+  
+  if (!recurringCheckbox.checked) {
+    if (recurringPanel) recurringPanel.classList.add("hidden");
+    return;
+  }
+  
+  if (recurringPanel) recurringPanel.classList.remove("hidden");
+  
+  const dateStr = document.getElementById("selectedDate").value;
+  let startDateObj = new Date();
+  if (dateStr) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    startDateObj = new Date(y, m - 1, d);
+  }
+  
+  const startTimeVal = document.getElementById("startTime").value;
+  const endTimeVal = document.getElementById("endTime").value;
+  const start12 = formatTimeTo12Hour(startTimeVal) || "3:00 PM";
+  const end12 = formatTimeTo12Hour(endTimeVal) || "3:30 PM";
+  
+  const interval = parseInt(document.getElementById("recurringInterval").value) || 1;
+  const unit = document.getElementById("recurringUnit").value || "week";
+  
+  let freqText = "";
+  if (unit === "day") {
+    freqText = `Occurs every ${interval > 1 ? `${interval} days` : "day"}`;
+  } else if (unit === "week") {
+    const activeButtons = Array.from(document.querySelectorAll(".recurring-day-btn.active"));
+    const daysShort = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayNames = activeButtons.map(btn => {
+      const d = parseInt(btn.dataset.day);
+      return daysShort[d];
+    });
+    
+    let daysStr = "";
+    if (dayNames.length === 0) {
+      daysStr = "week";
+    } else if (dayNames.length === 1) {
+      daysStr = dayNames[0];
+    } else if (dayNames.length === 2) {
+      daysStr = dayNames.join(" and ");
+    } else {
+      daysStr = dayNames.slice(0, -1).join(", ") + ", and " + dayNames[dayNames.length - 1];
+    }
+    
+    if (interval === 1) {
+      freqText = `Occurs every ${daysStr}`;
+    } else {
+      freqText = `Occurs every ${interval} weeks on ${daysStr}`;
+    }
+  } else if (unit === "month") {
+    freqText = `Occurs every ${interval > 1 ? `${interval} months` : "month"}`;
+  }
+  
+  const startFormatted = formatRecurringDate(startDateObj);
+  const untilDateVal = document.getElementById("recurringUntilDate").value;
+  let untilFormatted = "";
+  if (untilDateVal) {
+    const [uy, um, ud] = untilDateVal.split("-").map(Number);
+    untilFormatted = formatRecurringDate(new Date(uy, um - 1, ud));
+  } else {
+    untilFormatted = "forever";
+  }
+  
+  const summary = `${freqText} from ${start12} to ${end12} effective ${startFormatted} until ${untilFormatted}`;
+  summarySpan.innerText = summary;
+}
+
 /* =========================================
    BOOKING MODAL
    ========================================= */
@@ -801,14 +913,25 @@ function openBookingModal(facilityId) {
     Capacity: ${selectedFacility.capacity === "Open Space" ? selectedFacility.capacity : selectedFacility.capacity + " Seats"}
   `;
 
+  bookingForm.reset();
+
   selectedStartSlotIdx = null;
   selectedEndSlotIdx = null;
   dateSelectorOffset = 0;
   document.getElementById("selectedDate").value = "";
+  
+  const recurringCheckbox = document.getElementById("bookingRecurring");
+  if (recurringCheckbox) recurringCheckbox.checked = false;
+  const recurringPanel = document.getElementById("recurringOptionsPanel");
+  if (recurringPanel) recurringPanel.classList.add("hidden");
+  
   initDateSelector();
   renderTimeSlots();
+  
+  syncRecurringWeekdayFromDate();
+  updateRecurringSummary();
+  
   bookingModal.classList.add("active");
-  bookingForm.reset();
   lucide.createIcons();
 }
 
@@ -958,6 +1081,9 @@ function updateSelectedTimeInputs() {
     const duration = (selectedEndSlotIdx !== null ? (selectedEndSlotIdx - selectedStartSlotIdx + 1) : 1);
     summary.innerHTML = `<i data-lucide="check-circle" style="width:14px;height:14px;color:var(--success);"></i> <span>Selected: ${startSlot.start} – ${endSlot.end} (${duration} Hr${duration > 1 ? 's' : ''})</span>`;
   }
+  if (typeof updateRecurringSummary === "function") {
+    updateRecurringSummary();
+  }
   lucide.createIcons();
 }
 
@@ -1019,6 +1145,8 @@ function initDateSelector() {
       selectedStartSlotIdx = null;
       selectedEndSlotIdx = null;
       renderTimeSlots();
+      syncRecurringWeekdayFromDate();
+      updateRecurringSummary();
     });
   });
 
@@ -1065,22 +1193,87 @@ bookingForm.addEventListener("submit", e => {
 
   let datesToBook = [];
   if (isRecurring) {
-    const year = selectedDateObj.getFullYear();
-    const month = selectedDateObj.getMonth();
-    const dayOfWeek = selectedDateObj.getDay();
-
-    const temp = new Date(year, month, 1);
-    while (temp.getMonth() === month) {
-      if (temp.getDay() === dayOfWeek) {
-        const y = temp.getFullYear();
-        const m = String(temp.getMonth() + 1).padStart(2, '0');
-        const d = String(temp.getDate()).padStart(2, '0');
-        const dateStr = `${y}-${m}-${d}`;
-        if (dateStr >= date) {
-          datesToBook.push(dateStr);
+    const interval = parseInt(document.getElementById("recurringInterval").value) || 1;
+    const unit = document.getElementById("recurringUnit").value;
+    const activeDays = Array.from(document.querySelectorAll(".recurring-day-btn.active")).map(btn => parseInt(btn.dataset.day));
+    
+    const untilVal = document.getElementById("recurringUntilDate").value;
+    let untilDate = new Date(selectedDateObj);
+    if (untilVal) {
+      const [uy, um, ud] = untilVal.split("-").map(Number);
+      untilDate = new Date(uy, um - 1, ud);
+    } else {
+      untilDate.setDate(untilDate.getDate() + 28);
+    }
+    
+    // Safety check: cap at 1 year or 100 occurrences
+    const maxDate = new Date(selectedDateObj);
+    maxDate.setFullYear(maxDate.getFullYear() + 1);
+    if (untilDate > maxDate) untilDate = maxDate;
+    
+    let occurrencesCount = 0;
+    const maxOccurrences = 100;
+    
+    if (unit === "day") {
+      let currentDate = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate(), 12, 0, 0);
+      const targetUntil = new Date(untilDate.getFullYear(), untilDate.getMonth(), untilDate.getDate(), 12, 0, 0);
+      
+      while (currentDate <= targetUntil && occurrencesCount < maxOccurrences) {
+        if (currentDate.getDay() !== 0) {
+          const y = currentDate.getFullYear();
+          const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const d = String(currentDate.getDate()).padStart(2, '0');
+          datesToBook.push(`${y}-${m}-${d}`);
+          occurrencesCount++;
         }
+        currentDate.setDate(currentDate.getDate() + interval);
       }
-      temp.setDate(temp.getDate() + 1);
+    } else if (unit === "week") {
+      let tempDate = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate(), 12, 0, 0);
+      const targetUntil = new Date(untilDate.getFullYear(), untilDate.getMonth(), untilDate.getDate(), 12, 0, 0);
+      
+      while (tempDate <= targetUntil && occurrencesCount < maxOccurrences) {
+        const dayOfWeek = tempDate.getDay();
+        if (activeDays.includes(dayOfWeek)) {
+          const startSunday = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate(), 12, 0, 0);
+          startSunday.setDate(startSunday.getDate() - startSunday.getDay());
+          
+          const currentSunday = new Date(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate(), 12, 0, 0);
+          currentSunday.setDate(currentSunday.getDate() - currentSunday.getDay());
+          
+          const diffWeeks = Math.round((currentSunday - startSunday) / (7 * 24 * 60 * 60 * 1000));
+          if (diffWeeks % interval === 0) {
+            if (dayOfWeek !== 0) {
+              const y = tempDate.getFullYear();
+              const m = String(tempDate.getMonth() + 1).padStart(2, '0');
+              const d = String(tempDate.getDate()).padStart(2, '0');
+              const iso = `${y}-${m}-${d}`;
+              if (iso >= date && !datesToBook.includes(iso)) {
+                datesToBook.push(iso);
+                occurrencesCount++;
+              }
+            }
+          }
+        }
+        tempDate.setDate(tempDate.getDate() + 1);
+      }
+    } else if (unit === "month") {
+      let tempDate = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate(), 12, 0, 0);
+      const targetUntil = new Date(untilDate.getFullYear(), untilDate.getMonth(), untilDate.getDate(), 12, 0, 0);
+      
+      while (tempDate <= targetUntil && occurrencesCount < maxOccurrences) {
+        if (tempDate.getDay() !== 0) {
+          const y = tempDate.getFullYear();
+          const m = String(tempDate.getMonth() + 1).padStart(2, '0');
+          const d = String(tempDate.getDate()).padStart(2, '0');
+          const iso = `${y}-${m}-${d}`;
+          if (iso >= date) {
+            datesToBook.push(iso);
+            occurrencesCount++;
+          }
+        }
+        tempDate.setMonth(tempDate.getMonth() + interval);
+      }
     }
   } else {
     datesToBook.push(date);
@@ -1668,6 +1861,8 @@ window.submitAddVenue = function() {
   const categorySelect = document.getElementById("addVenueCategorySelect");
   const iconInput = document.getElementById("addVenueIconInput");
   const descInput = document.getElementById("addVenueDescInput");
+  const urlInput = document.getElementById("addVenueImageUrlInput");
+  const fileInput = document.getElementById("addVenueImageFileInput");
   
   if (!nameInput || !capacityInput || !categorySelect || !iconInput || !descInput) return;
   
@@ -1689,6 +1884,13 @@ window.submitAddVenue = function() {
     return;
   }
   
+  let image = "";
+  if (uploadedVenueImageBase64) {
+    image = uploadedVenueImageBase64;
+  } else if (urlInput && urlInput.value.trim()) {
+    image = urlInput.value.trim();
+  }
+  
   facilities.push({
     id,
     label,
@@ -1696,13 +1898,18 @@ window.submitAddVenue = function() {
     capacity,
     available: true,
     category,
-    desc
+    desc,
+    image
   });
   
   nameInput.value = "";
   capacityInput.value = "";
   iconInput.value = "";
   descInput.value = "";
+  if (urlInput) urlInput.value = "";
+  if (fileInput) fileInput.value = "";
+  uploadedVenueImageBase64 = null;
+  
   document.getElementById("addVenueFormContainer").classList.add("hidden");
   
   renderAdminManage();
@@ -1810,5 +2017,79 @@ document.addEventListener("DOMContentLoaded", () => {
   initSearch();
   initCancellationModal();
   initDateSelectorNav();
+  
+  // Set up venue image file listener
+  const fileInput = document.getElementById("addVenueImageFileInput");
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          uploadedVenueImageBase64 = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        uploadedVenueImageBase64 = null;
+      }
+    });
+  }
+
+  // Set up recurring booking listeners
+  const recurringCheckbox = document.getElementById("bookingRecurring");
+  if (recurringCheckbox) {
+    recurringCheckbox.addEventListener("change", () => {
+      const recurringPanel = document.getElementById("recurringOptionsPanel");
+      if (recurringCheckbox.checked) {
+        if (recurringPanel) recurringPanel.classList.remove("hidden");
+        
+        // Initialize default until date (28 days later)
+        const dateStr = document.getElementById("selectedDate").value;
+        if (dateStr) {
+          const [y, m, d] = dateStr.split("-").map(Number);
+          const startDate = new Date(y, m - 1, d);
+          const defaultUntil = new Date(startDate);
+          defaultUntil.setDate(defaultUntil.getDate() + 28);
+          document.getElementById("recurringUntilDate").value = defaultUntil.toISOString().split("T")[0];
+        }
+        
+        syncRecurringWeekdayFromDate();
+        updateRecurringSummary();
+      } else {
+        if (recurringPanel) recurringPanel.classList.add("hidden");
+      }
+    });
+  }
+
+  const intervalSelect = document.getElementById("recurringInterval");
+  if (intervalSelect) {
+    intervalSelect.addEventListener("change", updateRecurringSummary);
+  }
+
+  const unitSelect = document.getElementById("recurringUnit");
+  if (unitSelect) {
+    unitSelect.addEventListener("change", () => {
+      const weekdaysGroup = document.getElementById("recurringWeekdaysGroup");
+      if (unitSelect.value === "week") {
+        if (weekdaysGroup) weekdaysGroup.style.display = "flex";
+      } else {
+        if (weekdaysGroup) weekdaysGroup.style.display = "none";
+      }
+      updateRecurringSummary();
+    });
+  }
+
+  const untilDateInput = document.getElementById("recurringUntilDate");
+  if (untilDateInput) {
+    untilDateInput.addEventListener("change", updateRecurringSummary);
+  }
+
+  document.querySelectorAll(".recurring-day-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      btn.classList.toggle("active");
+      updateRecurringSummary();
+    });
+  });
+  
   lucide.createIcons();
 });

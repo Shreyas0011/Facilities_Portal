@@ -342,6 +342,16 @@
                       <input type="text" id="addVenueIconInput" placeholder="e.g. book-open, mic-2" style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem;" />
                     </div>
                   </div>
+                  <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div class="form-group">
+                      <label style="font-size:0.68rem;">Venue Picture (Upload File)</label>
+                      <input type="file" id="addVenueImageFileInput" accept="image/*" style="width:100%; padding:0.35rem 0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.8rem; background:white; height:36px;" />
+                    </div>
+                    <div class="form-group">
+                      <label style="font-size:0.68rem;">Or Picture URL</label>
+                      <input type="text" id="addVenueImageUrlInput" placeholder="e.g. https://images.unsplash.com/..." style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem;" />
+                    </div>
+                  </div>
                   <div class="form-group">
                     <label style="font-size:0.68rem;">Description</label>
                     <textarea id="addVenueDescInput" placeholder="Brief details about equipment or location..." style="width:100%; min-height:60px; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem; font-family:inherit; outline:none;"></textarea>
@@ -592,11 +602,60 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
-          <label style="display:inline-flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:700; color:var(--text-main); font-size:0.85rem;">
-            <input type="checkbox" id="bookingRecurring" style="width:16px; height:16px; accent-color:var(--primary); cursor:pointer;" />
-            <span>Repeat this booking weekly for the rest of the month</span>
-          </label>
+        <div class="form-group recurring-container" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid var(--surface-border);">
+            <label style="display:inline-flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:700; color:var(--text-main); font-size:0.85rem; margin: 0;">
+              <input type="checkbox" id="bookingRecurring" style="width:16px; height:16px; accent-color:var(--primary); cursor:pointer;" />
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="repeat" style="width: 14px; height: 14px;"></i> Recurring Booking</span>
+            </label>
+          </div>
+          
+          <!-- Detailed Recurring Options Panel (hidden by default) -->
+          <div id="recurringOptionsPanel" class="hidden" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem; border: 1px solid var(--surface-border); border-radius: 16px; background: rgba(255, 255, 255, 0.4); transition: all 0.3s ease;">
+            
+            <!-- Repeat every X week/day/month -->
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Repeat every</span>
+              <select id="recurringInterval" style="padding: 0.35rem 0.5rem; border: 1px solid var(--surface-border); border-radius: 8px; font-size: 0.85rem; background: white; font-weight: 600; height: 32px;">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+              <select id="recurringUnit" style="padding: 0.35rem 0.5rem; border: 1px solid var(--surface-border); border-radius: 8px; font-size: 0.85rem; background: white; font-weight: 600; height: 32px;">
+                <option value="day">day</option>
+                <option value="week" selected>week</option>
+                <option value="month">month</option>
+              </select>
+            </div>
+            
+            <!-- Weekday Selector (only shown when unit is 'week') -->
+            <div id="recurringWeekdaysGroup" style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">On Days</span>
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                <button type="button" class="recurring-day-btn" data-day="1">M</button>
+                <button type="button" class="recurring-day-btn" data-day="2">T</button>
+                <button type="button" class="recurring-day-btn" data-day="3">W</button>
+                <button type="button" class="recurring-day-btn" data-day="4">T</button>
+                <button type="button" class="recurring-day-btn" data-day="5">F</button>
+                <button type="button" class="recurring-day-btn" data-day="6">S</button>
+                <button type="button" class="recurring-day-btn" data-day="0">S</button>
+              </div>
+            </div>
+            
+            <!-- Until Date -->
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Until</span>
+              <input type="date" id="recurringUntilDate" style="padding: 0.35rem 0.6rem; border: 1px solid var(--surface-border); border-radius: 8px; font-size: 0.85rem; background: white; color: var(--text-main); font-family: inherit; font-weight: 600; outline: none; height: 32px;" />
+            </div>
+            
+            <!-- Recurrence Description Summary (Matches Microsoft Outlook / Scheduler style in the prompt) -->
+            <div id="recurringSummaryText" style="font-size: 0.78rem; font-weight: 600; color: #7c3aed; line-height: 1.4; padding: 0.6rem 0.8rem; background: rgba(124,58,237,0.06); border-radius: 10px; border-left: 3px solid #7c3aed; display: flex; align-items: flex-start; gap: 0.4rem;">
+              <i data-lucide="info" style="width: 14px; height: 14px; flex-shrink: 0; margin-top: 0.1rem;"></i>
+              <span id="recurringSummarySpan">Occurs every week...</span>
+            </div>
+            
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-submit">

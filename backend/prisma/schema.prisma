@@ -65,6 +65,8 @@ model Booking {
   attendeesCount  Int
   notes           String?
   requirements    String?
+  pocName         String?
+  pocContact      String?
   status          String        @default("PENDING")
   approvalRequired Boolean      @default(false)
   createdAt       DateTime      @default(now())

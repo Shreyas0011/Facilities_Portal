@@ -13,6 +13,8 @@ const bookingSchema = z.object({
   attendeesCount: z.number().min(1),
   notes: z.string().optional(),
   requirements: z.string().optional(),
+  pocName: z.string().optional(),
+  pocContact: z.string().optional(),
 });
 
 const timeToMinutes = (time: string): number => {
@@ -86,6 +88,13 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       return;
     }
 
+    // Verify bookings are off on Sundays (6 days a week)
+    const dayOfWeek = date.getUTCDay();
+    if (dayOfWeek === 0) {
+      res.status(400).json({ error: 'Bookings are not allowed on Sundays' });
+      return;
+    }
+
     // Validate time range
     const startMins = timeToMinutes(validated.startTime);
     const endMins = timeToMinutes(validated.endTime);
@@ -95,6 +104,16 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
     }
     if (endMins - startMins < 30) {
       res.status(400).json({ error: 'Minimum booking duration is 30 minutes' });
+      return;
+    }
+
+    // Enforce fixed timing: 8 AM to 4 PM (08:00 to 16:00)
+    const eightAm = timeToMinutes('08:00');
+    const fourPm = timeToMinutes('16:00');
+    if (startMins < eightAm || endMins > fourPm) {
+      res.status(400).json({
+        error: 'Facility is only available between 08:00 AM and 04:00 PM',
+      });
       return;
     }
 
@@ -141,6 +160,8 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
         attendeesCount: validated.attendeesCount,
         notes: validated.notes,
         requirements: validated.requirements || null,
+        pocName: validated.pocName || null,
+        pocContact: validated.pocContact || null,
         status: approvalRequired ? 'PENDING' : 'APPROVED',
         approvalRequired,
       },

@@ -16,8 +16,8 @@ router.use(authenticate, authorize('ADMIN', 'SUPER_ADMIN'));
 
 router.get('/analytics', getAnalytics);
 router.get('/pending-approvals', getPendingApprovals);
-router.get('/users', getUsers);
-router.patch('/users/:id', updateUser);
+router.get('/users', authorize('SUPER_ADMIN'), getUsers);
+router.patch('/users/:id', authorize('SUPER_ADMIN'), updateUser);
 router.post('/maintenance', createMaintenanceBlock);
 router.get('/maintenance', getMaintenanceBlocks);
 router.delete('/maintenance/:id', deleteMaintenanceBlock);

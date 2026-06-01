@@ -22,23 +22,32 @@ const categories = [
 
 // Shared bookings store
 const bookings = [
-  { id: 1, facility: "Auditorium",     purpose: "Annual Research Colloquium Keynote",    status: "APPROVED", date: "2026-10-24", time: "09:00 – 12:00", attendees: 150, requirements: "Stage setup, wireless microphones, slide clicker", requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair",      facilityId: "auditorium" },
-  { id: 2, facility: "Podcast Studio", purpose: "Micro-Lecture Series Recording",        status: "PENDING",  date: "2026-10-25", time: "14:00 – 15:30", attendees: 4,   requirements: "High-quality audio interface, 2 condenser microphones", requester: "Prof. Alex Mercer",  requesterRole: "Media Studies",    facilityId: "podcast_studio" },
-  { id: 3, facility: "Seminar Halls",  purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "2026-10-26", time: "11:00 – 13:00", attendees: 25,  requirements: "Projector, whiteboard markers", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "seminar_hall" },
-  { id: 4, facility: "Classrooms",     purpose: "Makeup Class for Applied Machine Learning", status: "APPROVED", date: "2026-10-27", time: "10:00 – 12:00", attendees: 45,  requirements: "Projector, whiteboard, slide clicker", requester: "Prof. Alex Mercer",  requesterRole: "Computer Science", facilityId: "classroom" },
-  { id: 5, facility: "Sports Facilities", purpose: "Inter-department Basketball Match",  status: "APPROVED", date: "2026-10-28", time: "17:00 – 19:30", attendees: 80,  requirements: "Scoreboard access, extra chairs", requester: "Dr. Sarah Jenkins", requesterRole: "Athletics Board", facilityId: "sports" },
-  { id: 6, facility: "Classrooms",     purpose: "Student Club Brainstorming Session",     status: "CANCELLED", date: "2026-10-22", time: "15:00 – 17:00", attendees: 15,  requirements: "None", requester: "Prof. Alex Mercer",  requesterRole: "Club Advisor",    facilityId: "classroom" },
-  { id: 7, facility: "Professional Classrooms", purpose: "Corporate Tech Seminar",       status: "REJECTED",  date: "2026-10-20", time: "09:00 – 13:00", attendees: 110, requirements: "Dual screen projector, premium audio", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "prof_classroom" }
+  { id: 1, facility: "Auditorium",     purpose: "Annual Research Colloquium Keynote",    status: "APPROVED", date: "2026-10-24", time: "09:00 – 12:00", attendees: 150, requirements: "Stage setup, wireless microphones, slide clicker", requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair",      facilityId: "auditorium", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834" },
+  { id: 2, facility: "Podcast Studio", purpose: "Micro-Lecture Series Recording",        status: "PENDING",  date: "2026-10-25", time: "14:00 – 15:30", attendees: 4,   requirements: "High-quality audio interface, 2 condenser microphones", requester: "Prof. Alex Mercer",  requesterRole: "Media Studies",    facilityId: "podcast_studio", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
+  { id: 3, facility: "Seminar Halls",  purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "2026-10-26", time: "11:00 – 13:00", attendees: 25,  requirements: "Projector, whiteboard markers", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "seminar_hall", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849" },
+  { id: 4, facility: "Classrooms",     purpose: "Makeup Class for Applied Machine Learning", status: "APPROVED", date: "2026-10-27", time: "10:00 – 12:00", attendees: 45,  requirements: "Projector, whiteboard, slide clicker", requester: "Prof. Alex Mercer",  requesterRole: "Computer Science", facilityId: "classroom", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
+  { id: 5, facility: "Sports Facilities", purpose: "Inter-department Basketball Match",  status: "APPROVED", date: "2026-10-28", time: "17:00 – 19:30", attendees: 80,  requirements: "Scoreboard access, extra chairs", requester: "Dr. Sarah Jenkins", requesterRole: "Athletics Board", facilityId: "sports", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834" },
+  { id: 6, facility: "Classrooms",     purpose: "Student Club Brainstorming Session",     status: "CANCELLED", date: "2026-10-22", time: "15:00 – 17:00", attendees: 15,  requirements: "None", requester: "Prof. Alex Mercer",  requesterRole: "Club Advisor",    facilityId: "classroom", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
+  { id: 7, facility: "Professional Classrooms", purpose: "Corporate Tech Seminar",       status: "REJECTED",  date: "2026-10-20", time: "09:00 – 13:00", attendees: 110, requirements: "Dual screen projector, premium audio", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "prof_classroom", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849" }
+];
+
+let users = [
+  { id: 1, name: "Dr. Sarah Jenkins", role: "Dept. Chair", contact: "+1 (555) 019-2834" },
+  { id: 2, name: "Prof. Alex Mercer", role: "Computer Science", contact: "+1 (555) 014-9821" },
+  { id: 3, name: "Dr. Aris Thorne", role: "Physics Professor", contact: "+1 (555) 017-3849" }
 ];
 
 /* =========================================
    STATE
    ========================================= */
-let activeCategory    = "all";
+let searchQuery       = "";
 let selectedFacility  = null;
 let currentRole       = null;         // "faculty" | "admin"
 let facultyPage       = "amenities";  // "amenities" | "calendar" | "myBookings"
+let adminPage         = "queue";      // "queue" | "calendar"
 let myBookingsFilter  = "all";
+let pendingCancellationBookingId = null;
+let pendingCancellationStatus = "REJECTED";
 
 /* =========================================
    DOM REFS
@@ -54,6 +63,7 @@ const adminPortal      = document.getElementById("adminPortal");
 
 const btnFacultyLogin  = document.getElementById("btnFacultyLogin");
 const btnAdminLogin    = document.getElementById("btnAdminLogin");
+const btnSuperAdminLogin = document.getElementById("btnSuperAdminLogin");
 
 // Faculty pages
 const pageFacultyAmenities  = document.getElementById("pageFacultyAmenities");
@@ -79,6 +89,9 @@ const bookingForm   = document.getElementById("bookingForm");
    ========================================= */
 btnFacultyLogin.addEventListener("click", () => login("faculty"));
 btnAdminLogin.addEventListener("click",   () => login("admin"));
+if (btnSuperAdminLogin) {
+  btnSuperAdminLogin.addEventListener("click", () => login("superadmin"));
+}
 
 function login(role) {
   currentRole = role;
@@ -89,14 +102,16 @@ function login(role) {
     facultyPortal.classList.remove("hidden");
     adminPortal.classList.add("hidden");
     setFacultyNav();
-    renderFilters();
     renderGrid();
     renderRecentBookings();
   } else {
     adminPortal.classList.remove("hidden");
     facultyPortal.classList.add("hidden");
+    if (role === "admin" && adminPage === "manage") {
+      adminPage = "dashboard";
+    }
     setAdminNav();
-    renderAdminDashboard();
+    switchAdminPage(adminPage);
   }
   lucide.createIcons();
 }
@@ -130,10 +145,51 @@ function setFacultyNav() {
 }
 
 function setAdminNav() {
-  navUserBadge.innerHTML = `<i data-lucide="shield" style="width:14px;height:14px;"></i> <span>Admin Console</span>`;
-  navLinks.innerHTML = `<a href="#" class="active">Approval Queue</a>`;
+  if (currentRole === "superadmin") {
+    navUserBadge.innerHTML = `<i data-lucide="shield-alert" style="width:14px;height:14px;color:#8b5cf6;"></i> <span style="color:#8b5cf6;font-weight:700;">Super Admin</span>`;
+  } else {
+    navUserBadge.innerHTML = `<i data-lucide="shield" style="width:14px;height:14px;"></i> <span>Admin Console</span>`;
+  }
+  navLinks.innerHTML = `
+    <a href="#" class="${adminPage === 'dashboard' ? 'active' : ''}" data-page="dashboard">Dashboard</a>
+    <a href="#" class="${adminPage === 'queue' ? 'active' : ''}" data-page="queue">Approval Queue</a>
+    <a href="#" class="${adminPage === 'calendar' ? 'active' : ''}" data-page="calendar">Calendar</a>
+    ${currentRole === "superadmin" ? `<a href="#" class="${adminPage === 'manage' ? 'active' : ''}" data-page="manage">Manage</a>` : ""}
+  `;
+  navLinks.querySelectorAll("a[data-page]").forEach(a => {
+    a.addEventListener("click", e => {
+      e.preventDefault();
+      switchAdminPage(a.dataset.page);
+    });
+  });
   lucide.createIcons();
 }
+
+/* =========================================
+   ADMIN PAGE SWITCHER
+   ========================================= */
+function switchAdminPage(page) {
+  if (page === "manage" && currentRole !== "superadmin") {
+    page = "dashboard";
+  }
+  adminPage = page;
+  document.getElementById("pageAdminDashboard").classList.toggle("hidden", page !== "dashboard");
+  document.getElementById("pageAdminQueue").classList.toggle("hidden", page !== "queue");
+  document.getElementById("pageAdminCalendar").classList.toggle("hidden", page !== "calendar");
+  document.getElementById("pageAdminManage").classList.toggle("hidden", page !== "manage");
+
+  renderAdminDashboard();
+
+  if (page === "calendar") renderAdminCalendar();
+  if (page === "manage") renderAdminManage();
+
+  // Update nav active state
+  navLinks.querySelectorAll("a[data-page]").forEach(a => {
+    a.classList.toggle("active", a.dataset.page === page);
+  });
+  lucide.createIcons();
+}
+
 
 /* =========================================
    FACULTY PAGE SWITCHER
@@ -155,20 +211,25 @@ function switchFacultyPage(page) {
 }
 
 /* =========================================
-   FACULTY: CATEGORY FILTERS
+   FACULTY: SEARCH BAR
    ========================================= */
-function renderFilters() {
-  filtersContainer.innerHTML = categories.map(c => `
-    <button class="filter-btn ${activeCategory === c.id ? 'active' : ''}" data-id="${c.id}">
-      ${c.label}
-    </button>
-  `).join("");
-  filtersContainer.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      activeCategory = btn.dataset.id;
-      renderFilters();
-      renderGrid();
-    });
+function initSearch() {
+  const searchInput = document.getElementById("facilitySearchInput");
+  const clearBtn = document.getElementById("clearSearchBtn");
+
+  if (!searchInput) return;
+
+  searchInput.addEventListener("input", e => {
+    searchQuery = e.target.value;
+    clearBtn.style.display = searchQuery ? "flex" : "none";
+    renderGrid();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    searchInput.value = "";
+    searchQuery = "";
+    clearBtn.style.display = "none";
+    renderGrid();
   });
 }
 
@@ -176,39 +237,72 @@ function renderFilters() {
    FACULTY: AMENITIES GRID
    ========================================= */
 function renderGrid() {
-  const list = activeCategory === "all"
-    ? facilities
-    : facilities.filter(f => f.category === activeCategory);
+  let list = facilities;
+
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase().trim();
+    const numericQuery = query.replace(/\.$/, "").trim(); // Remove trailing dot (e.g. "05." -> "05")
+
+    if (/^[0-9]+$/.test(numericQuery)) {
+      const val = parseInt(numericQuery, 10);
+      if (val >= 1 && val <= facilities.length) {
+        list = [facilities[val - 1]];
+      } else {
+        // Numeric but not a valid serial, fallback to normal search
+        list = facilities.filter(f => 
+          f.label.toLowerCase().includes(query) ||
+          f.desc.toLowerCase().includes(query) ||
+          f.category.toLowerCase().includes(query) ||
+          f.capacity.toLowerCase().includes(query)
+        );
+      }
+    } else {
+      list = facilities.filter(f => 
+        f.label.toLowerCase().includes(query) ||
+        f.desc.toLowerCase().includes(query) ||
+        f.category.toLowerCase().includes(query) ||
+        f.capacity.toLowerCase().includes(query)
+      );
+    }
+  }
 
   if (!list.length) {
-    gridContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-muted);">No facilities found.</div>`;
+    gridContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-muted);">No facilities found matching "${searchQuery}".</div>`;
     return;
   }
 
-  gridContainer.innerHTML = list.map((f, i) => `
-    <div class="card animate-slide-up" style="animation-delay:${i * 0.05}s">
-      <div class="card-image">
-        <div class="status-badge ${f.available ? 'available' : 'reserved'}">
-          <div class="status-dot ${f.available ? 'available' : 'reserved'}"></div>
-          ${f.available ? 'Available' : 'Reserved'}
-        </div>
-        <div class="card-icon"><i data-lucide="${f.icon}"></i></div>
-      </div>
-      <div class="card-body">
-        <h3 class="card-title">${f.label}</h3>
-        <p class="card-desc">${f.desc}</p>
-        <div class="card-footer">
-          <div class="capacity">
-            <i data-lucide="users" style="width:14px;height:14px;"></i>
-            ${f.capacity === "Open Space" ? f.capacity : f.capacity + " Seats"}
+  gridContainer.innerHTML = list.map((f, i) => {
+    const originalIndex = facilities.findIndex(orig => orig.id === f.id);
+    const serialNumber = String(originalIndex + 1).padStart(2, '0');
+
+    return `
+      <div class="card animate-slide-up" style="animation-delay:${i * 0.05}s">
+        <div class="card-image">
+          <div class="status-badge ${f.available ? 'available' : 'reserved'}">
+            <div class="status-dot ${f.available ? 'available' : 'reserved'}"></div>
+            ${f.available ? 'Available' : 'Reserved'}
           </div>
-          <button class="btn btn-primary btn-reserve" data-id="${f.id}" style="width:100%;">
-            Reserve Space <i data-lucide="chevron-right" style="width:16px;"></i>
-          </button>
+          <div class="card-icon"><i data-lucide="${f.icon}"></i></div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">
+            <span class="card-serial" style="color:var(--primary);font-weight:800;margin-right:0.3rem;">${serialNumber}</span>
+            ${f.label}
+          </h3>
+          <p class="card-desc">${f.desc}</p>
+          <div class="card-footer">
+            <div class="capacity">
+              <i data-lucide="users" style="width:14px;height:14px;"></i>
+              ${f.capacity === "Open Space" ? f.capacity : f.capacity + " Seats"}
+            </div>
+            <button class="btn btn-primary btn-reserve" data-id="${f.id}" style="width:100%;">
+              Reserve Space <i data-lucide="chevron-right" style="width:16px;"></i>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   gridContainer.querySelectorAll(".btn-reserve").forEach(btn => {
     btn.addEventListener("click", () => openBookingModal(btn.dataset.id));
@@ -246,42 +340,396 @@ function renderRecentBookings() {
    FACULTY: CALENDAR PAGE
    ========================================= */
 function renderCalendar() {
-  const calContainer = document.getElementById("calendarContainer");
-  const approved = bookings.filter(b => b.status === "APPROVED" || b.status === "PENDING");
+  renderUnifiedCalendar("facultyCalendarWrapper", false);
+}
 
-  if (!approved.length) {
-    calContainer.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:3rem;">No bookings on your calendar yet.</p>`;
-    return;
+/* =========================================
+   ADMIN: CALENDAR PAGE
+   ========================================= */
+function renderAdminCalendar() {
+  renderUnifiedCalendar("adminCalendarWrapper", true);
+}
+
+/* =========================================
+   UNIFIED INTERACTIVE CALENDAR ENGINE
+   ========================================= */
+let calendarDate = new Date(2026, 9, 1); // Start in October 2026 for visibility
+let calendarViewMode = "month"; // "month" | "week" | "day"
+let calendarFilterSerial = "all"; // "all" | "01" ... "09"
+
+function renderUnifiedCalendar(containerId, isForAdmin = false) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  let titleText = "";
+  if (calendarViewMode === "month") {
+    titleText = calendarDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  } else if (calendarViewMode === "week") {
+    const sunday = new Date(calendarDate);
+    sunday.setDate(sunday.getDate() - sunday.getDay());
+    const saturday = new Date(sunday);
+    saturday.setDate(saturday.getDate() + 6);
+    
+    const startStr = sunday.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const endStr = saturday.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    titleText = `${startStr} – ${endStr}`;
+  } else {
+    titleText = calendarDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
   }
 
-  // Group by date
-  const grouped = {};
-  approved.forEach(b => {
-    if (!grouped[b.date]) grouped[b.date] = [];
-    grouped[b.date].push(b);
-  });
+  container.innerHTML = `
+    <div class="calendar-header-bar">
+      <div class="calendar-nav-group">
+        <button class="btn btn-secondary btn-cal-prev" style="padding:0.4rem 0.8rem;"><i data-lucide="chevron-left" style="width:16px;"></i></button>
+        <button class="btn btn-secondary btn-cal-today" style="padding:0.4rem 0.8rem; font-size:0.8rem; font-weight:700;">Today</button>
+        <button class="btn btn-secondary btn-cal-next" style="padding:0.4rem 0.8rem;"><i data-lucide="chevron-right" style="width:16px;"></i></button>
+        <span class="calendar-title-display">${titleText}</span>
+      </div>
+      
+      <div class="calendar-controls-right">
+        <select class="calendar-filter-select filter-serial-dropdown">
+          <option value="all">All Amenities</option>
+          ${facilities.map((f, i) => {
+            const serial = String(i + 1).padStart(2, '0');
+            return `<option value="${serial}" ${calendarFilterSerial === serial ? "selected" : ""}>${serial}. ${f.label}</option>`;
+          }).join("")}
+        </select>
 
-  const sortedDates = Object.keys(grouped).sort();
-
-  calContainer.innerHTML = sortedDates.map(date => `
-    <div class="cal-day-group">
-      <div class="cal-day-label">${formatDateFull(date)}</div>
-      <div class="cal-events">
-        ${grouped[date].map(b => `
-          <div class="cal-event ${b.status.toLowerCase()}">
-            <div class="cal-event-time">${b.time}</div>
-            <div class="cal-event-body">
-              <div class="cal-event-title">${b.facility}</div>
-              <div class="cal-event-purpose">${b.purpose}</div>
-            </div>
-            <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
-          </div>
-        `).join("")}
+        <div class="calendar-view-btn-group">
+          <button class="calendar-view-btn ${calendarViewMode === 'day' ? 'active' : ''}" data-view="day">Day</button>
+          <button class="calendar-view-btn ${calendarViewMode === 'week' ? 'active' : ''}" data-view="week">Week</button>
+          <button class="calendar-view-btn ${calendarViewMode === 'month' ? 'active' : ''}" data-view="month">Month</button>
+        </div>
       </div>
     </div>
-  `).join("");
+    
+    <div class="calendar-body-content"></div>
+  `;
+
+  container.querySelector(".btn-cal-prev").addEventListener("click", () => {
+    adjustCalendarDate(-1);
+    renderCalendar();
+    renderAdminCalendar();
+  });
+  container.querySelector(".btn-cal-today").addEventListener("click", () => {
+    calendarDate = new Date();
+    renderCalendar();
+    renderAdminCalendar();
+  });
+  container.querySelector(".btn-cal-next").addEventListener("click", () => {
+    adjustCalendarDate(1);
+    renderCalendar();
+    renderAdminCalendar();
+  });
+
+  const filterDropdown = container.querySelector(".filter-serial-dropdown");
+  filterDropdown.value = calendarFilterSerial;
+  filterDropdown.addEventListener("change", e => {
+    calendarFilterSerial = e.target.value;
+    renderCalendar();
+    renderAdminCalendar();
+  });
+
+  container.querySelectorAll(".calendar-view-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      calendarViewMode = btn.dataset.view;
+      renderCalendar();
+      renderAdminCalendar();
+    });
+  });
+
+  const bodyContent = container.querySelector(".calendar-body-content");
+  
+  const activeBookings = bookings.filter(b => b.status === "APPROVED" || b.status === "PENDING");
+  const filteredEvents = activeBookings.filter(b => {
+    if (calendarFilterSerial === "all") return true;
+    const origIdx = facilities.findIndex(f => f.id === b.facilityId);
+    const serial = String(origIdx + 1).padStart(2, '0');
+    return serial === calendarFilterSerial;
+  });
+
+  if (calendarViewMode === "month") {
+    renderMonthView(bodyContent, filteredEvents, isForAdmin);
+  } else if (calendarViewMode === "week") {
+    renderWeekView(bodyContent, filteredEvents, isForAdmin);
+  } else {
+    renderDayView(bodyContent, filteredEvents, isForAdmin);
+  }
+
   lucide.createIcons();
 }
+
+function adjustCalendarDate(direction) {
+  if (calendarViewMode === "month") {
+    calendarDate.setMonth(calendarDate.getMonth() + direction);
+  } else if (calendarViewMode === "week") {
+    calendarDate.setDate(calendarDate.getDate() + direction * 7);
+  } else {
+    calendarDate.setDate(calendarDate.getDate() + direction);
+  }
+}
+
+function renderMonthView(container, events, isForAdmin) {
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  
+  const startOfMonth = new Date(year, month, 1);
+  const startGrid = new Date(startOfMonth);
+  startGrid.setDate(startGrid.getDate() - startGrid.getDay());
+
+  let html = `
+    <div class="calendar-month-grid">
+      <div class="calendar-weekday-header">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+  `;
+
+  const tempDate = new Date(startGrid);
+  const today = new Date();
+  
+  for (let i = 0; i < 42; i++) {
+    const isToday = tempDate.getDate() === today.getDate() && 
+                    tempDate.getMonth() === today.getMonth() && 
+                    tempDate.getFullYear() === today.getFullYear();
+    const isOtherMonth = tempDate.getMonth() !== month;
+    
+    const yearStr = tempDate.getFullYear();
+    const monthStr = String(tempDate.getMonth() + 1).padStart(2, '0');
+    const dateStr = String(tempDate.getDate()).padStart(2, '0');
+    const dateKey = `${yearStr}-${monthStr}-${dateStr}`;
+
+    const dayEvents = events.filter(e => e.date === dateKey);
+
+    let cellClass = "calendar-day-cell";
+    if (isToday) cellClass += " today";
+    if (isOtherMonth) cellClass += " other-month";
+
+    html += `
+      <div class="${cellClass}">
+        <div class="calendar-day-number">${tempDate.getDate()}</div>
+        <div class="calendar-day-events">
+          ${dayEvents.map(e => `
+            <div class="calendar-event-chip ${e.status.toLowerCase()}" 
+                 title="${e.time} - ${e.facility} (${e.purpose})"
+                 onclick="window.showCalendarEventDetail(${e.id})">
+              ${e.time.split(" – ")[0]} ${e.facility}
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+    
+    tempDate.setDate(tempDate.getDate() + 1);
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderWeekView(container, events, isForAdmin) {
+  const sunday = new Date(calendarDate);
+  sunday.setDate(sunday.getDate() - sunday.getDay());
+  
+  let html = `<div class="calendar-week-grid">`;
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const tempDate = new Date(sunday);
+  const today = new Date();
+
+  for (let i = 0; i < 7; i++) {
+    const isToday = tempDate.getDate() === today.getDate() && 
+                    tempDate.getMonth() === today.getMonth() && 
+                    tempDate.getFullYear() === today.getFullYear();
+
+    const yearStr = tempDate.getFullYear();
+    const monthStr = String(tempDate.getMonth() + 1).padStart(2, '0');
+    const dateStr = String(tempDate.getDate()).padStart(2, '0');
+    const dateKey = `${yearStr}-${monthStr}-${dateStr}`;
+
+    const dayEvents = events.filter(e => e.date === dateKey);
+
+    html += `
+      <div class="calendar-week-day-card ${isToday ? 'today' : ''}" style="${isToday ? 'border-color:var(--primary); background:rgba(37,99,235,0.02);' : ''}">
+        <div class="calendar-week-day-header">
+          <div class="calendar-week-day-title">${weekdays[i]}</div>
+          <div class="calendar-week-day-subtitle">${tempDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+        </div>
+        <div class="calendar-week-day-events">
+          ${dayEvents.length ? dayEvents.map(e => `
+            <div class="calendar-event-chip ${e.status.toLowerCase()}" 
+                 style="white-space:normal; font-size:0.75rem; padding:0.4rem;"
+                 title="${e.time} - ${e.facility} (${e.purpose})"
+                 onclick="window.showCalendarEventDetail(${e.id})">
+              <strong style="display:block; font-size:0.65rem; color:var(--text-muted);">${e.time}</strong>
+              ${e.facility}
+              <div style="font-size:0.65rem; font-weight:normal; opacity:0.8; margin-top:0.1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.purpose}</div>
+            </div>
+          `).join("") : `<div style="text-align:center; color:var(--text-muted); font-size:0.7rem; padding:2rem 0;">No bookings</div>`}
+        </div>
+      </div>
+    `;
+
+    tempDate.setDate(tempDate.getDate() + 1);
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderDayView(container, events, isForAdmin) {
+  const yearStr = calendarDate.getFullYear();
+  const monthStr = String(calendarDate.getMonth() + 1).padStart(2, '0');
+  const dateStr = String(calendarDate.getDate()).padStart(2, '0');
+  const dateKey = `${yearStr}-${monthStr}-${dateStr}`;
+
+  const dayEvents = events.filter(e => e.date === dateKey);
+
+  let html = `
+    <div class="calendar-day-view-container">
+      <div class="calendar-day-view-header">
+        <i data-lucide="calendar-days" style="display:inline-block; vertical-align:middle; margin-right:0.5rem; width:18px;"></i>
+        <span style="vertical-align:middle;">Schedule for ${calendarDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</span>
+      </div>
+      <div class="calendar-day-view-slots">
+  `;
+
+  TIME_SLOTS.forEach(slot => {
+    const slotStart = timeToMinutes(slot.start);
+    const slotEnd = timeToMinutes(slot.end);
+    
+    const slotEvents = dayEvents.filter(e => {
+      const parts = e.time.split(" – ");
+      if (parts.length < 2) return false;
+      const bStart = timeToMinutes(parts[0].trim());
+      const bEnd = timeToMinutes(parts[1].trim());
+      return slotStart < bEnd && bStart < slotEnd;
+    });
+
+    html += `
+      <div class="calendar-day-view-slot">
+        <div class="calendar-day-view-time-col">${slot.start} – ${slot.end}</div>
+        <div class="calendar-day-view-events-col">
+          ${slotEvents.length ? slotEvents.map(e => `
+            <div class="cal-event ${e.status.toLowerCase()}" 
+                 style="margin:0; padding:0.6rem 1rem; cursor:pointer;" 
+                 onclick="window.showCalendarEventDetail(${e.id})">
+              <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div>
+                  <strong style="color:var(--text-main); font-size:0.85rem;">${e.facility}</strong>
+                  <span style="font-size:0.75rem; color:var(--text-muted); margin-left:0.5rem;">(${e.time})</span>
+                  <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.1rem;">
+                    Purpose: ${e.purpose} | Requester: ${e.requester} (${e.requesterRole})
+                    ${e.pocName ? ` | POC: ${e.pocName} (${e.pocContact})` : ""}
+                  </div>
+                </div>
+                <div class="feed-status ${e.status.toLowerCase()}" style="font-size:0.65rem;">${e.status}</div>
+              </div>
+            </div>
+          `).join("") : `<span style="color:var(--text-muted); font-size:0.78rem; font-style:italic; padding-left:0.5rem;">Available</span>`}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+function showCalendarEventDetail(bookingId) {
+  const b = bookings.find(x => x.id === bookingId);
+  if (!b) return;
+
+  const origIdx = facilities.findIndex(f => f.id === b.facilityId);
+  const serial = String(origIdx + 1).padStart(2, '0');
+
+  let overlay = document.getElementById("calDetailOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "calDetailOverlay";
+    overlay.className = "modal-overlay";
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="modal active" style="max-width: 480px; display:block;">
+      <button class="modal-close" onclick="window.closeCalDetail()">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="modal-header">
+        <div class="modal-badge">
+          <i data-lucide="info"></i>
+          <span>Reservation Details</span>
+        </div>
+        <h2 style="margin-top:0.5rem;"><span style="color:var(--primary); font-weight:800; margin-right:0.3rem;">${serial}</span> ${b.facility}</h2>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem;">
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Time & Date</div>
+          <div style="font-size:0.95rem; font-weight:600; color:var(--text-main); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
+            <i data-lucide="calendar" style="width:16px; color:var(--primary);"></i>
+            ${formatDateFull(b.date)} | ${b.time}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Purpose & Attendees</div>
+          <div style="font-size:0.95rem; font-weight:600; color:var(--text-main); margin-top:0.15rem;">
+            ${b.purpose}
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
+            <i data-lucide="users" style="width:14px;"></i>
+            Attendees: ${b.attendees}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Requester</div>
+          <div style="font-size:0.9rem; font-weight:600; color:var(--text-main); margin-top:0.15rem;">
+            ${b.requester} (${b.requesterRole})
+          </div>
+        </div>
+
+        ${b.pocName ? `
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Point of Contact</div>
+          <div style="font-size:0.9rem; font-weight:600; color:var(--text-main); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
+            <i data-lucide="user" style="width:15px; color:var(--accent);"></i>
+            ${b.pocName} (${b.pocContact})
+          </div>
+        </div>` : ""}
+
+        ${b.requirements ? `
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Requirements</div>
+          <div style="font-size:0.85rem; color:var(--primary); font-weight:600; background:rgba(37,99,235,0.05); padding:0.5rem 0.75rem; border-radius:8px; margin-top:0.25rem;">
+            ${b.requirements}
+          </div>
+        </div>` : ""}
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--surface-border); padding-top:1rem; margin-top:0.5rem;">
+          <div style="font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:0.4rem;">
+            Status: 
+            <span class="feed-status ${b.status.toLowerCase()}">${b.status}</span>
+          </div>
+          <button class="btn btn-secondary" onclick="window.closeCalDetail()" style="padding:0.5rem 1.2rem;">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  lucide.createIcons();
+  overlay.classList.add("active");
+}
+
+window.showCalendarEventDetail = showCalendarEventDetail;
+window.closeCalDetail = () => {
+  const overlay = document.getElementById("calDetailOverlay");
+  if (overlay) overlay.classList.remove("active");
+};
+
+
 
 /* =========================================
    FACULTY: MY BOOKINGS PAGE
@@ -323,6 +771,11 @@ function renderMyBookings() {
           <i data-lucide="sliders" style="width:13px;height:13px;color:var(--primary);"></i>
           <span><strong>Requirements:</strong> ${b.requirements}</span>
         </div>` : ''}
+        ${b.pocName ? `
+        <div class="my-booking-poc" style="font-size:0.78rem;color:var(--text-muted);margin-top:0.4rem;display:flex;align-items:center;gap:0.35rem;">
+          <i data-lucide="user" style="width:13px;height:13px;color:var(--accent);"></i>
+          <span><strong>POC:</strong> ${b.pocName} (${b.pocContact})</span>
+        </div>` : ''}
       </div>
       <div class="my-booking-status-col">
         <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
@@ -348,7 +801,12 @@ function openBookingModal(facilityId) {
     Capacity: ${selectedFacility.capacity === "Open Space" ? selectedFacility.capacity : selectedFacility.capacity + " Seats"}
   `;
 
+  selectedStartSlotIdx = null;
+  selectedEndSlotIdx = null;
+  dateSelectorOffset = 0;
+  document.getElementById("selectedDate").value = "";
   initDateSelector();
+  renderTimeSlots();
   bookingModal.classList.add("active");
   bookingForm.reset();
   lucide.createIcons();
@@ -362,6 +820,149 @@ function closeModal() {
 closeModalBtn.addEventListener("click", closeModal);
 bookingModal.addEventListener("click", e => { if (e.target === bookingModal) closeModal(); });
 
+let selectedStartSlotIdx = null;
+let selectedEndSlotIdx = null;
+
+const TIME_SLOTS = [
+  { start: "08:00", end: "09:00" },
+  { start: "09:00", end: "10:00" },
+  { start: "10:00", end: "11:00" },
+  { start: "11:00", end: "12:00" },
+  { start: "12:00", end: "13:00" },
+  { start: "13:00", end: "14:00" },
+  { start: "14:00", end: "15:00" },
+  { start: "15:00", end: "16:00" }
+];
+
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function isSlotBooked(facilityId, date, slotStart, slotEnd) {
+  const sStart = timeToMinutes(slotStart);
+  const sEnd = timeToMinutes(slotEnd);
+
+  return bookings.some(b => {
+    if (b.facilityId !== facilityId || b.date !== date) return false;
+    if (b.status === "CANCELLED" || b.status === "REJECTED") return false;
+
+    const parts = b.time.split(" – ");
+    if (parts.length < 2) return false;
+    const bStart = timeToMinutes(parts[0].trim());
+    const bEnd = timeToMinutes(parts[1].trim());
+
+    return sStart < bEnd && bStart < sEnd;
+  });
+}
+
+function renderTimeSlots() {
+  const grid = document.getElementById("timeSlotsGrid");
+  const date = document.getElementById("selectedDate").value;
+
+  if (!selectedFacility || !date) return;
+
+  let html = "";
+  TIME_SLOTS.forEach((slot, idx) => {
+    const booked = isSlotBooked(selectedFacility.id, date, slot.start, slot.end);
+    let classes = "time-slot-chip";
+    if (booked) {
+      classes += " booked";
+    } else {
+      const inRange = isSlotInRange(idx);
+      if (inRange) {
+        classes += " active";
+      }
+    }
+
+    html += `
+      <button type="button" class="${classes}" data-idx="${idx}" ${booked ? "disabled" : ""}>
+        <span style="font-weight:700;">${slot.start} – ${slot.end}</span>
+        ${booked ? '<span class="status-lbl">Booked</span>' : '<span class="status-lbl">Available</span>'}
+      </button>
+    `;
+  });
+
+  grid.innerHTML = html;
+
+  grid.querySelectorAll(".time-slot-chip:not(.booked)").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.idx);
+      handleSlotClick(idx);
+    });
+  });
+
+  updateSelectedTimeInputs();
+}
+
+function isSlotInRange(idx) {
+  if (selectedStartSlotIdx === null) return false;
+  if (selectedEndSlotIdx === null) {
+    return idx === selectedStartSlotIdx;
+  }
+  return idx >= selectedStartSlotIdx && idx <= selectedEndSlotIdx;
+}
+
+function handleSlotClick(idx) {
+  if (selectedStartSlotIdx === null) {
+    selectedStartSlotIdx = idx;
+    selectedEndSlotIdx = null;
+  } else if (selectedEndSlotIdx === null) {
+    if (idx === selectedStartSlotIdx) {
+      selectedStartSlotIdx = null;
+    } else if (idx > selectedStartSlotIdx) {
+      // Check if intermediate slots are booked
+      let hasBookedSlot = false;
+      const date = document.getElementById("selectedDate").value;
+      for (let i = selectedStartSlotIdx; i <= idx; i++) {
+        if (isSlotBooked(selectedFacility.id, date, TIME_SLOTS[i].start, TIME_SLOTS[i].end)) {
+          hasBookedSlot = true;
+          break;
+        }
+      }
+      if (hasBookedSlot) {
+        showToast("Cannot select range containing booked slot(s)!");
+        selectedStartSlotIdx = idx;
+        selectedEndSlotIdx = null;
+      } else {
+        selectedEndSlotIdx = idx;
+      }
+    } else {
+      selectedStartSlotIdx = idx;
+      selectedEndSlotIdx = null;
+    }
+  } else {
+    selectedStartSlotIdx = idx;
+    selectedEndSlotIdx = null;
+  }
+
+  renderTimeSlots();
+}
+
+function updateSelectedTimeInputs() {
+  const startInput = document.getElementById("startTime");
+  const endInput = document.getElementById("endTime");
+  const summary = document.getElementById("timeRangeSummary");
+
+  if (selectedStartSlotIdx === null) {
+    startInput.value = "";
+    endInput.value = "";
+    summary.innerHTML = `<i data-lucide="info" style="width:14px;height:14px;"></i> <span>Select a start and optional end slot</span>`;
+  } else {
+    const startSlot = TIME_SLOTS[selectedStartSlotIdx];
+    const endSlot = selectedEndSlotIdx !== null ? TIME_SLOTS[selectedEndSlotIdx] : startSlot;
+
+    startInput.value = startSlot.start;
+    endInput.value = endSlot.end;
+
+    const duration = (selectedEndSlotIdx !== null ? (selectedEndSlotIdx - selectedStartSlotIdx + 1) : 1);
+    summary.innerHTML = `<i data-lucide="check-circle" style="width:14px;height:14px;color:var(--success);"></i> <span>Selected: ${startSlot.start} – ${endSlot.end} (${duration} Hr${duration > 1 ? 's' : ''})</span>`;
+  }
+  lucide.createIcons();
+}
+
+let dateSelectorOffset = 0;
+
 function initDateSelector() {
   const selector = document.getElementById("dateSelector");
   const hidden   = document.getElementById("selectedDate");
@@ -370,27 +971,64 @@ function initDateSelector() {
   const today  = new Date();
   let html = "";
 
-  for (let i = 0; i < 7; i++) {
+  // Render a 5-day window starting from today + dateSelectorOffset
+  for (let i = 0; i < 5; i++) {
     const d = new Date();
-    d.setDate(today.getDate() + i);
+    d.setDate(today.getDate() + dateSelectorOffset + i);
     const iso = d.toISOString().split("T")[0];
+    const isSunday = d.getDay() === 0;
+
+    let classes = "date-card";
+    if (isSunday) {
+      classes += " disabled";
+    } else if (hidden.value === iso) {
+      classes += " active";
+    }
+
     html += `
-      <div class="date-card ${i === 0 ? 'active' : ''}" data-val="${iso}">
+      <div class="${classes}" ${isSunday ? '' : `data-val="${iso}"`}>
         <div class="date-card-day">${DAYS[d.getDay()]}</div>
         <div class="date-card-num">${d.getDate()}</div>
         <div class="date-card-month">${MONTHS[d.getMonth()]}</div>
+        ${isSunday ? '<div style="font-size: 0.52rem; font-weight: 700; color: var(--text-muted); margin-top: 0.2rem; letter-spacing: 0.5px;">CLOSED</div>' : ''}
       </div>`;
-    if (i === 0) hidden.value = iso;
   }
 
   selector.innerHTML = html;
-  selector.querySelectorAll(".date-card").forEach(card => {
+
+  // Auto-select the first non-Sunday date if none is selected
+  if (!hidden.value) {
+    for (let i = 0; i < 5; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() + dateSelectorOffset + i);
+      if (d.getDay() !== 0) {
+        hidden.value = d.toISOString().split("T")[0];
+        break;
+      }
+    }
+    // Re-render to show active class
+    initDateSelector();
+    return;
+  }
+
+  selector.querySelectorAll(".date-card:not(.disabled)").forEach(card => {
     card.addEventListener("click", () => {
       selector.querySelectorAll(".date-card").forEach(c => c.classList.remove("active"));
       card.classList.add("active");
       hidden.value = card.dataset.val;
+      selectedStartSlotIdx = null;
+      selectedEndSlotIdx = null;
+      renderTimeSlots();
     });
   });
+
+  // Enable/disable prev/next buttons
+  const prevBtn = document.getElementById("datePrevBtn");
+  if (prevBtn) {
+    prevBtn.disabled = (dateSelectorOffset <= 0);
+    prevBtn.style.opacity = (dateSelectorOffset <= 0) ? "0.4" : "1";
+    prevBtn.style.cursor = (dateSelectorOffset <= 0) ? "not-allowed" : "pointer";
+  }
 }
 
 bookingForm.addEventListener("submit", e => {
@@ -403,30 +1041,81 @@ bookingForm.addEventListener("submit", e => {
   const purpose  = document.getElementById("bookingPurpose").value;
   const count    = parseInt(document.getElementById("attendeeCount").value);
   const requirements = document.getElementById("bookingRequirements").value.trim();
+  const pocName  = document.getElementById("pocName").value.trim();
+  const pocContact = document.getElementById("pocContact").value.trim();
+  const isRecurring = document.getElementById("bookingRecurring").checked;
   
-  const newBooking = {
-    id: bookings.length + 1,
-    facility:      selectedFacility.label,
-    facilityId:    selectedFacility.id,
-    purpose,
-    status:        "PENDING",
-    date,
-    time:          `${start} – ${end}`,
-    attendees:     count,
-    requirements:  requirements || null,
-    requester:     "Faculty User",
-    requesterRole: "Faculty",
-  };
+  if (!start || !end) {
+    showToast("Error: Please select at least one time slot!");
+    return;
+  }
+  
+  // Frontend Sunday Check
+  const selectedDateObj = new Date(date);
+  if (selectedDateObj.getDay() === 0) {
+    showToast("Error: Bookings are not allowed on Sundays!");
+    return;
+  }
 
-  bookings.unshift(newBooking);
+  // Frontend Time Range Check (08:00 to 16:00)
+  if (start < "08:00" || start > "16:00" || end < "08:00" || end > "16:00") {
+    showToast("Error: Bookings must be between 8:00 AM and 4:00 PM!");
+    return;
+  }
 
-  // Refresh visible panels
+  let datesToBook = [];
+  if (isRecurring) {
+    const year = selectedDateObj.getFullYear();
+    const month = selectedDateObj.getMonth();
+    const dayOfWeek = selectedDateObj.getDay();
+
+    const temp = new Date(year, month, 1);
+    while (temp.getMonth() === month) {
+      if (temp.getDay() === dayOfWeek) {
+        const y = temp.getFullYear();
+        const m = String(temp.getMonth() + 1).padStart(2, '0');
+        const d = String(temp.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${d}`;
+        if (dateStr >= date) {
+          datesToBook.push(dateStr);
+        }
+      }
+      temp.setDate(temp.getDate() + 1);
+    }
+  } else {
+    datesToBook.push(date);
+  }
+
+  datesToBook.forEach(dateStr => {
+    const nextId = bookings.length ? Math.max(...bookings.map(b => b.id)) + 1 : 1;
+    const newBooking = {
+      id: nextId,
+      facility:      selectedFacility.label,
+      facilityId:    selectedFacility.id,
+      purpose,
+      status:        "PENDING",
+      date:          dateStr,
+      time:          `${start} – ${end}`,
+      attendees:     count,
+      requirements:  requirements || null,
+      pocName,
+      pocContact,
+      requester:     "Faculty User",
+      requesterRole: "Faculty",
+      recurring:     isRecurring
+    };
+    bookings.unshift(newBooking);
+  });
+
+  // Refresh visible panels instantly
   renderRecentBookings();
-  if (facultyPage === "calendar")   renderCalendar();
+  renderCalendar();
+  renderAdminCalendar();
   if (facultyPage === "myBookings") renderMyBookings();
 
+  const facilityLabel = selectedFacility.label;
   closeModal();
-  showToast(`Booking request sent for ${selectedFacility.label}!`);
+  showToast(`Booking request sent for ${facilityLabel}${isRecurring ? ' (Recurring)' : ''}!`);
 });
 
 /* =========================================
@@ -458,10 +1147,20 @@ function renderAdminDashboard() {
         <td style="font-weight:700;">${b.facility}</td>
         <td>
           <div style="font-weight:600;">${b.purpose}</div>
+          ${b.recurring ? `
+          <div style="font-size:0.7rem;color:#7c3aed;margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;font-weight:700;background:rgba(124,58,237,0.06);padding:0.15rem 0.45rem;border-radius:4px;width:fit-content;">
+            <i data-lucide="repeat" style="width:11px;height:11px;"></i>
+            <span>Recurring Booking (Weekly)</span>
+          </div>` : ""}
           ${b.requirements ? `
           <div style="font-size:0.75rem;color:var(--primary);margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;">
             <i data-lucide="sliders" style="width:11px;height:11px;"></i>
             <span><strong>Req:</strong> ${b.requirements}</span>
+          </div>` : ""}
+          ${b.pocName ? `
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;">
+            <i data-lucide="user" style="width:11px;height:11px;color:var(--accent);"></i>
+            <span><strong>POC:</strong> ${b.pocName} (${b.pocContact})</span>
           </div>` : ""}
         </td>
         <td>
@@ -499,10 +1198,25 @@ function renderAdminDashboard() {
       <td style="font-weight:700;">${b.facility}</td>
       <td>
         <div style="font-weight:600;">${b.purpose}</div>
+        ${b.recurring ? `
+        <div style="font-size:0.7rem;color:#7c3aed;margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;font-weight:700;background:rgba(124,58,237,0.06);padding:0.15rem 0.45rem;border-radius:4px;width:fit-content;">
+          <i data-lucide="repeat" style="width:11px;height:11px;"></i>
+          <span>Recurring Booking (Weekly)</span>
+        </div>` : ""}
         ${b.requirements ? `
         <div style="font-size:0.75rem;color:var(--primary);margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;">
           <i data-lucide="sliders" style="width:11px;height:11px;"></i>
           <span><strong>Req:</strong> ${b.requirements}</span>
+        </div>` : ""}
+        ${b.pocName ? `
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;">
+          <i data-lucide="user" style="width:11px;height:11px;color:var(--accent);"></i>
+          <span><strong>POC:</strong> ${b.pocName} (${b.pocContact})</span>
+        </div>` : ""}
+        ${b.cancelReason ? `
+        <div style="font-size:0.75rem;color:#ef4444;margin-top:0.3rem;display:flex;align-items:center;gap:0.25rem;">
+          <i data-lucide="alert-circle" style="width:11px;height:11px;"></i>
+          <span><strong>Reason:</strong> ${b.cancelReason}</span>
         </div>` : ""}
       </td>
       <td>
@@ -510,8 +1224,25 @@ function renderAdminDashboard() {
         <div style="font-size:0.78rem;color:var(--text-muted);">${b.time}</div>
       </td>
       <td><div class="feed-status ${b.status.toLowerCase()}">${b.status}</div></td>
+      <td>
+        ${b.status === "APPROVED" ? `
+          <div class="actions-cell">
+            <button class="btn-reject btn-action btn-cancel-approved" data-id="${b.id}" title="Cancel Approved Booking">
+              <i data-lucide="x" style="width:18px;height:18px;"></i>
+            </button>
+          </div>
+        ` : `
+          <span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">None</span>
+        `}
+      </td>
     </tr>
   `).join("");
+
+  adminAllList.querySelectorAll(".btn-cancel-approved").forEach(btn => {
+    btn.addEventListener("click", () => {
+      updateStatus(parseInt(btn.dataset.id), "REJECTED");
+    });
+  });
 
   renderUpcomingBookings();
   renderUtilizationReports();
@@ -691,20 +1422,328 @@ function renderCancellationReports() {
       <div class="cancellation-log-body">
         Requested by <strong>${b.requester}</strong> for ${formatDate(b.date)} (${b.time}).
         <div style="color:var(--text-muted);font-style:italic;margin-top:0.25rem;">
-          Reason: ${b.status === 'REJECTED' ? 'Declined by Admin' : 'Cancelled by Faculty'}
+          Reason: ${b.cancelReason || (b.status === 'REJECTED' ? 'Declined by Admin' : 'Cancelled by Faculty')}
         </div>
       </div>
     </div>
   `).join("");
 }
 
+function openCancellationModal(bookingId, targetStatus) {
+  pendingCancellationBookingId = bookingId;
+  pendingCancellationStatus = targetStatus;
+  
+  const modal = document.getElementById("cancelReasonModal");
+  const reasonInput = document.getElementById("cancelReasonInput");
+  if (modal && reasonInput) {
+    reasonInput.value = "";
+    modal.classList.add("active");
+  }
+}
+
+function initCancellationModal() {
+  const modal = document.getElementById("cancelReasonModal");
+  const closeBtn = document.getElementById("closeCancelReasonModal");
+  const abortBtn = document.getElementById("btnCancelReasonAbort");
+  const submitBtn = document.getElementById("btnCancelReasonSubmit");
+  const reasonInput = document.getElementById("cancelReasonInput");
+
+  if (!modal) return;
+
+  const closeModal = () => {
+    modal.classList.remove("active");
+    pendingCancellationBookingId = null;
+  };
+
+  closeBtn.addEventListener("click", closeModal);
+  abortBtn.addEventListener("click", closeModal);
+
+  submitBtn.addEventListener("click", () => {
+    const reason = reasonInput.value.trim();
+    if (!reason) {
+      showToast("Error: Please provide a cancellation reason!");
+      return;
+    }
+    
+    if (pendingCancellationBookingId !== null) {
+      const b = bookings.find(x => x.id === pendingCancellationBookingId);
+      if (b) {
+        b.status = pendingCancellationStatus;
+        b.cancelReason = reason;
+        
+        renderAdminDashboard();
+        renderCalendar();
+        renderAdminCalendar();
+        
+        showToast(`${b.facility} booking cancelled!`);
+      }
+      closeModal();
+    }
+  });
+}
+
 function updateStatus(id, status) {
+  if (status === "REJECTED") {
+    openCancellationModal(id, "REJECTED");
+    return;
+  }
+
   const b = bookings.find(x => x.id === id);
   if (!b) return;
   b.status = status;
   renderAdminDashboard();
+  renderCalendar();
+  renderAdminCalendar();
   showToast(`${b.facility} booking ${status.toLowerCase()}!`);
 }
+
+/* =========================================
+   ADMIN: MANAGE USERS & VENUES
+   ========================================= */
+function renderAdminManage() {
+  const usersList = document.getElementById("adminManageUsersList");
+  const venuesList = document.getElementById("adminManageVenuesList");
+  
+  if (!usersList || !venuesList) return;
+  
+  // Hide form containers and buttons if not superadmin
+  const isSuperAdmin = currentRole === "superadmin";
+  const addUserBtn = document.getElementById("btnAddUserBtn");
+  const addVenueBtn = document.getElementById("btnAddVenueBtn");
+  
+  if (addUserBtn) {
+    addUserBtn.style.display = isSuperAdmin ? "flex" : "none";
+  }
+  if (addVenueBtn) {
+    addVenueBtn.style.display = isSuperAdmin ? "flex" : "none";
+  }
+  
+  if (!isSuperAdmin) {
+    const addUserForm = document.getElementById("addUserFormContainer");
+    const addVenueForm = document.getElementById("addVenueFormContainer");
+    if (addUserForm) addUserForm.classList.add("hidden");
+    if (addVenueForm) addVenueForm.classList.add("hidden");
+  }
+
+  // Render users list
+  if (!users.length) {
+    usersList.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No registered users.</td></tr>`;
+  } else {
+    usersList.innerHTML = users.map(u => `
+      <tr>
+        <td>
+          <div style="font-weight:700; color:var(--text-main);">${u.name}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">${u.role}</div>
+        </td>
+        <td style="font-size:0.83rem; font-weight:500;">${u.contact}</td>
+        <td>
+          <div class="actions-cell">
+            ${isSuperAdmin ? `
+              <button class="btn-reject btn-action btn-delete-user" data-id="${u.id}" title="Delete User" style="background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.12); color:#ef4444;">
+                <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+              </button>
+            ` : `<span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">N/A</span>`}
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    if (isSuperAdmin) {
+      usersList.querySelectorAll(".btn-delete-user").forEach(btn => {
+        btn.addEventListener("click", () => {
+          window.deleteUser(parseInt(btn.dataset.id));
+        });
+      });
+    }
+  }
+  
+  // Render venues list
+  if (!facilities.length) {
+    venuesList.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No facilities registered.</td></tr>`;
+  } else {
+    venuesList.innerHTML = facilities.map((f, index) => {
+      const sn = String(index + 1).padStart(2, "0");
+      return `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="font-size:0.75rem; font-weight:700; background:rgba(37,99,235,0.08); color:var(--primary); padding:0.15rem 0.4rem; border-radius:4px;">${sn}</span>
+              <div style="font-weight:700; color:var(--text-main);">${f.label}</div>
+            </div>
+          </td>
+          <td>
+            <div style="font-size:0.78rem; color:var(--text-muted);">
+              <strong>Cap:</strong> ${f.capacity} | <strong>Cat:</strong> ${f.category}
+            </div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:220px;" title="${f.desc}">
+              ${f.desc}
+            </div>
+          </td>
+          <td>
+            <div class="actions-cell">
+              ${isSuperAdmin ? `
+                <button class="btn-reject btn-action btn-delete-venue" data-id="${f.id}" title="Delete Venue" style="background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.12); color:#ef4444;">
+                  <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+                </button>
+              ` : `<span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">N/A</span>`}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    if (isSuperAdmin) {
+      venuesList.querySelectorAll(".btn-delete-venue").forEach(btn => {
+        btn.addEventListener("click", () => {
+          window.deleteVenue(btn.dataset.id);
+        });
+      });
+    }
+  }
+  
+  lucide.createIcons();
+}
+
+window.toggleAddUserForm = function() {
+  if (currentRole !== "superadmin") {
+    showToast("Error: Unauthorized action!");
+    return;
+  }
+  const container = document.getElementById("addUserFormContainer");
+  if (container) {
+    container.classList.toggle("hidden");
+  }
+};
+
+window.submitAddUser = function() {
+  if (currentRole !== "superadmin") {
+    showToast("Error: Unauthorized action!");
+    return;
+  }
+  const nameInput = document.getElementById("addUserNameInput");
+  const roleInput = document.getElementById("addUserRoleInput");
+  const contactInput = document.getElementById("addUserContactInput");
+  
+  if (!nameInput || !roleInput || !contactInput) return;
+  
+  const name = nameInput.value.trim();
+  const role = roleInput.value.trim();
+  const contact = contactInput.value.trim();
+  
+  if (!name || !role || !contact) {
+    showToast("Error: All fields are required!");
+    return;
+  }
+  
+  const nextId = users.length ? Math.max(...users.map(u => u.id)) + 1 : 1;
+  users.push({ id: nextId, name, role, contact });
+  
+  nameInput.value = "";
+  roleInput.value = "";
+  contactInput.value = "";
+  document.getElementById("addUserFormContainer").classList.add("hidden");
+  
+  renderAdminManage();
+  showToast(`User ${name} registered successfully!`);
+};
+
+window.toggleAddVenueForm = function() {
+  if (currentRole !== "superadmin") {
+    showToast("Error: Unauthorized action!");
+    return;
+  }
+  const container = document.getElementById("addVenueFormContainer");
+  if (container) {
+    container.classList.toggle("hidden");
+  }
+};
+
+window.submitAddVenue = function() {
+  if (currentRole !== "superadmin") {
+    showToast("Error: Unauthorized action!");
+    return;
+  }
+  const nameInput = document.getElementById("addVenueNameInput");
+  const capacityInput = document.getElementById("addVenueCapacityInput");
+  const categorySelect = document.getElementById("addVenueCategorySelect");
+  const iconInput = document.getElementById("addVenueIconInput");
+  const descInput = document.getElementById("addVenueDescInput");
+  
+  if (!nameInput || !capacityInput || !categorySelect || !iconInput || !descInput) return;
+  
+  const label = nameInput.value.trim();
+  const capacity = capacityInput.value.trim();
+  const category = categorySelect.value;
+  const icon = iconInput.value.trim() || "building-2";
+  const desc = descInput.value.trim();
+  
+  if (!label || !capacity || !desc) {
+    showToast("Error: Name, capacity, and description are required!");
+    return;
+  }
+  
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  
+  if (facilities.some(f => f.id === id)) {
+    showToast("Error: A facility with this name already exists!");
+    return;
+  }
+  
+  facilities.push({
+    id,
+    label,
+    icon,
+    capacity,
+    available: true,
+    category,
+    desc
+  });
+  
+  nameInput.value = "";
+  capacityInput.value = "";
+  iconInput.value = "";
+  descInput.value = "";
+  document.getElementById("addVenueFormContainer").classList.add("hidden");
+  
+  renderAdminManage();
+  renderGrid();
+  renderCalendar();
+  renderAdminCalendar();
+  renderAdminDashboard();
+  showToast(`Venue ${label} created successfully!`);
+};
+
+window.deleteUser = function(id) {
+  if (currentRole !== "superadmin") {
+    showToast("Error: Unauthorized action!");
+    return;
+  }
+  const uIndex = users.findIndex(u => u.id === id);
+  if (uIndex === -1) return;
+  const uName = users[uIndex].name;
+  
+  users.splice(uIndex, 1);
+  renderAdminManage();
+  showToast(`User ${uName} removed!`);
+};
+
+window.deleteVenue = function(facilityId) {
+  if (currentRole !== "superadmin") {
+    showToast("Error: Unauthorized action!");
+    return;
+  }
+  const fIndex = facilities.findIndex(f => f.id === facilityId);
+  if (fIndex === -1) return;
+  const fLabel = facilities[fIndex].label;
+  
+  facilities.splice(fIndex, 1);
+  renderAdminManage();
+  renderGrid();
+  renderCalendar();
+  renderAdminCalendar();
+  renderAdminDashboard();
+  showToast(`Venue ${fLabel} deleted!`);
+};
 
 /* =========================================
    TOAST
@@ -748,6 +1787,28 @@ function formatDateFull(iso) {
 /* =========================================
    INIT
    ========================================= */
+function initDateSelectorNav() {
+  const prevBtn = document.getElementById("datePrevBtn");
+  const nextBtn = document.getElementById("dateNextBtn");
+
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener("click", () => {
+      if (dateSelectorOffset > 0) {
+        dateSelectorOffset--;
+        initDateSelector();
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      dateSelectorOffset++;
+      initDateSelector();
+    });
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  initSearch();
+  initCancellationModal();
+  initDateSelectorNav();
   lucide.createIcons();
 });

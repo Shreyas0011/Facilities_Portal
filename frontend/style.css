@@ -127,6 +127,21 @@ body {
   letter-spacing: -0.5px;
 }
 
+.logo-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.login-logo-img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
 .nav-links {
   display: none;
 }
@@ -1580,6 +1595,65 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+}
+
+/* Calendar View role icon */
+.calendar-view-icon {
+  background: rgba(6, 182, 212, 0.1);
+  color: #0891b2;
+}
+
+/* ==========================================
+   CALENDAR VIEW PORTAL TOPBAR
+   ========================================== */
+.cal-view-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.cal-view-topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cal-view-topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.cal-view-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.65rem;
+  border-radius: 50px;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  color: #0891b2;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-left: 0.25rem;
+}
+
+.cal-view-content {
+  /* offset for the fixed topbar */
+  padding-top: 0;
 }
 
 /* ==========================================

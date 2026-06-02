@@ -78,10 +78,12 @@ const logoutBtn        = document.getElementById("logoutBtn");
 const loginView        = document.getElementById("loginView");
 const facultyPortal    = document.getElementById("facultyPortal");
 const adminPortal      = document.getElementById("adminPortal");
+const calendarViewPortal = document.getElementById("calendarViewPortal");
 
 const btnFacultyLogin  = document.getElementById("btnFacultyLogin");
 const btnAdminLogin    = document.getElementById("btnAdminLogin");
 const btnSuperAdminLogin = document.getElementById("btnSuperAdminLogin");
+const btnCalendarViewLogin = document.getElementById("btnCalendarViewLogin");
 
 // Faculty pages
 const pageFacultyAmenities  = document.getElementById("pageFacultyAmenities");
@@ -110,11 +112,27 @@ btnAdminLogin.addEventListener("click",   () => login("admin"));
 if (btnSuperAdminLogin) {
   btnSuperAdminLogin.addEventListener("click", () => login("superadmin"));
 }
+if (btnCalendarViewLogin) {
+  btnCalendarViewLogin.addEventListener("click", () => login("calendarView"));
+}
 
 function login(role) {
   currentRole = role;
   loginView.classList.add("hidden");
+
+  if (role === "calendarView") {
+    // Calendar-only view: no navbar, just the read-only calendar portal
+    mainNavbar.classList.add("hidden");
+    facultyPortal.classList.add("hidden");
+    adminPortal.classList.add("hidden");
+    calendarViewPortal.classList.remove("hidden");
+    renderCalendarViewPortal();
+    lucide.createIcons();
+    return;
+  }
+
   mainNavbar.classList.remove("hidden");
+  calendarViewPortal.classList.add("hidden");
 
   if (role === "faculty") {
     facultyPortal.classList.remove("hidden");
@@ -139,9 +157,21 @@ logoutBtn.addEventListener("click", () => {
   mainNavbar.classList.add("hidden");
   facultyPortal.classList.add("hidden");
   adminPortal.classList.add("hidden");
+  calendarViewPortal.classList.add("hidden");
   loginView.classList.remove("hidden");
   lucide.createIcons();
 });
+
+// Calendar-View-only exit button
+const calViewLogoutBtn = document.getElementById("calViewLogoutBtn");
+if (calViewLogoutBtn) {
+  calViewLogoutBtn.addEventListener("click", () => {
+    currentRole = null;
+    calendarViewPortal.classList.add("hidden");
+    loginView.classList.remove("hidden");
+    lucide.createIcons();
+  });
+}
 
 /* =========================================
    NAVBAR BUILDERS
@@ -373,13 +403,20 @@ function renderAdminCalendar() {
 }
 
 /* =========================================
+   CALENDAR VIEW PORTAL (Read-Only)
+   ========================================= */
+function renderCalendarViewPortal() {
+  renderUnifiedCalendar("calendarViewWrapper", false, true);
+}
+
+/* =========================================
    UNIFIED INTERACTIVE CALENDAR ENGINE
    ========================================= */
 let calendarDate = new Date(2026, 9, 1); // Start in October 2026 for visibility
 let calendarViewMode = "month"; // "month" | "week" | "day"
 let calendarFilterSerial = "all"; // "all" | "01" ... "09"
 
-function renderUnifiedCalendar(containerId, isForAdmin = false) {
+function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = false) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -430,16 +467,19 @@ function renderUnifiedCalendar(containerId, isForAdmin = false) {
 
   container.querySelector(".btn-cal-prev").addEventListener("click", () => {
     adjustCalendarDate(-1);
+    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
   container.querySelector(".btn-cal-today").addEventListener("click", () => {
     calendarDate = new Date();
+    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
   container.querySelector(".btn-cal-next").addEventListener("click", () => {
     adjustCalendarDate(1);
+    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
@@ -448,6 +488,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false) {
   filterDropdown.value = calendarFilterSerial;
   filterDropdown.addEventListener("change", e => {
     calendarFilterSerial = e.target.value;
+    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
@@ -455,6 +496,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false) {
   container.querySelectorAll(".calendar-view-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       calendarViewMode = btn.dataset.view;
+      if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
       renderCalendar();
       renderAdminCalendar();
     });

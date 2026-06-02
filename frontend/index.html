@@ -19,8 +19,7 @@
   <nav class="navbar hidden" id="mainNavbar">
     <div class="nav-container">
       <div class="logo">
-        <div class="logo-icon"><i data-lucide="building-2"></i></div>
-        <span class="logo-text">Transcend</span>
+        <img src="./logo.png" alt="Transcend Logo" class="logo-img" />
       </div>
       <!-- Faculty tabs -->
       <div class="nav-links" id="navLinks"></div>
@@ -42,8 +41,7 @@
     <div id="loginView" class="login-container">
       <div class="login-card animate-slide-up">
         <div class="login-logo">
-          <div class="logo-icon"><i data-lucide="building-2"></i></div>
-          <span class="logo-text">Transcend</span>
+          <img src="./logo.png" alt="Transcend Logo" class="login-logo-img" />
         </div>
         <h2>Campus Facility Portal</h2>
         <p class="login-subtitle">Choose your access level to continue</p>
@@ -65,6 +63,12 @@
             <div class="role-icon superadmin-icon" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6;"><i data-lucide="shield-alert"></i></div>
             <div class="role-label">Super Admin</div>
             <div class="role-desc">Full system administration &amp; settings</div>
+            <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
+          </button>
+          <button class="role-card" id="btnCalendarViewLogin">
+            <div class="role-icon calendar-view-icon"><i data-lucide="calendar-days"></i></div>
+            <div class="role-label">Calendar View</div>
+            <div class="role-desc">View-only access to the campus booking schedule</div>
             <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
           </button>
         </div>
@@ -489,6 +493,43 @@
       </div><!-- /pageAdminDashboard -->
 
     </div><!-- /adminPortal -->
+
+    <!-- ══════════════════════════════════════
+         CALENDAR VIEW PORTAL (Read-Only)
+    ══════════════════════════════════════ -->
+    <div id="calendarViewPortal" class="hidden">
+      <!-- Minimal top bar for calendar-only access -->
+      <div class="cal-view-topbar">
+        <div class="cal-view-topbar-inner">
+          <div class="logo">
+            <img src="./logo.png" alt="Transcend Logo" class="logo-img" />
+          </div>
+          <div class="cal-view-topbar-title">
+            <i data-lucide="calendar-days" style="width:18px;height:18px;color:var(--primary);"></i>
+            <span>Campus Booking Schedule</span>
+            <span class="cal-view-badge">View Only</span>
+          </div>
+          <button class="btn btn-ghost" id="calViewLogoutBtn" style="font-size:0.85rem;">
+            <i data-lucide="log-out" style="width:15px;height:15px;"></i>
+            <span>Exit</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="cal-view-content">
+        <header class="hero" style="padding-top:8rem;">
+          <div class="hero-badge animate-fade">
+            <i data-lucide="calendar"></i>
+            <span>Read-Only Schedule</span>
+          </div>
+          <h1 class="animate-slide-up">Campus Booking Calendar</h1>
+          <p class="animate-slide-up delay-1">Browse all approved and pending facility reservations across campus.</p>
+        </header>
+        <div class="content-container animate-fade delay-2">
+          <div id="calendarViewWrapper" class="custom-calendar"></div>
+        </div>
+      </div>
+    </div><!-- /calendarViewPortal -->
 
   </main>
 

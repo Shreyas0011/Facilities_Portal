@@ -128,14 +128,14 @@ body {
 }
 
 .logo-img {
-  height: 38px;
+  height: 60px;
   width: auto;
   object-fit: contain;
   display: block;
 }
 
 .login-logo-img {
-  height: 52px;
+  height: 90px;
   width: auto;
   object-fit: contain;
   display: block;

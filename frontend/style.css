@@ -3009,3 +3009,244 @@ body {
   }
 }
 
+
+/* =====================================================
+   RESPONSIVE — TABLET (641 px – 1024 px)
+   ===================================================== */
+@media (max-width: 1024px) {
+
+  /* ── Navbar ── */
+  .nav-container { padding: 0.9rem 1.25rem; }
+
+  /* ── Hero split → stack ── */
+  .hero-split-wrapper {
+    grid-template-columns: 1fr;
+    padding: 6rem 1.5rem 2rem;
+    gap: 2rem;
+  }
+  .hero-img-panel { display: none; }   /* hide side galleries on tablet */
+  .hero.hero-center {
+    max-width: 100%;
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  /* ── Facilities grid: 2 columns ── */
+  .facilities-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  /* ── Admin grid → single column ── */
+  .admin-grid { grid-template-columns: 1fr; }
+
+  /* ── Stats grid: 2 columns ── */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* ── Cal-view hero strip inner ── */
+  .cal-view-hero-inner { gap: 1.5rem; }
+  .cal-view-stats-row { justify-content: flex-start; }
+
+  /* ── Warning banner ── */
+  .warning-banner {
+    margin: 5.5rem 1.25rem 1rem;
+    width: calc(100% - 2.5rem);
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
+
+/* =====================================================
+   RESPONSIVE — MOBILE (≤ 640 px)
+   ===================================================== */
+@media (max-width: 640px) {
+
+  /* ── Base ── */
+  body { font-size: 15px; }
+
+  /* ── Navbar ── */
+  .nav-container {
+    padding: 0.75rem 1rem;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+  .logo-img    { height: 56px; }
+  .logo-text   { font-size: 1rem; }
+
+  /* Hide text nav links; show only user badge + logout */
+  .nav-links   { display: none !important; }
+  .nav-actions { gap: 0.5rem; }
+
+  /* User badge — shrink on small screens */
+  .user-badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+  }
+  .user-badge span { display: none; }   /* show icon only on very small */
+
+  /* ── Hero ── */
+  .hero-split-wrapper {
+    grid-template-columns: 1fr;
+    padding: 5.5rem 1rem 1.5rem;
+  }
+  .hero-img-panel { display: none; }
+  .hero.hero-center {
+    max-width: 100%;
+    padding: 0 0.5rem;
+    text-align: center;
+    margin: 0 auto;
+  }
+  .hero h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
+
+  /* ── Content container ── */
+  .content-container { padding: 0 1rem 3rem; }
+
+  /* ── Facilities grid → single column ── */
+  .facilities-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* ── Filters – scrollable row ── */
+  .filters-container { margin-bottom: 1.75rem; }
+  .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0.4rem;
+    gap: 0.35rem;
+    scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter-btn { white-space: nowrap; font-size: 0.82rem; padding: 0.5rem 1rem; }
+
+  /* ── Search bar ── */
+  .search-container { max-width: 100%; }
+
+  /* ── Stats grid → 2 columns ── */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 2rem;
+  }
+  .stat-val { font-size: 1.5rem; }
+
+  /* ── Admin tables → horizontal scroll ── */
+  .admin-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .admin-table { min-width: 640px; }
+  .admin-table th, .admin-table td { padding: 0.85rem 1rem; font-size: 0.8rem; }
+
+  /* ── Admin panel ── */
+  .admin-panel { padding: 1.25rem 1rem; border-radius: 18px; }
+
+  /* ── Admin grid ── */
+  .admin-grid { grid-template-columns: 1fr; gap: 1rem; }
+
+  /* ── Recent / booking cards ── */
+  .recent-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  .my-booking-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1.1rem;
+  }
+  .my-booking-status-col {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .my-booking-meta { flex-wrap: wrap; gap: 0.5rem; }
+
+  /* ── Feed items ── */
+  .feed-item { flex-direction: column; gap: 0.85rem; padding: 1rem; }
+  .feed-top  { flex-wrap: wrap; gap: 0.4rem; }
+  .feed-meta { flex-wrap: wrap; gap: 0.75rem; }
+
+  /* ── Cal-event ── */
+  .cal-event { flex-direction: column; gap: 0.5rem; padding: 0.85rem 1rem; }
+  .cal-event-time { min-width: unset; }
+
+  /* ── Modal ── */
+  .modal {
+    width: 96%;
+    padding: 1.5rem 1.25rem;
+    border-radius: 20px;
+    max-height: 94vh;
+  }
+  .form-row { grid-template-columns: 1fr; }
+
+  /* ── Login card ── */
+  .login-container { padding: 1rem 0.75rem; }
+  .login-card {
+    padding: 2rem 1.25rem;
+    border-radius: 24px;
+  }
+  .login-logo-img { height: 100px; }
+
+  /* ── Warning banner ── */
+  .warning-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin: 5rem 0.75rem 0.75rem;
+    width: calc(100% - 1.5rem);
+    padding: 1rem;
+  }
+  .warning-banner-actions { width: 100%; justify-content: flex-end; }
+
+  /* ── Cal-view topbar ── */
+  .cal-view-topbar-inner { padding: 0.7rem 1rem; gap: 0.5rem; }
+  .cal-view-topbar-title { font-size: 0.82rem; }
+  .cal-view-badge { display: none; }
+  .cal-view-user-name { max-width: 80px; font-size: 0.72rem; }
+  .cal-view-page-body { padding-top: 60px; }
+
+  /* ── Viewer hero strip ── */
+  .cal-view-hero-strip { padding: 1.75rem 0 1.5rem; }
+  .cal-view-hero-inner {
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 0 1rem;
+  }
+  .cal-view-hero-title { font-size: clamp(1.4rem, 5vw, 1.85rem); }
+  .cal-view-hero-sub   { font-size: 0.82rem; }
+  .cal-view-stats-row  { justify-content: flex-start; gap: 0.6rem; }
+  .cal-view-stat-card  { padding: 0.75rem 1rem; min-width: 78px; }
+  .cal-view-stat-value { font-size: 1.35rem; }
+  .cal-view-calendar-section { padding-top: 1.5rem; padding-bottom: 2.5rem; }
+
+  /* ── Calendar month grid ── */
+  .calendar-header-bar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .calendar-controls-right { width: 100%; flex-wrap: wrap; }
+  .calendar-title-display { min-width: unset; font-size: 1rem; }
+  .calendar-day-cell {
+    min-height: 64px;
+    padding: 0.25rem;
+  }
+  .calendar-day-number { font-size: 0.72rem; width: 18px; height: 18px; }
+  .calendar-day-events { max-height: 48px; }
+  .calendar-event-chip { font-size: 0.6rem; padding: 0.15rem 0.3rem; }
+  .calendar-weekday-header { font-size: 0.65rem; padding: 0.5rem 0; }
+
+  /* ── Calendar week grid ── */
+  .calendar-week-grid { grid-template-columns: 1fr; }
+
+  /* ── Calendar day view ── */
+  .calendar-day-view-time-col { width: 72px; font-size: 0.7rem; padding: 0.85rem 0.5rem; }
+
+  /* ── Upcoming card ── */
+  .upcoming-card { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .upcoming-meta { flex-direction: row; text-align: left; }
+
+  /* ── Settings card ── */
+  .settings-card { max-width: 100%; }
+
+  /* ── Section header ── */
+  .section-header h2 { font-size: 1.35rem; }
+}

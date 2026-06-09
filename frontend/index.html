@@ -24,7 +24,19 @@
       <!-- Faculty tabs -->
       <div class="nav-links" id="navLinks"></div>
       <div class="nav-actions">
-        <div class="user-badge" id="navUserBadge"></div>
+        <div class="profile-dropdown">
+          <div class="user-badge" id="navUserBadge" style="cursor: pointer;"></div>
+          <div class="dropdown-menu hidden" id="profileDropdownMenu">
+            <button class="dropdown-item" id="dropdownChangePwdBtn" type="button">
+              <i data-lucide="lock"></i>
+              <span>Change Password</span>
+            </button>
+            <button class="dropdown-item" id="dropdownLogoutBtn" type="button">
+              <i data-lucide="log-out"></i>
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
         <button class="btn btn-ghost" id="logoutBtn">
           <i data-lucide="log-out" style="width:16px;height:16px;"></i>
           <span>Log Out</span>
@@ -34,9 +46,25 @@
   </nav>
 
   <main>
+    <!-- Dismissible Warning Banner for Temporary Password -->
+    <div id="tempPasswordBanner" class="warning-banner hidden">
+      <div class="warning-banner-content">
+        <i data-lucide="alert-triangle" class="warning-banner-icon"></i>
+        <span>You are using a temporary password. Please change your password.</span>
+      </div>
+      <div class="warning-banner-actions">
+        <button id="bannerChangePasswordBtn" class="btn btn-warning-banner" type="button">Change Password</button>
+        <button id="dismissWarningBannerBtn" class="btn btn-warning-banner-close" aria-label="Dismiss" type="button">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
 
     <!-- ══════════════════════════════════════
          LOGIN GATE
+    ══════════════════════════════════════ -->
+    <!-- ══════════════════════════════════════
+         LOGIN FORM (Local Auth)
     ══════════════════════════════════════ -->
     <div id="loginView" class="login-container">
       <div class="login-card animate-slide-up">
@@ -44,36 +72,117 @@
           <img src="./logo.png" alt="Transcend Logo" class="login-logo-img" />
         </div>
         <h2>Campus Facility Portal</h2>
-        <p class="login-subtitle">Choose your access level to continue</p>
+        <p class="login-subtitle">Sign in with your institutional account</p>
 
-        <div class="role-selector">
-          <button class="role-card" id="btnFacultyLogin">
-            <div class="role-icon faculty-icon"><i data-lucide="user-check"></i></div>
-            <div class="role-label">Faculty</div>
-            <div class="role-desc">Book amenities &amp; manage reservations</div>
-            <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
+        <form id="loginForm" class="auth-form" autocomplete="on" novalidate>
+          <div class="form-group">
+            <label for="loginEmail">Email Address</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="loginEmail" placeholder="you@transcend.edu.in" required autocomplete="email" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <div class="input-wrapper" style="position:relative;">
+              <i data-lucide="lock"></i>
+              <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" id="toggleLoginPwd" class="pwd-toggle-btn" tabindex="-1" title="Toggle visibility">
+                <i data-lucide="eye" id="toggleLoginPwdIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="loginError" class="auth-error hidden"></div>
+
+          <button type="submit" class="btn btn-primary btn-submit" id="loginSubmitBtn" style="width:100%; margin-top:0.25rem;">
+            <span id="loginBtnText">Sign In</span>
+            <i data-lucide="arrow-right"></i>
           </button>
-          <button class="role-card" id="btnAdminLogin">
-            <div class="role-icon admin-icon"><i data-lucide="shield-check"></i></div>
-            <div class="role-label">Admin</div>
-            <div class="role-desc">Review &amp; approve booking requests</div>
-            <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
+
+          <!-- Public Calendar Access -->
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-top:0.5rem;">
+            <div style="flex:1; height:1px; background:var(--surface-border);"></div>
+            <span style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">or</span>
+            <div style="flex:1; height:1px; background:var(--surface-border);"></div>
+          </div>
+
+          <button type="button" id="publicCalendarBtn" class="btn" style="width:100%; background:rgba(6,182,212,0.07); border:1px solid rgba(6,182,212,0.25); color:#0891b2; font-weight:700; font-size:0.88rem; border-radius:12px; padding:0.75rem; transition:all 0.2s ease;">
+            <i data-lucide="calendar-days" style="width:16px;height:16px;"></i>
+            <span>View Campus Calendar</span>
+            <i data-lucide="arrow-right" style="width:14px;height:14px; margin-left:auto;"></i>
           </button>
-          <button class="role-card" id="btnSuperAdminLogin">
-            <div class="role-icon superadmin-icon" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6;"><i data-lucide="shield-alert"></i></div>
-            <div class="role-label">Super Admin</div>
-            <div class="role-desc">Full system administration &amp; settings</div>
-            <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
-          </button>
-          <button class="role-card" id="btnCalendarViewLogin">
-            <div class="role-icon calendar-view-icon"><i data-lucide="calendar-days"></i></div>
-            <div class="role-label">Calendar View</div>
-            <div class="role-desc">View-only access to the campus booking schedule</div>
-            <div class="role-arrow"><i data-lucide="arrow-right"></i></div>
-          </button>
+        </form>
+
+        <div class="login-footer" style="display:flex; flex-direction:column; align-items:center; gap:0.25rem;">
+          <span>Owned by Transcend Group of Institutions</span>
+          <span style="font-size:0.68rem; color:var(--text-muted); opacity:0.7;">Developed by <strong style="color:var(--primary);">Start Smart by SE</strong></span>
         </div>
+      </div>
+    </div>
 
-        <div class="login-footer">Transcend Group of Institutions 2026</div>
+    <!-- ══════════════════════════════════════
+         CHANGE PASSWORD (first_login gate)
+    ══════════════════════════════════════ -->
+    <div id="changePasswordView" class="login-container hidden">
+      <div class="login-card animate-slide-up" style="max-width:420px;">
+        <div class="auth-icon-wrap" style="text-align:center; margin-bottom:1.25rem;">
+          <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#a78bfa);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(124,58,237,0.3);">
+            <i data-lucide="shield-check" style="width:28px;height:28px;color:white;"></i>
+          </div>
+        </div>
+        <h2 style="text-align:center;">Set Your Password</h2>
+        <p class="login-subtitle" style="text-align:center;">This is your first login. Please create a secure new password to continue.</p>
+
+        <form id="changePasswordForm" class="auth-form" novalidate style="margin-top:1.5rem;">
+          <div class="form-group" id="currentPasswordGroup">
+            <label for="currentPassword">Current Password</label>
+            <div class="input-wrapper" style="position:relative;">
+              <i data-lucide="lock"></i>
+              <input type="password" id="currentPassword" placeholder="Enter current password" required autocomplete="current-password" />
+              <button type="button" id="toggleCurrentPwd" class="pwd-toggle-btn" tabindex="-1">
+                <i data-lucide="eye" id="toggleCurrentPwdIcon"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <div class="input-wrapper" style="position:relative;">
+              <i data-lucide="lock"></i>
+              <input type="password" id="newPassword" placeholder="At least 8 characters" required autocomplete="new-password" />
+              <button type="button" id="toggleNewPwd" class="pwd-toggle-btn" tabindex="-1">
+                <i data-lucide="eye" id="toggleNewPwdIcon"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <div class="input-wrapper" style="position:relative;">
+              <i data-lucide="lock"></i>
+              <input type="password" id="confirmPassword" placeholder="Re-enter password" required autocomplete="new-password" />
+              <button type="button" id="toggleConfirmPwd" class="pwd-toggle-btn" tabindex="-1">
+                <i data-lucide="eye" id="toggleConfirmPwdIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Password strength bar -->
+          <div class="pwd-strength-wrap">
+            <div class="pwd-strength-bar" id="pwdStrengthBar"></div>
+          </div>
+          <div id="pwdStrengthLabel" class="pwd-strength-label"></div>
+
+          <div id="changePwdError" class="auth-error hidden"></div>
+
+          <button type="submit" class="btn btn-primary btn-submit" id="changePwdBtn" style="width:100%; margin-top:0.5rem; background:linear-gradient(135deg,#7c3aed,#a78bfa); box-shadow:0 4px 15px rgba(124,58,237,0.3);">
+            <span id="changePwdBtnText">Set Password &amp; Continue</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+          
+          <button type="button" class="btn btn-ghost" id="cancelChangePwdBtn" style="width:100%; margin-top:0.5rem; display:none;">
+            <span>Cancel and Go Back</span>
+          </button>
+        </form>
       </div>
     </div>
 
@@ -85,14 +194,33 @@
 
       <!-- PAGE: Amenities -->
       <div id="pageFacultyAmenities">
-        <header class="hero">
-          <div class="hero-badge animate-fade">
-            <i data-lucide="sparkles"></i>
-            <span>Faculty Space Reservation Hub</span>
-          </div>
-          <h1 class="animate-slide-up">Reserve Academic Spaces</h1>
-          <p class="animate-slide-up delay-1">Select a facility, pick a date and time slot, and send your booking for admin approval.</p>
-        </header>
+        <!-- Hero: 3-column layout -->
+        <div class="hero-split-wrapper">
+          <!-- Left image grid -->
+          <div class="hero-img-panel" id="heroImgLeft"></div>
+
+          <!-- Center hero content -->
+          <header class="hero hero-center">
+            <div class="hero-badge animate-fade">
+              <i data-lucide="sparkles"></i>
+              <span>Faculty Space Reservation Hub</span>
+            </div>
+            <h1 class="animate-slide-up">Reserve Academic Spaces</h1>
+            <p class="animate-slide-up delay-1">Select a facility, pick a date and time slot, and send your booking for admin approval.</p>
+
+            <!-- Superadmin-only: add image button -->
+            <div id="heroImageAdminPanel" style="display:none; margin-top:1.2rem;">
+              <label for="heroImageUploadInput" class="hero-upload-btn">
+                <i data-lucide="image-plus" style="width:15px;height:15px;"></i>
+                Add Gallery Image
+              </label>
+              <input type="file" id="heroImageUploadInput" accept="image/*" style="display:none;" multiple />
+            </div>
+          </header>
+
+          <!-- Right image grid -->
+          <div class="hero-img-panel" id="heroImgRight"></div>
+        </div>
 
         <div class="content-container animate-fade delay-2">
           <!-- Search Bar -->
@@ -155,6 +283,29 @@
             <button class="filter-btn" data-status="REJECTED">Rejected</button>
           </div>
           <div id="myBookingsList"></div>
+        </div>
+      </div>
+      <!-- PAGE: Settings -->
+      <div id="pageFacultySettings" class="hidden">
+        <header class="hero">
+          <div class="hero-badge animate-fade">
+            <i data-lucide="settings"></i>
+            <span>Account Configurations</span>
+          </div>
+          <h1 class="animate-slide-up">Settings</h1>
+          <p class="animate-slide-up delay-1">Manage your account preferences and security settings.</p>
+        </header>
+        <div class="content-container animate-fade delay-2">
+          <div class="settings-card card" style="max-width: 600px; margin: 0 auto;">
+            <div class="card-body">
+              <h3 class="card-title">Security &amp; Password</h3>
+              <p class="card-desc">Keep your account secure by periodically updating your password.</p>
+              <button class="btn btn-primary open-change-pwd-btn" type="button">
+                <i data-lucide="lock"></i>
+                <span>Change Password</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -270,23 +421,33 @@
 
               <!-- Add User Form (hidden by default) -->
               <div id="addUserFormContainer" class="hidden" style="margin-bottom:1.5rem; padding:1.25rem; border:1px dashed var(--surface-border); border-radius:16px; background:rgba(255,255,255,0.4);">
-                <h4 style="font-weight:800; margin-bottom:0.75rem;">Register New User</h4>
+                <h4 style="font-weight:800; margin-bottom:0.75rem;">Pre-Create New User</h4>
+                <div id="addUserServerError" class="auth-error hidden" style="margin-bottom:0.75rem;"></div>
                 <div style="display:flex; flex-direction:column; gap:0.75rem;">
                   <div class="form-group">
                     <label style="font-size:0.68rem;">Full Name</label>
                     <input type="text" id="addUserNameInput" placeholder="e.g. Dr. Fiona Gallagher" style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem;" />
                   </div>
                   <div class="form-group">
-                    <label style="font-size:0.68rem;">Department / Role</label>
-                    <input type="text" id="addUserRoleInput" placeholder="e.g. Biology Professor" style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem;" />
+                    <label style="font-size:0.68rem;">Email Address</label>
+                    <input type="email" id="addUserEmailInput" placeholder="e.g. fiona@transcend.edu.in" style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem;" />
                   </div>
                   <div class="form-group">
-                    <label style="font-size:0.68rem;">Contact Number</label>
-                    <input type="text" id="addUserContactInput" placeholder="e.g. +1 (555) 012-3456" style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem;" />
+                    <label style="font-size:0.68rem;">Portal Role</label>
+                    <select id="addUserRoleSelect" style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem; background:white; height:36px;">
+                      <option value="faculty">Faculty</option>
+                      <option value="admin">Admin</option>
+                      <option value="viewer">Viewer (Calendar only)</option>
+                      <option value="superadmin">Super Admin</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label style="font-size:0.68rem;">Temporary Password</label>
+                    <input type="text" id="addUserTempPwdInput" placeholder="e.g. Welcome@123" style="width:100%; padding:0.5rem; border:1px solid var(--surface-border); border-radius:8px; font-size:0.85rem; font-family:monospace;" />
                   </div>
                   <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:0.25rem;">
                     <button class="btn btn-secondary" onclick="window.toggleAddUserForm()" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Cancel</button>
-                    <button class="btn btn-primary" onclick="window.submitAddUser()" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Save User</button>
+                    <button class="btn btn-primary" id="saveUserBtn" onclick="window.submitAddUser()" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Create User</button>
                   </div>
                 </div>
               </div>
@@ -296,8 +457,9 @@
                 <table class="admin-table">
                   <thead>
                     <tr>
-                      <th>Name / Role</th>
-                      <th>Contact</th>
+                      <th>Name / Email</th>
+                      <th>Role</th>
+                      <th>Status</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -490,46 +652,32 @@
             </div>
           </div>
         </div>
-      </div><!-- /pageAdminDashboard -->
+      <!-- PAGE: Admin Settings -->
+      <div id="pageAdminSettings" class="hidden">
+        <header class="hero">
+          <div class="hero-badge animate-fade">
+            <i data-lucide="settings"></i>
+            <span>System Preferences</span>
+          </div>
+          <h1 class="animate-slide-up">Settings</h1>
+          <p class="animate-slide-up delay-1">Manage your administrator account security settings.</p>
+        </header>
+        <div class="content-container animate-fade delay-2">
+          <div class="settings-card card" style="max-width: 600px; margin: 0 auto;">
+            <div class="card-body">
+              <h3 class="card-title">Security &amp; Password</h3>
+              <p class="card-desc">Update your administrator account password to keep management actions secure.</p>
+              <button class="btn btn-primary open-change-pwd-btn" type="button">
+                <i data-lucide="lock"></i>
+                <span>Change Password</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div><!-- /adminPortal -->
 
-    <!-- ══════════════════════════════════════
-         CALENDAR VIEW PORTAL (Read-Only)
-    ══════════════════════════════════════ -->
-    <div id="calendarViewPortal" class="hidden">
-      <!-- Minimal top bar for calendar-only access -->
-      <div class="cal-view-topbar">
-        <div class="cal-view-topbar-inner">
-          <div class="logo">
-            <img src="./logo.png" alt="Transcend Logo" class="logo-img" />
-          </div>
-          <div class="cal-view-topbar-title">
-            <i data-lucide="calendar-days" style="width:18px;height:18px;color:var(--primary);"></i>
-            <span>Campus Booking Schedule</span>
-            <span class="cal-view-badge">View Only</span>
-          </div>
-          <button class="btn btn-ghost" id="calViewLogoutBtn" style="font-size:0.85rem;">
-            <i data-lucide="log-out" style="width:15px;height:15px;"></i>
-            <span>Exit</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="cal-view-content">
-        <header class="hero" style="padding-top:8rem;">
-          <div class="hero-badge animate-fade">
-            <i data-lucide="calendar"></i>
-            <span>Read-Only Schedule</span>
-          </div>
-          <h1 class="animate-slide-up">Campus Booking Calendar</h1>
-          <p class="animate-slide-up delay-1">Browse all approved and pending facility reservations across campus.</p>
-        </header>
-        <div class="content-container animate-fade delay-2">
-          <div id="calendarViewWrapper" class="custom-calendar"></div>
-        </div>
-      </div>
-    </div><!-- /calendarViewPortal -->
 
   </main>
 
@@ -643,6 +791,13 @@
           </div>
         </div>
 
+        <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+          <label style="display:inline-flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:700; color:var(--text-main); font-size:0.85rem; margin: 0;">
+            <input type="checkbox" id="bookingExternal" style="width:16px; height:16px; accent-color:var(--primary); cursor:pointer;" />
+            <span style="display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="external-link" style="width: 14px; height: 14px;"></i> External Meeting</span>
+          </label>
+        </div>
+
         <div class="form-group recurring-container" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
           <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid var(--surface-border);">
             <label style="display:inline-flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:700; color:var(--text-main); font-size:0.85rem; margin: 0;">
@@ -706,6 +861,19 @@
       </form>
     </div>
   </div>
+
+  <!-- ══════════════════════════════════════
+       CALENDAR VIEW PORTAL (Read-Only / Public)
+  ══════════════════════════════════════ -->
+  <div id="calendarViewPortal" style="display:none; position:fixed; inset:0; background:#ffffff; z-index:9999; overflow-y:auto; padding:2rem;">
+    <button id="calViewLogoutBtn" class="btn btn-secondary" style="position:fixed; top:1rem; right:1.5rem; z-index:10000; display:flex; align-items:center; gap:0.5rem; border-radius:30px; padding:0.5rem 1.25rem; box-shadow:0 4px 12px rgba(0,0,0,0.1); background:white; border:1px solid rgba(0,0,0,0.1);">
+      <i data-lucide="arrow-left" style="width:15px; height:15px;"></i>
+      <span>Exit View</span>
+    </button>
+    <div style="max-width:1200px; margin:0 auto; padding-top:1rem;">
+      <div id="calendarViewWrapper" class="custom-calendar"></div>
+    </div>
+  </div><!-- /calendarViewPortal -->
 
   <script type="module" src="./main.js"></script>
 </body>

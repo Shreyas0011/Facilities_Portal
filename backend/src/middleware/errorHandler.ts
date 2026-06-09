@@ -1,21 +1,31 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const errorHandler = (
-  err: Error & { statusCode?: number; code?: string },
-  req: Request,
+  err: Error & { statusCode?: number; code?: number | string },
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   console.error('Error:', err.message);
-  console.error('Stack:', err.stack);
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Stack:', err.stack);
+  }
 
-  // Prisma errors
-  if (err.code === 'P2002') {
+  // MongoDB duplicate key error
+  if (err.code === 11000) {
     res.status(409).json({ error: 'A record with this value already exists.' });
     return;
   }
-  if (err.code === 'P2025') {
-    res.status(404).json({ error: 'Record not found.' });
+
+  // Mongoose CastError (invalid ObjectId)
+  if (err.name === 'CastError') {
+    res.status(400).json({ error: 'Invalid ID format.' });
+    return;
+  }
+
+  // Mongoose ValidationError
+  if (err.name === 'ValidationError') {
+    res.status(400).json({ error: err.message });
     return;
   }
 

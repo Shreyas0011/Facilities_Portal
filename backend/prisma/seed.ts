@@ -7,30 +7,137 @@ async function main() {
   console.log('Seeding database...');
 
   // 1. Create Super Admin
-  const hashedPassword = await bcrypt.hash('password123', 12);
+  const hashedPassword = await bcrypt.hash('Transcend@2026', 12);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@campus.edu' },
-    update: {},
+    update: { name: 'Dr. Robert Chen' },
     create: {
-      name: 'Super Admin',
+      name: 'Dr. Robert Chen',
       email: 'admin@campus.edu',
       password: hashedPassword,
-      role: 'SUPER_ADMIN',
+      role: 'superadmin',
       department: 'Administration',
     },
   });
 
-  const student = await prisma.user.upsert({
-    where: { email: 'student@campus.edu' },
+  const superAdmin1 = await prisma.user.upsert({
+    where: { email: 'prasannak@transcendgroup.org' },
+    update: { name: 'Prasanna Kumar K' },
+    create: {
+      name: 'Prasanna Kumar K',
+      email: 'prasannak@transcendgroup.org',
+      password: hashedPassword,
+      role: 'superadmin',
+      department: 'Administration',
+    },
+  });
+
+  const superAdmin2 = await prisma.user.upsert({
+    where: { email: 'pankajmatta@transcendgroup.org' },
+    update: { name: 'Pankaj M' },
+    create: {
+      name: 'Pankaj M',
+      email: 'pankajmatta@transcendgroup.org',
+      password: hashedPassword,
+      role: 'superadmin',
+      department: 'Administration',
+    },
+  });
+
+  const superAdmin3 = await prisma.user.upsert({
+    where: { email: 'siddharthkt@transcendgroup.org' },
+    update: { name: 'Siddharth K T' },
+    create: {
+      name: 'Siddharth K T',
+      email: 'siddharthkt@transcendgroup.org',
+      password: hashedPassword,
+      role: 'superadmin',
+      department: 'Administration',
+    },
+  });
+
+  const superAdmin4 = await prisma.user.upsert({
+    where: { email: 'shwethas@transcendgroup.org' },
+    update: { name: 'Shwetha S' },
+    create: {
+      name: 'Shwetha S',
+      email: 'shwethas@transcendgroup.org',
+      password: hashedPassword,
+      role: 'superadmin',
+      department: 'Administration',
+    },
+  });
+
+  const viewer = await prisma.user.upsert({
+    where: { email: 'viewer@campus.edu' },
     update: {},
     create: {
-      name: 'Demo Student',
-      email: 'student@campus.edu',
+      name: 'Demo Viewer',
+      email: 'viewer@campus.edu',
       password: hashedPassword,
-      role: 'STUDENT',
+      role: 'viewer',
       department: 'Computer Science',
     },
   });
+
+  const viewersData = [
+    { name: 'Ravi Kiran T N', email: 'ravikiran.tn@transcendgroup.org' },
+    { name: 'Parimala S', email: 'parimalas@transcendgroup.org' },
+    { name: 'Shruthi T R', email: 'shruthi.tr@transcendgroup.org' },
+    { name: 'Divya J', email: 'divya.j@transcendgroup.org' },
+    { name: 'R. Kokila', email: 'kokila.r@transcendgroup.org' },
+    { name: 'Pooja Dikshith S', email: 'poojadeekshith.s@transcendgroup.org' },
+    { name: 'Vani Sridhar', email: 'vani.sridhar@transcendgroup.org' },
+    { name: 'Rashmi Raghuram', email: 'rashmi.r@transcendgroup.org' },
+    { name: 'SHRUTHI BL', email: 'shruthibl@transcendgroup.org' },
+    { name: 'Swati S Pandit', email: 'swatipandit@transcendgroup.org' },
+    { name: 'Meghana Bangalore', email: 'meghana@transcendgroup.org' },
+    { name: 'Narasimhaiah K', email: 'narasimhaiahk@transcendgroup.org' },
+    { name: 'Vani S Rao', email: 'vani.rao@transcendgroup.org' },
+    { name: 'Shravana Kumar', email: 'shravana.k@transcendgroup.org' },
+    { name: 'Dr. K R Shashikala', email: 'shashikalarao@transcendgroup.org' },
+    { name: 'Agnel Trivikram G', email: 'agneltrivikramg@transcendgroup.org' },
+    { name: 'Jessy Mathew', email: 'jessymathew@transcendgroup.org' },
+    { name: 'Roopa Kambam', email: 'roopakambam@transcendgroup.org' },
+    { name: 'Prashanth Jadav J', email: 'prashanth.j@transcendgroup.org' },
+    { name: 'Reshma Belagaje', email: 'reshma.b@transcendgroup.org' },
+    { name: 'G Shushma', email: 'shushma.g@transcendgroup.org' },
+    { name: 'Pallavi A', email: 'pallavi.a@transcendgroup.org' }
+  ];
+
+  for (const v of viewersData) {
+    await prisma.user.upsert({
+      where: { email: v.email },
+      update: { name: v.name },
+      create: {
+        name: v.name,
+        email: v.email,
+        password: hashedPassword,
+        role: 'viewer',
+        department: 'General',
+      },
+    });
+  }
+
+  const adminsData = [
+    { name: 'Prasad K', email: 'prasad@transcendgroup.org' },
+    { name: 'Niranjan D G', email: 'niranjan.dg@transcendgroup.org' },
+    { name: 'Padmaja N', email: 'padmaja@transcendgroup.org' }
+  ];
+
+  for (const a of adminsData) {
+    await prisma.user.upsert({
+      where: { email: a.email },
+      update: { name: a.name, role: 'admin' },
+      create: {
+        name: a.name,
+        email: a.email,
+        password: hashedPassword,
+        role: 'admin',
+        department: 'Administration',
+      },
+    });
+  }
 
   const faculty = await prisma.user.upsert({
     where: { email: 'faculty@campus.edu' },
@@ -39,25 +146,56 @@ async function main() {
       name: 'Prof. Jenkins',
       email: 'faculty@campus.edu',
       password: hashedPassword,
-      role: 'FACULTY',
+      role: 'faculty',
       department: 'Physics',
     },
   });
 
+  const facultiesData = [
+    { name: 'Brinda R', email: 'brindar@transcendgroup.org' },
+    { name: 'Annapoorna M', email: 'annapoornam@transcendgroup.org' },
+    { name: 'Aparna Barengai', email: 'aparna.b@transcendgroup.org' },
+    { name: 'C. Sree Lakshmi M', email: 'sreelakshmimenon@transcendgroup.org' },
+    { name: 'Sneha Alok', email: 'snehaalok@transcendgroup.org' },
+    { name: 'Aarthy Vasudevan', email: 'aarthy.v@transcendgroup.org' },
+    { name: 'Akshaykumar Kulkarni', email: 'akshaykumarkulkarni@transcendgroup.org' },
+    { name: 'Prathima S', email: 'prathimas@transcendgroup.org' },
+    { name: 'Anusha Balaji', email: 'anusha.b@transcendgroup.org' },
+    { name: 'SWATHI K IYER', email: 'swathi.iyer@transcendgroup.org' }
+  ];
+
+  for (const f of facultiesData) {
+    await prisma.user.upsert({
+      where: { email: f.email },
+      update: { name: f.name },
+      create: {
+        name: f.name,
+        email: f.email,
+        password: hashedPassword,
+        role: 'faculty',
+        department: 'Academic',
+      },
+    });
+  }
+
   const manager = await prisma.user.upsert({
     where: { email: 'manager@campus.edu' },
-    update: {},
+    update: { name: 'Mr. John Doe' },
     create: {
-      name: 'Facility Manager',
+      name: 'Mr. John Doe',
       email: 'manager@campus.edu',
       password: hashedPassword,
-      role: 'ADMIN',
+      role: 'admin',
       department: 'Estate Office',
     },
   });
 
   console.log(`Created admin user: ${admin.email}`);
-  console.log(`Created student user: ${student.email}`);
+  console.log(`Created super admin user: ${superAdmin1.email}`);
+  console.log(`Created super admin user: ${superAdmin2.email}`);
+  console.log(`Created super admin user: ${superAdmin3.email}`);
+  console.log(`Created super admin user: ${superAdmin4.email}`);
+  console.log(`Created viewer user: ${viewer.email}`);
   console.log(`Created faculty user: ${faculty.email}`);
   console.log(`Created manager user: ${manager.email}`);
 

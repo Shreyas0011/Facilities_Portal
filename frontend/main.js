@@ -1,34 +1,19 @@
 /* =========================================
+   REDUX IMPORT
+   ========================================= */
+import { store } from './src/store/index.js';
+import { loginUser, fetchMe, logout as logoutAction, changePassword } from './src/store/authSlice.js';
+import { fetchFacilities, fetchBookings, fetchMyBookings, createBooking, updateBookingStatus } from './src/store/dataSlice.js';
+
+console.log("MAIN LOADED");
+console.log("REDUX STORE INITIALIZED", store.getState());
+
+/* =========================================
    DATA
    ========================================= */
-const facilities = [
-  { id: "mph",                 label: "MPH",                   icon: "warehouse",      capacity: "300",         available: true,  category: "academic",   location: "TPU Com",        desc: "Multi-purpose hall for indoor sports, assemblies, and events.", image: null },
-  { id: "pcr_1",               label: "PCR 1",                 icon: "presentation",   capacity: "30",          available: true,  category: "academic",   location: "TPU Com",        desc: "Smart classroom equipped with modern presentation resources.", image: null },
-  { id: "pcr_2",               label: "PCR 2",                 icon: "presentation",   capacity: "30",          available: true,  category: "academic",   location: "TPU Com",        desc: "Collaborative learning space with high-speed internet and displays.", image: null },
-  { id: "pcr_4",               label: "PCR 4",                 icon: "presentation",   capacity: "30",          available: true,  category: "academic",   location: "TPU Com",        desc: "Dedicated presentation room with hybrid conferencing setup.", image: null },
-  { id: "av_room",             label: "AV Room",               icon: "clapperboard",   capacity: "50",          available: true,  category: "academic",   location: "TPU Com",        desc: "Acoustically treated room for media preview and small screenings.", image: null },
-  { id: "comp_lab_1",          label: "Comp Lab 1",            icon: "monitor",        capacity: "40",          available: true,  category: "academic",   location: "TPU Com",        desc: "Computer lab featuring workstations with specialized software.", image: null },
-  { id: "comp_lab_2",          label: "Comp Lab 2",            icon: "monitor",        capacity: "40",          available: true,  category: "academic",   location: "TPU Com",        desc: "Advanced programming and database systems laboratory room.", image: null },
-  { id: "swimming",            label: "Swimming",              icon: "waves",          capacity: "Open Space",  available: true,  category: "recreation", location: "Sports Complex", desc: "Half-Olympic size indoor swimming pool with temperature controls.", image: null },
-  { id: "fitness",             label: "Fitness",               icon: "dumbbell",       capacity: "50",          available: true,  category: "recreation", location: "Sports Complex", desc: "Fully equipped gymnasium with cardio machines and weights.", image: null },
-  { id: "bb",                  label: "BB",                    icon: "basketball",     capacity: "Open Space",  available: true,  category: "recreation", location: "Sports Complex", desc: "Indoor wooden-floor court for basketball games and practice.", image: null },
-  { id: "bt",                  label: "BT",                    icon: "swords",         capacity: "Open Space",  available: true,  category: "recreation", location: "Sports Complex", desc: "Multi-court indoor badminton facility with synthetic flooring.", image: null },
-  { id: "revel",               label: "Revel",                 icon: "disc",           capacity: "50",          available: true,  category: "recreation", location: "Sports Complex", desc: "Recreation lounge and dynamic student activities hub.", image: null },
-  { id: "indoor_play",         label: "Indoor Play Area",      icon: "smile",          capacity: "Open Space",  available: true,  category: "recreation", location: "TPU Sci",        desc: "Indoor recreational play area for table games and activities.", image: null },
-  { id: "auditorium",          label: "Auditorium",            icon: "mic-2",          capacity: "500",         available: false, category: "media",      location: "TPU Sci",        desc: "Grand auditorium with 500-seat capacity, surround PA system, and backstage.", image: null },
-  { id: "turf_lg_1",           label: "Turf LG 1",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Outdoor artificial grass turf for football and athletic sessions.", image: null },
-  { id: "turf_lg_2",           label: "Turf LG 2",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Lower ground football turf with floodlight support.", image: null },
-  { id: "turf_lg_3",           label: "Turf LG 3",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Premium synthetic grass field for training and matches.", image: null },
-  { id: "turf_lg_4",           label: "Turf LG 4",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Additional outdoor lower ground sports pitch.", image: null },
-  { id: "turf_ug_5",           label: "Turf UG 5",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Upper ground turf suitable for small-sided games and practice.", image: null },
-  { id: "turf_ug_6",           label: "Turf UG 6",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Upper ground synthetic field with spectator seating.", image: null },
-  { id: "turf_ug_7",           label: "Turf UG 7",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Synthetic multi-sport grass turf on the upper level.", image: null },
-  { id: "turf_ug_8",           label: "Turf UG 8",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Dedicated practice pitch on the upper level complex.", image: null },
-  { id: "tgis_turf",           label: "TGIS Turf",             icon: "award",          capacity: "Open Space",  available: true,  category: "recreation", location: "TGIS",           desc: "TGIS campus sports turf for tournaments and training.", image: null },
-  { id: "tgis_dance",          label: "TGIS Dance & Fitness",  icon: "activity",       capacity: "40",          available: true,  category: "recreation", location: "TGIS",           desc: "TGIS studio with full-length mirrors and wooden flooring.", image: null },
-  { id: "tgis_karate",         label: "TGIS Karate",           icon: "shield",         capacity: "30",          available: true,  category: "recreation", location: "TGIS",           desc: "TGIS martial arts training room with safety mats and bags.", image: null },
-  { id: "tt",                  label: "TT",                    icon: "table",          capacity: "8",           available: true,  category: "recreation", location: "Boys Hostel",    desc: "Table tennis room with tournament-grade tables in Boys Hostel.", image: null }
-];
+let facilities = [];
+let bookings = [];
+let users = [];
 
 const categories = [
   { id: "all",        label: "All Amenities" },
@@ -37,35 +22,32 @@ const categories = [
   { id: "recreation", label: "Recreation" },
 ];
 
-// Shared bookings store
-const bookings = [
-  { id: 1, facility: "Auditorium",     purpose: "Annual Research Colloquium Keynote",    status: "APPROVED", date: "2026-10-24", time: "09:00 – 12:00", attendees: 150, requirements: "Stage setup, wireless microphones, slide clicker", requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair",      facilityId: "auditorium", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834" },
-  { id: 2, facility: "AV Room",        purpose: "Micro-Lecture Series Recording",        status: "PENDING",  date: "2026-10-25", time: "14:00 – 15:30", attendees: 4,   requirements: "High-quality audio interface, 2 condenser microphones", requester: "Prof. Alex Mercer",  requesterRole: "Media Studies",    facilityId: "av_room", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
-  { id: 3, facility: "MPH",            purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "2026-10-26", time: "11:00 – 13:00", attendees: 25,  requirements: "Projector, whiteboard markers", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "mph", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849" },
-  { id: 4, facility: "PCR 1",          purpose: "Makeup Class for Applied Machine Learning", status: "APPROVED", date: "2026-10-27", time: "10:00 – 12:00", attendees: 45,  requirements: "Projector, whiteboard, slide clicker", requester: "Prof. Alex Mercer",  requesterRole: "Computer Science", facilityId: "pcr_1", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
-  { id: 5, facility: "BB",             purpose: "Inter-department Basketball Match",  status: "APPROVED", date: "2026-10-28", time: "17:00 – 19:30", attendees: 80,  requirements: "Scoreboard access, extra chairs", requester: "Dr. Sarah Jenkins", requesterRole: "Athletics Board", facilityId: "bb", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834" },
-  { id: 6, facility: "PCR 1",          purpose: "Student Club Brainstorming Session",     status: "CANCELLED", date: "2026-10-22", time: "15:00 – 17:00", attendees: 15,  requirements: "None", requester: "Prof. Alex Mercer",  requesterRole: "Club Advisor",    facilityId: "pcr_1", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
-  { id: 7, facility: "PCR 2",          purpose: "Corporate Tech Seminar",       status: "REJECTED",  date: "2026-10-20", time: "09:00 – 13:00", attendees: 110, requirements: "Dual screen projector, premium audio", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "pcr_2", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849" }
-];
+// Subscribe to store updates
+store.subscribe(() => {
+  const state = store.getState();
+  facilities = state.data.facilities || [];
+  bookings = state.data.bookings || [];
+  if (state.auth.user) {
+    currentUserProfile = state.auth.user;
+    currentRole = currentUserProfile.role;
+  }
+});
 
-let users = [
-  { id: 1, name: "Dr. Sarah Jenkins", role: "Dept. Chair", contact: "+1 (555) 019-2834" },
-  { id: 2, name: "Prof. Alex Mercer", role: "Computer Science", contact: "+1 (555) 014-9821" },
-  { id: 3, name: "Dr. Aris Thorne", role: "Physics Professor", contact: "+1 (555) 017-3849" }
-];
 
 /* =========================================
    STATE
    ========================================= */
 let searchQuery       = "";
 let selectedFacility  = null;
-let currentRole       = null;         // "faculty" | "admin"
+let currentRole       = null;         // "superadmin" | "admin" | "faculty" | "viewer"
+let currentUserProfile = null;        // { id, name, email, role, first_login }
 let facultyPage       = "amenities";  // "amenities" | "calendar" | "myBookings"
 let adminPage         = "queue";      // "queue" | "calendar"
 let myBookingsFilter  = "all";
 let pendingCancellationBookingId = null;
 let pendingCancellationStatus = "REJECTED";
 let uploadedVenueImageBase64 = null;
+let supabaseUsers     = [];           // profiles fetched from Supabase for Manage page
 
 /* =========================================
    DOM REFS
@@ -75,15 +57,11 @@ const navLinks         = document.getElementById("navLinks");
 const navUserBadge     = document.getElementById("navUserBadge");
 const logoutBtn        = document.getElementById("logoutBtn");
 
-const loginView        = document.getElementById("loginView");
-const facultyPortal    = document.getElementById("facultyPortal");
-const adminPortal      = document.getElementById("adminPortal");
+const loginView          = document.getElementById("loginView");
+const changePasswordView = document.getElementById("changePasswordView");
+const facultyPortal      = document.getElementById("facultyPortal");
+const adminPortal        = document.getElementById("adminPortal");
 const calendarViewPortal = document.getElementById("calendarViewPortal");
-
-const btnFacultyLogin  = document.getElementById("btnFacultyLogin");
-const btnAdminLogin    = document.getElementById("btnAdminLogin");
-const btnSuperAdminLogin = document.getElementById("btnSuperAdminLogin");
-const btnCalendarViewLogin = document.getElementById("btnCalendarViewLogin");
 
 // Faculty pages
 const pageFacultyAmenities  = document.getElementById("pageFacultyAmenities");
@@ -105,45 +83,372 @@ const closeModalBtn = document.getElementById("closeModal");
 const bookingForm   = document.getElementById("bookingForm");
 
 /* =========================================
-   LOGIN GATE
+   HELPERS: hide / show all view panels
    ========================================= */
-btnFacultyLogin.addEventListener("click", () => login("faculty"));
-btnAdminLogin.addEventListener("click",   () => login("admin"));
-if (btnSuperAdminLogin) {
-  btnSuperAdminLogin.addEventListener("click", () => login("superadmin"));
-}
-if (btnCalendarViewLogin) {
-  btnCalendarViewLogin.addEventListener("click", () => login("calendarView"));
-}
-
-function login(role) {
-  currentRole = role;
+function hideAllViews() {
   loginView.classList.add("hidden");
+  if (changePasswordView) changePasswordView.classList.add("hidden");
+  facultyPortal.classList.add("hidden");
+  adminPortal.classList.add("hidden");
+  calendarViewPortal.style.display = "none";
+  mainNavbar.classList.add("hidden");
+  const tempPasswordBanner = document.getElementById("tempPasswordBanner");
+  if (tempPasswordBanner) tempPasswordBanner.classList.add("hidden");
+}
 
-  if (role === "calendarView") {
-    // Calendar-only view: no navbar, just the read-only calendar portal
-    mainNavbar.classList.add("hidden");
-    facultyPortal.classList.add("hidden");
-    adminPortal.classList.add("hidden");
+/* =========================================
+   AUTH FLOW — Supabase
+   ========================================= */
+
+// ── Login form submit ──────────────────────────────────────────────────
+const loginForm       = document.getElementById("loginForm");
+const loginErrorEl    = document.getElementById("loginError");
+const loginSubmitBtn  = document.getElementById("loginSubmitBtn");
+const loginBtnText    = document.getElementById("loginBtnText");
+
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    if (!email || !password) {
+      showAuthError(loginErrorEl, "Please enter your email and password.");
+      return;
+    }
+
+    setLoginLoading(true);
+    loginErrorEl.classList.add("hidden");
+
+    try {
+      console.log("STEP 1 - Login button clicked", { email });
+      
+      console.log("BEFORE AUTH");
+      const resultAction = await store.dispatch(loginUser({ email, password }));
+      
+      if (loginUser.rejected.match(resultAction)) {
+        showAuthError(loginErrorEl, resultAction.payload || "Invalid username or password");
+        return;
+      }
+
+      console.log("AFTER AUTH");
+      const user = resultAction.payload.user;
+      
+      currentUserProfile = user;
+      currentRole = user.role;
+
+      // Check first_login property if it exists, otherwise false
+      const isFirstLogin = user.first_login;
+
+      console.log("STEP 5 - About to route user", {
+        role: user.role,
+        first_login: isFirstLogin
+      });
+
+      enterDashboard(user.role);
+      console.log("STEP 6 - Route complete");
+    } catch (err) {
+      console.error("LOGIN EXCEPTION", err);
+      showAuthError(loginErrorEl, "Invalid username or password");
+    } finally {
+      setLoginLoading(false);
+    }
+  });
+}
+
+function setLoginLoading(loading) {
+  if (!loginSubmitBtn) return;
+  loginSubmitBtn.disabled = loading;
+  if (loginBtnText) loginBtnText.textContent = loading ? "Signing in…" : "Sign In";
+}
+
+// ── Public Calendar Button (no login required) ─────────────────────────
+const publicCalendarBtn = document.getElementById("publicCalendarBtn");
+if (publicCalendarBtn) {
+  publicCalendarBtn.addEventListener("click", showPublicCalendar);
+}
+
+async function showPublicCalendar() {
+  const btn = document.getElementById("publicCalendarBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "Loading..."; }
+
+  try {
+    const [facRes, bookRes] = await Promise.all([
+      fetch('http://localhost:5000/api/facilities'),
+      fetch('http://localhost:5000/api/bookings/public'),
+    ]);
+    if (!facRes.ok) throw new Error(`Facilities fetch failed (${facRes.status})`);
+    if (!bookRes.ok) throw new Error(`Bookings fetch failed (${bookRes.status})`);
+
+    const facData  = await facRes.json();
+    const bookData = await bookRes.json();
+
+    facilities = (facData.facilities || []).map(f => ({
+      id: f.id || f._id, label: f.name, icon: f.icon || 'building',
+      capacity: String(f.capacity), available: f.isActive,
+      category: f.category || 'academic', location: f.location,
+      desc: f.description, image: f.images?.[0] || null,
+    }));
+
+    bookings = (bookData.bookings || []).map(b => ({
+      id: b.id || b._id,
+      facility:      b.facilityId?.name || 'Unknown Facility',
+      facilityId:    b.facilityId?.id   || b.facilityId?._id || b.facilityId,
+      purpose:       b.purpose,   status: b.status,
+      date:          b.date ? b.date.split('T')[0] : '',
+      time:          `${b.startTime} - ${b.endTime}`,
+      attendees:     b.attendeesCount, requirements: b.requirements,
+      requester:     b.userId?.name || 'Unknown',
+      requesterId:   b.userId?._id  || b.userId?.id || null,
+      requesterRole: b.userId?.role || '', cancelReason: b.notes,
+    }));
+
+    currentRole = 'viewer';
+    currentUserProfile = null;
+
+    // Show portal, hide login
+    loginView.style.display = 'none';
+    calendarViewPortal.style.display = 'block';
+    window.scrollTo(0, 0);
+
+    // Wire exit button
+    const exitBtn = document.getElementById('calViewLogoutBtn');
+    if (exitBtn) {
+      exitBtn.onclick = () => {
+        currentRole = null; currentUserProfile = null;
+        calendarViewPortal.style.display = 'none';
+        loginView.style.display = '';
+        lucide.createIcons();
+      };
+    }
+
+    // Render calendar
+    renderUnifiedCalendar('calendarViewWrapper', false, true);
+    lucide.createIcons();
+
+  } catch (err) {
+    console.error('[PublicCal] Error:', err);
+    calendarViewPortal.style.display = 'none';
+    loginView.style.display = '';
+    lucide.createIcons();
+    const errEl = document.getElementById('loginError');
+    if (errEl) { errEl.textContent = err.message; errEl.classList.remove('hidden'); }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="calendar-days" style="width:16px;height:16px;"></i><span>View Campus Calendar</span><i data-lucide="arrow-right" style="width:14px;height:14px;margin-left:auto;"></i>`;
+      lucide.createIcons();
+    }
+  }
+}
+
+
+
+
+// ── Password-visibility toggle ─────────────────────────────────────────
+function setupPasswordToggle(toggleBtnId, iconId, inputId) {
+  const btn = document.getElementById(toggleBtnId);
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const input = document.getElementById(inputId);
+    const icon  = document.getElementById(iconId);
+    if (!input) return;
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    if (icon) {
+      icon.setAttribute("data-lucide", isHidden ? "eye-off" : "eye");
+      lucide.createIcons();
+    }
+  });
+}
+
+// ── Change Password form ───────────────────────────────────────────────
+const changePasswordForm = document.getElementById("changePasswordForm");
+const changePwdError     = document.getElementById("changePwdError");
+const changePwdBtn       = document.getElementById("changePwdBtn");
+const changePwdBtnText   = document.getElementById("changePwdBtnText");
+
+if (changePasswordForm) {
+  // Live password strength meter
+  const newPwdInput = document.getElementById("newPassword");
+  if (newPwdInput) {
+    newPwdInput.addEventListener("input", () => {
+      updatePasswordStrength(newPwdInput.value);
+    });
+  }
+
+  changePasswordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const currentPwd = document.getElementById("currentPassword").value;
+    const newPwd     = document.getElementById("newPassword").value;
+    const confirmPwd = document.getElementById("confirmPassword").value;
+
+    changePwdError.classList.add("hidden");
+
+    if (!currentPwd) {
+      showAuthError(changePwdError, "Please enter your current password.");
+      return;
+    }
+    if (newPwd.length < 8) {
+      showAuthError(changePwdError, "Password must be at least 8 characters.");
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      showAuthError(changePwdError, "Passwords do not match.");
+      return;
+    }
+
+    if (changePwdBtn) changePwdBtn.disabled = true;
+    if (changePwdBtnText) changePwdBtnText.textContent = "Updating…";
+
+    try {
+      const resultAction = await store.dispatch(changePassword({ currentPassword: currentPwd, newPassword: newPwd }));
+      
+      if (changePassword.rejected.match(resultAction)) {
+        throw new Error(resultAction.payload || "Incorrect current password or update failed.");
+      }
+
+      // Update local profile state (clone to avoid mutating frozen Redux object)
+      currentUserProfile = { ...currentUserProfile, first_login: false, firstLogin: false };
+
+      // Remove the warning banner if it is visible
+      const tempPasswordBanner = document.getElementById("tempPasswordBanner");
+      if (tempPasswordBanner) {
+        tempPasswordBanner.classList.add("hidden");
+      }
+
+      showToast("Password updated successfully!");
+
+      setTimeout(() => {
+        enterDashboard(currentUserProfile.role);
+      }, 900);
+    } catch (err) {
+      showAuthError(changePwdError, err.message || "Failed to update password.");
+      if (changePwdBtn) changePwdBtn.disabled = false;
+      if (changePwdBtnText) changePwdBtnText.textContent = "Set Password & Continue";
+    }
+  });
+}
+
+function updatePasswordStrength(pwd) {
+  const bar   = document.getElementById("pwdStrengthBar");
+  const label = document.getElementById("pwdStrengthLabel");
+  if (!bar || !label) return;
+
+  let score = 0;
+  if (pwd.length >= 8)  score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+  const levels = [
+    { pct: "0%",   color: "transparent", text: "" },
+    { pct: "25%",  color: "#ef4444",     text: "Weak" },
+    { pct: "50%",  color: "#f59e0b",     text: "Fair" },
+    { pct: "75%",  color: "#3b82f6",     text: "Good" },
+    { pct: "90%",  color: "#10b981",     text: "Strong" },
+    { pct: "100%", color: "#059669",     text: "Very Strong" },
+  ];
+  const lvl = levels[Math.min(score, 5)];
+  bar.style.width  = lvl.pct;
+  bar.style.background = lvl.color;
+  label.textContent = lvl.text;
+  label.style.color = lvl.color;
+}
+
+// ── Enter the appropriate dashboard ────────────────────────────────────
+async function enterDashboard(role) {
+  // Try to load user from store, if not available, try to fetch
+  let state = store.getState();
+  if (!state.auth.token) {
+    showLoginPage();
+    return;
+  }
+
+  if (!state.auth.user) {
+    const fetchResult = await store.dispatch(fetchMe());
+    if (fetchMe.rejected.match(fetchResult)) {
+      showLoginPage();
+      return;
+    }
+  }
+
+  // Reload state
+  state = store.getState();
+  currentUserProfile = state.auth.user;
+  currentRole = currentUserProfile?.role;
+  
+  // Also fetch data when entering dashboard
+  await store.dispatch(fetchFacilities());
+  await store.dispatch(fetchBookings());
+
+  currentRole = currentUserProfile.role;
+  hideAllViews();
+
+  const tempPasswordBanner = document.getElementById("tempPasswordBanner");
+  // Viewers never see the temp-password banner (they cannot change password in viewer portal)
+  if (currentUserProfile && currentUserProfile.first_login && currentRole !== 'viewer') {
+    if (tempPasswordBanner) {
+      tempPasswordBanner.classList.remove("hidden");
+    }
+  } else {
+    if (tempPasswordBanner) {
+      tempPasswordBanner.classList.add("hidden");
+    }
+  }
+
+  const dismissWarningBannerBtn = document.getElementById("dismissWarningBannerBtn");
+  if (dismissWarningBannerBtn) {
+    dismissWarningBannerBtn.onclick = () => {
+      const banner = document.getElementById("tempPasswordBanner");
+      if (banner) banner.classList.add("hidden");
+    };
+  }
+
+  const bannerChangePasswordBtn = document.getElementById("bannerChangePasswordBtn");
+  if (bannerChangePasswordBtn) {
+    bannerChangePasswordBtn.onclick = () => {
+      openChangePasswordScreen();
+    };
+  }
+
+  if (currentRole === "viewer") {
+    // Show viewer name in topbar user chip
+    const calViewUserName = document.getElementById("calViewUserName");
+    if (calViewUserName && currentUserProfile) {
+      calViewUserName.textContent = currentUserProfile.name || currentUserProfile.email || "";
+    }
     calendarViewPortal.classList.remove("hidden");
+    console.log("[Viewer] Portal shown. Facilities:", facilities.length, "Bookings:", bookings.length);
+    // Start live clock and populate stats
+    startCalViewClock();
+    renderCalViewStats();
     renderCalendarViewPortal();
+    console.log("[Viewer] Calendar rendered.");
     lucide.createIcons();
     return;
   }
 
   mainNavbar.classList.remove("hidden");
-  calendarViewPortal.classList.add("hidden");
 
-  if (role === "faculty") {
+  if (currentRole === "faculty") {
     facultyPortal.classList.remove("hidden");
-    adminPortal.classList.add("hidden");
     setFacultyNav();
     renderGrid();
     renderRecentBookings();
-  } else {
+    initHeroGallery();
+  } else if (currentRole === "superadmin") {
+    // superadmin also gets the faculty portal view for hero gallery
+    // init gallery whenever they visit the amenities page
+    initHeroGallery();
     adminPortal.classList.remove("hidden");
-    facultyPortal.classList.add("hidden");
-    if (role === "admin" && adminPage === "manage") {
+    setAdminNav();
+    switchAdminPage(adminPage);
+  } else {
+    // admin
+    adminPortal.classList.remove("hidden");
+    if (currentRole === "admin" && adminPage === "manage") {
       adminPage = "dashboard";
     }
     setAdminNav();
@@ -152,12 +457,48 @@ function login(role) {
   lucide.createIcons();
 }
 
+function openChangePasswordScreen() {
+  hideAllViews();
+  const changePwdError = document.getElementById("changePwdError");
+  if (changePwdError) changePwdError.classList.add("hidden");
+  
+  changePasswordView.classList.remove("hidden");
+  
+  const currentPasswordInput = document.getElementById("currentPassword");
+  const newPasswordInput = document.getElementById("newPassword");
+  const confirmPasswordInput = document.getElementById("confirmPassword");
+  if (currentPasswordInput) currentPasswordInput.value = "";
+  if (newPasswordInput) newPasswordInput.value = "";
+  if (confirmPasswordInput) confirmPasswordInput.value = "";
+  
+  const cancelBtn = document.getElementById("cancelChangePwdBtn");
+  if (cancelBtn) {
+    if (currentUserProfile && !currentUserProfile.first_login) {
+      cancelBtn.style.display = "block";
+      cancelBtn.onclick = () => {
+        enterDashboard(currentUserProfile.role);
+      };
+    } else {
+      cancelBtn.style.display = "none";
+    }
+  }
+  lucide.createIcons();
+}
+
+// ── Auth error helper ──────────────────────────────────────────────────
+function showAuthError(el, msg) {
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+
+// ── Logout ─────────────────────────────────────────────────────────────
 logoutBtn.addEventListener("click", () => {
-  currentRole = null;
-  mainNavbar.classList.add("hidden");
-  facultyPortal.classList.add("hidden");
-  adminPortal.classList.add("hidden");
-  calendarViewPortal.classList.add("hidden");
+  store.dispatch(logoutAction());
+  currentRole        = null;
+  currentUserProfile = null;
+  supabaseUsers      = [];
+  hideAllViews();
   loginView.classList.remove("hidden");
   lucide.createIcons();
 });
@@ -166,22 +507,43 @@ logoutBtn.addEventListener("click", () => {
 const calViewLogoutBtn = document.getElementById("calViewLogoutBtn");
 if (calViewLogoutBtn) {
   calViewLogoutBtn.addEventListener("click", () => {
-    currentRole = null;
-    calendarViewPortal.classList.add("hidden");
+    store.dispatch(logoutAction());
+    currentRole        = null;
+    currentUserProfile = null;
+    hideAllViews();
     loginView.classList.remove("hidden");
     lucide.createIcons();
   });
+}
+
+function showLoginPage() {
+  currentRole        = null;
+  currentUserProfile = null;
+  supabaseUsers      = [];
+  hideAllViews();
+  loginView.classList.remove("hidden");
+  lucide.createIcons();
+}
+
+// ── Restore session on page reload ────────────────────────────────────
+// Initial check if we have a token
+if (localStorage.getItem('token')) {
+  enterDashboard();
+} else {
+  showLoginPage();
 }
 
 /* =========================================
    NAVBAR BUILDERS
    ========================================= */
 function setFacultyNav() {
-  navUserBadge.innerHTML = `<i data-lucide="user" style="width:14px;height:14px;"></i> <span>Faculty Portal</span>`;
+  const displayName = currentUserProfile ? currentUserProfile.name : "Faculty";
+  navUserBadge.innerHTML = `<i data-lucide="user" style="width:14px;height:14px;"></i> <span>${escapeHtml(displayName)}</span>`;
   navLinks.innerHTML = `
     <a href="#" class="${facultyPage === 'amenities'   ? 'active' : ''}" data-page="amenities">Amenities</a>
     <a href="#" class="${facultyPage === 'calendar'    ? 'active' : ''}" data-page="calendar">Calendar</a>
     <a href="#" class="${facultyPage === 'myBookings'  ? 'active' : ''}" data-page="myBookings">My Bookings</a>
+    <a href="#" class="${facultyPage === 'settings'    ? 'active' : ''}" data-page="settings">Settings</a>
   `;
   navLinks.querySelectorAll("a[data-page]").forEach(a => {
     a.addEventListener("click", e => {
@@ -193,16 +555,18 @@ function setFacultyNav() {
 }
 
 function setAdminNav() {
+  const displayName = currentUserProfile ? currentUserProfile.name : (currentRole === "superadmin" ? "Super Admin" : "Admin");
   if (currentRole === "superadmin") {
-    navUserBadge.innerHTML = `<i data-lucide="shield-alert" style="width:14px;height:14px;color:#8b5cf6;"></i> <span style="color:#8b5cf6;font-weight:700;">Super Admin</span>`;
+    navUserBadge.innerHTML = `<i data-lucide="shield-alert" style="width:14px;height:14px;color:#8b5cf6;"></i> <span style="color:#8b5cf6;font-weight:700;">${escapeHtml(displayName)}</span>`;
   } else {
-    navUserBadge.innerHTML = `<i data-lucide="shield" style="width:14px;height:14px;"></i> <span>Admin Console</span>`;
+    navUserBadge.innerHTML = `<i data-lucide="shield" style="width:14px;height:14px;"></i> <span>${escapeHtml(displayName)}</span>`;
   }
   navLinks.innerHTML = `
     <a href="#" class="${adminPage === 'dashboard' ? 'active' : ''}" data-page="dashboard">Dashboard</a>
     <a href="#" class="${adminPage === 'queue' ? 'active' : ''}" data-page="queue">Approval Queue</a>
     <a href="#" class="${adminPage === 'calendar' ? 'active' : ''}" data-page="calendar">Calendar</a>
     ${currentRole === "superadmin" ? `<a href="#" class="${adminPage === 'manage' ? 'active' : ''}" data-page="manage">Manage</a>` : ""}
+    <a href="#" class="${adminPage === 'settings' ? 'active' : ''}" data-page="settings">Settings</a>
   `;
   navLinks.querySelectorAll("a[data-page]").forEach(a => {
     a.addEventListener("click", e => {
@@ -211,6 +575,10 @@ function setAdminNav() {
     });
   });
   lucide.createIcons();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
 /* =========================================
@@ -225,6 +593,11 @@ function switchAdminPage(page) {
   document.getElementById("pageAdminQueue").classList.toggle("hidden", page !== "queue");
   document.getElementById("pageAdminCalendar").classList.toggle("hidden", page !== "calendar");
   document.getElementById("pageAdminManage").classList.toggle("hidden", page !== "manage");
+  
+  const pageAdminSettings = document.getElementById("pageAdminSettings");
+  if (pageAdminSettings) {
+    pageAdminSettings.classList.toggle("hidden", page !== "settings");
+  }
 
   renderAdminDashboard();
 
@@ -247,6 +620,11 @@ function switchFacultyPage(page) {
   pageFacultyAmenities.classList.toggle("hidden",  page !== "amenities");
   pageFacultyCalendar.classList.toggle("hidden",   page !== "calendar");
   pageFacultyMyBookings.classList.toggle("hidden", page !== "myBookings");
+  
+  const pageFacultySettings = document.getElementById("pageFacultySettings");
+  if (pageFacultySettings) {
+    pageFacultySettings.classList.toggle("hidden", page !== "settings");
+  }
 
   if (page === "calendar")   renderCalendar();
   if (page === "myBookings") renderMyBookings();
@@ -289,29 +667,12 @@ function renderGrid() {
 
   if (searchQuery) {
     const query = searchQuery.toLowerCase().trim();
-    const numericQuery = query.replace(/\.$/, "").trim(); // Remove trailing dot (e.g. "05." -> "05")
-
-    if (/^[0-9]+$/.test(numericQuery)) {
-      const val = parseInt(numericQuery, 10);
-      if (val >= 1 && val <= facilities.length) {
-        list = [facilities[val - 1]];
-      } else {
-        // Numeric but not a valid serial, fallback to normal search
-        list = facilities.filter(f => 
-          f.label.toLowerCase().includes(query) ||
-          f.desc.toLowerCase().includes(query) ||
-          f.category.toLowerCase().includes(query) ||
-          f.capacity.toLowerCase().includes(query)
-        );
-      }
-    } else {
-      list = facilities.filter(f => 
-        f.label.toLowerCase().includes(query) ||
-        f.desc.toLowerCase().includes(query) ||
-        f.category.toLowerCase().includes(query) ||
-        f.capacity.toLowerCase().includes(query)
-      );
-    }
+    list = facilities.filter(f => 
+      f.label.toLowerCase().includes(query) ||
+      f.desc.toLowerCase().includes(query) ||
+      f.category.toLowerCase().includes(query) ||
+      f.capacity.toLowerCase().includes(query)
+    );
   }
 
   if (!list.length) {
@@ -320,9 +681,6 @@ function renderGrid() {
   }
 
   gridContainer.innerHTML = list.map((f, i) => {
-    const originalIndex = facilities.findIndex(orig => orig.id === f.id);
-    const serialNumber = String(originalIndex + 1).padStart(2, '0');
-
     return `
       <div class="card animate-slide-up" style="animation-delay:${i * 0.05}s">
         <div class="card-image" style="${f.image ? `background-image: url('${f.image}'); background-size: cover; background-position: center; height: 160px;` : 'height: 160px;'}">
@@ -334,7 +692,6 @@ function renderGrid() {
         </div>
         <div class="card-body">
           <h3 class="card-title">
-            <span class="card-serial" style="color:var(--primary);font-weight:800;margin-right:0.3rem;">${serialNumber}</span>
             ${f.label}
           </h3>
           <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
@@ -363,24 +720,127 @@ function renderGrid() {
 }
 
 /* =========================================
+   HERO GALLERY (Superadmin image management)
+   ========================================= */
+const HERO_IMAGES_KEY = 'heroGalleryImages';
+
+function getHeroImages() {
+  try { return JSON.parse(localStorage.getItem(HERO_IMAGES_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveHeroImages(imgs) {
+  localStorage.setItem(HERO_IMAGES_KEY, JSON.stringify(imgs));
+}
+
+function renderHeroGallery() {
+  const leftPanel  = document.getElementById('heroImgLeft');
+  const rightPanel = document.getElementById('heroImgRight');
+  if (!leftPanel || !rightPanel) return;
+
+  const imgs = getHeroImages();
+  const isAdmin = currentRole === 'superadmin';
+
+  const makeItem = (img, idx) => {
+    const div = document.createElement('div');
+    div.className = 'hero-gallery-item';
+    div.innerHTML = `
+      <img src="${img}" alt="Gallery image ${idx + 1}" loading="lazy" />
+      ${isAdmin ? `<button class="hero-gallery-delete" data-idx="${idx}" title="Remove image">✕</button>` : ''}
+    `;
+    return div;
+  };
+
+  leftPanel.innerHTML  = '';
+  rightPanel.innerHTML = '';
+
+  imgs.forEach((img, idx) => {
+    const item = makeItem(img, idx);
+    if (idx % 2 === 0) leftPanel.appendChild(item);
+    else               rightPanel.appendChild(item);
+  });
+
+  // Wire delete buttons
+  [leftPanel, rightPanel].forEach(panel => {
+    panel.querySelectorAll('.hero-gallery-delete').forEach(btn => {
+      btn.addEventListener('click', () => deleteHeroImage(parseInt(btn.dataset.idx)));
+    });
+  });
+}
+
+function deleteHeroImage(idx) {
+  const imgs = getHeroImages();
+  imgs.splice(idx, 1);
+  saveHeroImages(imgs);
+  renderHeroGallery();
+  showToast('Image removed.');
+}
+
+function initHeroGallery() {
+  // Show upload panel for superadmin
+  const panel = document.getElementById('heroImageAdminPanel');
+  if (panel) panel.style.display = currentRole === 'superadmin' ? 'block' : 'none';
+
+  renderHeroGallery();
+  lucide.createIcons();
+
+  const input = document.getElementById('heroImageUploadInput');
+  if (!input) return;
+
+  input.addEventListener('change', () => {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+
+    let processed = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imgs = getHeroImages();
+        imgs.push(e.target.result);
+        saveHeroImages(imgs);
+        processed++;
+        if (processed === files.length) {
+          renderHeroGallery();
+          showToast(`${files.length} image${files.length > 1 ? 's' : ''} added!`);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = '';
+  });
+}
+
+/* =========================================
    FACULTY: RECENT BOOKINGS (below grid)
    ========================================= */
 function renderRecentBookings() {
-  const recent = [...bookings].slice(0, 3);
+  if (!recentList) return;
+  const recent = bookings
+    .filter(b => b.requesterId === currentUserProfile.id)
+    .slice(-4)
+    .reverse();
   if (!recent.length) {
     recentList.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:2rem;">No recent bookings yet.</p>`;
     return;
   }
   recentList.innerHTML = recent.map(b => `
     <div class="recent-card">
-      <div class="recent-left">
-        <div class="recent-facility">${b.facility}</div>
+      <div class="recent-info">
+        <div class="recent-facility">
+          ${b.facility}
+          ${b.isExternal ? `<span style="font-size:0.6rem; background:#ef4444; color:white; padding:1px 4px; border-radius:4px; margin-left:0.4rem; vertical-align:middle; font-weight:800;">EXT</span>` : ''}
+        </div>
         <div class="recent-purpose">${b.purpose}</div>
         <div class="recent-meta">
           <span><i data-lucide="calendar" style="width:12px;height:12px;"></i> ${formatDate(b.date)}</span>
           <span><i data-lucide="clock" style="width:12px;height:12px;"></i> ${b.time}</span>
           <span><i data-lucide="users" style="width:12px;height:12px;"></i> ${b.attendees} Ppl</span>
         </div>
+        ${(b.status === "APPROVED" || b.status === "REJECTED") && b.approvedByName ? `
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.4rem;display:flex;align-items:center;gap:0.25rem;">
+          <i data-lucide="shield" style="width:11px;height:11px;color:var(--primary);"></i>
+          <span>${b.status === 'APPROVED' ? 'Approved' : 'Declined'} by <strong>${b.approvedByName}</strong></span>
+        </div>` : ""}
       </div>
       <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
     </div>
@@ -409,16 +869,67 @@ function renderCalendarViewPortal() {
   renderUnifiedCalendar("calendarViewWrapper", false, true);
 }
 
+// Live clock for viewer topbar
+let _calViewClockInterval = null;
+function startCalViewClock() {
+  const el = document.getElementById('calViewLiveDate');
+  if (!el) return;
+  if (_calViewClockInterval) clearInterval(_calViewClockInterval);
+  const tick = () => {
+    const now = new Date();
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    el.innerHTML = `<i data-lucide="clock" style="width:12px;height:12px;"></i> ${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} &nbsp;&middot;&nbsp; ${hh}:${mm}`;
+    lucide.createIcons();
+  };
+  tick();
+  _calViewClockInterval = setInterval(tick, 30000);
+}
+
+// Stats strip for viewer portal
+function renderCalViewStats() {
+  const el = document.getElementById('calViewStats');
+  if (!el) return;
+  const approved = bookings.filter(b => b.status === 'APPROVED').length;
+  const pending  = bookings.filter(b => b.status === 'PENDING').length;
+  const todayKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const todayCount = bookings.filter(b => b.date === todayKey && (b.status === 'APPROVED' || b.status === 'PENDING')).length;
+  el.innerHTML = `
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value" style="color:#34d399;">${approved}</span>
+      <span class="cal-view-stat-label"><span class="cal-view-stat-dot" style="background:#34d399;"></span>Approved</span>
+    </div>
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value" style="color:#fbbf24;">${pending}</span>
+      <span class="cal-view-stat-label"><span class="cal-view-stat-dot" style="background:#fbbf24;"></span>Pending</span>
+    </div>
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value" style="color:#60a5fa;">${todayCount}</span>
+      <span class="cal-view-stat-label"><span class="cal-view-stat-dot" style="background:#60a5fa;"></span>Today</span>
+    </div>
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value">${facilities.length}</span>
+      <span class="cal-view-stat-label">Venues</span>
+    </div>
+  `;
+}
+
 /* =========================================
    UNIFIED INTERACTIVE CALENDAR ENGINE
    ========================================= */
-let calendarDate = new Date(2026, 9, 1); // Start in October 2026 for visibility
+let calendarDate = new Date(); // Start on today's date
 let calendarViewMode = "month"; // "month" | "week" | "day"
 let calendarFilterSerial = "all"; // "all" | "01" ... "09"
 
 function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = false) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) {
+    console.error("[Calendar] Container not found:", containerId);
+    return;
+  }
+  console.log("[Calendar] Rendering", containerId, "| bookings:", bookings.length, "| facilities:", facilities.length);
 
   let titleText = "";
   if (calendarViewMode === "month") {
@@ -448,9 +959,8 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
       <div class="calendar-controls-right">
         <select class="calendar-filter-select filter-serial-dropdown">
           <option value="all">All Amenities</option>
-          ${facilities.map((f, i) => {
-            const serial = String(i + 1).padStart(2, '0');
-            return `<option value="${serial}" ${calendarFilterSerial === serial ? "selected" : ""}>${serial}. ${f.label}</option>`;
+          ${facilities.map(f => {
+            return `<option value="${f.id}" ${calendarFilterSerial === f.id ? "selected" : ""}>${f.label}</option>`;
           }).join("")}
         </select>
 
@@ -467,19 +977,19 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
 
   container.querySelector(".btn-cal-prev").addEventListener("click", () => {
     adjustCalendarDate(-1);
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
   container.querySelector(".btn-cal-today").addEventListener("click", () => {
     calendarDate = new Date();
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
   container.querySelector(".btn-cal-next").addEventListener("click", () => {
     adjustCalendarDate(1);
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
@@ -488,7 +998,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
   filterDropdown.value = calendarFilterSerial;
   filterDropdown.addEventListener("change", e => {
     calendarFilterSerial = e.target.value;
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
@@ -496,7 +1006,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
   container.querySelectorAll(".calendar-view-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       calendarViewMode = btn.dataset.view;
-      if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+      if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
       renderCalendar();
       renderAdminCalendar();
     });
@@ -507,9 +1017,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
   const activeBookings = bookings.filter(b => b.status === "APPROVED" || b.status === "PENDING");
   const filteredEvents = activeBookings.filter(b => {
     if (calendarFilterSerial === "all") return true;
-    const origIdx = facilities.findIndex(f => f.id === b.facilityId);
-    const serial = String(origIdx + 1).padStart(2, '0');
-    return serial === calendarFilterSerial;
+    return b.facilityId === calendarFilterSerial;
   });
 
   if (calendarViewMode === "month") {
@@ -575,8 +1083,8 @@ function renderMonthView(container, events, isForAdmin) {
           ${dayEvents.map(e => `
             <div class="calendar-event-chip ${e.status.toLowerCase()}" 
                  title="${e.time} - ${e.facility} (${e.purpose})"
-                 onclick="window.showCalendarEventDetail(${e.id})">
-              ${e.time.split(" – ")[0]} ${e.facility}
+                 onclick="window.showCalendarEventDetail('${e.id}')">
+              ${e.time.split(" – ")[0]} ${e.isExternal ? 'EXT' : e.facility}
             </div>
           `).join("")}
         </div>
@@ -622,9 +1130,9 @@ function renderWeekView(container, events, isForAdmin) {
             <div class="calendar-event-chip ${e.status.toLowerCase()}" 
                  style="white-space:normal; font-size:0.75rem; padding:0.4rem;"
                  title="${e.time} - ${e.facility} (${e.purpose})"
-                 onclick="window.showCalendarEventDetail(${e.id})">
+                 onclick="window.showCalendarEventDetail('${e.id}')">
               <strong style="display:block; font-size:0.65rem; color:var(--text-muted);">${e.time}</strong>
-              ${e.facility}
+              ${e.isExternal ? 'EXT' : e.facility}
               <div style="font-size:0.65rem; font-weight:normal; opacity:0.8; margin-top:0.1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.purpose}</div>
             </div>
           `).join("") : `<div style="text-align:center; color:var(--text-muted); font-size:0.7rem; padding:2rem 0;">No bookings</div>`}
@@ -675,10 +1183,10 @@ function renderDayView(container, events, isForAdmin) {
           ${slotEvents.length ? slotEvents.map(e => `
             <div class="cal-event ${e.status.toLowerCase()}" 
                  style="margin:0; padding:0.6rem 1rem; cursor:pointer;" 
-                 onclick="window.showCalendarEventDetail(${e.id})">
+                 onclick="window.showCalendarEventDetail('${e.id}')">
               <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                 <div>
-                  <strong style="color:var(--text-main); font-size:0.85rem;">${e.facility}</strong>
+                  <strong style="color:var(--text-main); font-size:0.85rem;">${e.isExternal ? 'EXT' : e.facility}</strong>
                   <span style="font-size:0.75rem; color:var(--text-muted); margin-left:0.5rem;">(${e.time})</span>
                   <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.1rem;">
                     Purpose: ${e.purpose} | Requester: ${e.requester} (${e.requesterRole})
@@ -702,11 +1210,8 @@ function renderDayView(container, events, isForAdmin) {
 }
 
 function showCalendarEventDetail(bookingId) {
-  const b = bookings.find(x => x.id === bookingId);
+  const b = bookings.find(x => String(x.id) === String(bookingId));
   if (!b) return;
-
-  const origIdx = facilities.findIndex(f => f.id === b.facilityId);
-  const serial = String(origIdx + 1).padStart(2, '0');
 
   let overlay = document.getElementById("calDetailOverlay");
   if (!overlay) {
@@ -726,7 +1231,7 @@ function showCalendarEventDetail(bookingId) {
           <i data-lucide="info"></i>
           <span>Reservation Details</span>
         </div>
-        <h2 style="margin-top:0.5rem;"><span style="color:var(--primary); font-weight:800; margin-right:0.3rem;">${serial}</span> ${b.facility}</h2>
+        <h2 style="margin-top:0.5rem;">${b.facility}</h2>
       </div>
       <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem;">
         <div>
@@ -739,8 +1244,9 @@ function showCalendarEventDetail(bookingId) {
 
         <div>
           <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Purpose & Attendees</div>
-          <div style="font-size:0.95rem; font-weight:600; color:var(--text-main); margin-top:0.15rem;">
+          <div style="font-size:0.95rem; font-weight:600; color:var(--text-main); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
             ${b.purpose}
+            ${b.isExternal ? `<span style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; font-weight:800;">EXT</span>` : ''}
           </div>
           <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
             <i data-lucide="users" style="width:14px;"></i>
@@ -771,6 +1277,20 @@ function showCalendarEventDetail(bookingId) {
             ${b.requirements}
           </div>
         </div>` : ""}
+
+        ${(b.status === "APPROVED" || b.status === "REJECTED") && b.approvedByName ? `
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Approval Details</div>
+          <div style="font-size:0.9rem; font-weight:600; color:var(--text-main); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
+            <i data-lucide="${b.status === 'APPROVED' ? 'check-circle' : 'x-circle'}" style="width:15px; color:${b.status === 'APPROVED' ? 'var(--success)' : '#ef4444'};"></i>
+            <span>${b.status === 'APPROVED' ? 'Approved' : 'Declined'} by <strong>${b.approvedByName}</strong></span>
+          </div>
+          ${b.cancelReason ? `
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem; font-style:italic;">
+            Remarks: ${b.cancelReason}
+          </div>` : ""}
+        </div>
+        ` : ""}
 
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--surface-border); padding-top:1rem; margin-top:0.5rem;">
           <div style="font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:0.4rem;">
@@ -811,19 +1331,23 @@ function renderMyBookings() {
     });
   });
 
-  const filtered = myBookingsFilter === "all"
-    ? bookings
-    : bookings.filter(b => b.status === myBookingsFilter);
+  let list = bookings.filter(b => b.requesterId === currentUserProfile.id);
+  if (myBookingsFilter !== "all") {
+    list = list.filter(b => b.status === myBookingsFilter);
+  }
 
-  if (!filtered.length) {
+  if (!list.length) {
     container.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:3rem;">No bookings found.</p>`;
     return;
   }
 
-  container.innerHTML = filtered.map(b => `
+  container.innerHTML = list.map(b => `
     <div class="my-booking-card">
       <div class="my-booking-left">
-        <div class="my-booking-facility">${b.facility}</div>
+        <div class="my-booking-facility">
+          ${b.facility}
+          ${b.isExternal ? `<span style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; margin-left:0.5rem; vertical-align:middle; font-weight:800;">EXT</span>` : ''}
+        </div>
         <div class="my-booking-purpose">${b.purpose}</div>
         <div class="my-booking-meta">
           <span><i data-lucide="calendar" style="width:13px;height:13px;"></i> ${formatDate(b.date)}</span>
@@ -843,8 +1367,16 @@ function renderMyBookings() {
       </div>
       <div class="my-booking-status-col">
         <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
-        ${b.status === "APPROVED" ? `<div class="my-booking-note"><i data-lucide="check-circle" style="width:12px;height:12px;color:var(--success);"></i> Confirmed by Admin</div>` : ""}
-        ${b.status === "REJECTED" ? `<div class="my-booking-note" style="color:#ef4444;"><i data-lucide="x-circle" style="width:12px;height:12px;"></i> Request Declined</div>` : ""}
+        ${b.status === "APPROVED" ? `
+          <div class="my-booking-note" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; text-align:right;">
+            <span style="display:inline-flex; align-items:center; gap:4px; color:var(--success); font-weight:600;"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Confirmed</span>
+            ${b.approvedByName ? `<span style="font-size:0.7rem; color:var(--text-muted);">By: <strong>${b.approvedByName}</strong></span>` : ""}
+          </div>` : ""}
+        ${b.status === "REJECTED" ? `
+          <div class="my-booking-note" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; color:#ef4444; text-align:right;">
+            <span style="display:inline-flex; align-items:center; gap:4px; font-weight:600;"><i data-lucide="x-circle" style="width:12px;height:12px;"></i> Declined</span>
+            ${b.approvedByName ? `<span style="font-size:0.7rem; color:var(--text-muted);">By: <strong>${b.approvedByName}</strong></span>` : ""}
+          </div>` : ""}
         ${b.status === "PENDING"  ? `<div class="my-booking-note"><i data-lucide="clock" style="width:12px;height:12px;color:var(--warning);"></i> Awaiting Review</div>` : ""}
       </div>
     </div>
@@ -991,6 +1523,9 @@ function openBookingModal(facilityId) {
   if (recurringCheckbox) recurringCheckbox.checked = false;
   const recurringPanel = document.getElementById("recurringOptionsPanel");
   if (recurringPanel) recurringPanel.classList.add("hidden");
+  
+  const externalCheckbox = document.getElementById("bookingExternal");
+  if (externalCheckbox) externalCheckbox.checked = false;
   
   initDateSelector();
   renderTimeSlots();
@@ -1239,6 +1774,7 @@ bookingForm.addEventListener("submit", e => {
   const pocName  = document.getElementById("pocName").value.trim();
   const pocContact = document.getElementById("pocContact").value.trim();
   const isRecurring = document.getElementById("bookingRecurring").checked;
+  const isExternal = document.getElementById("bookingExternal") ? document.getElementById("bookingExternal").checked : false;
   
   if (!start || !end) {
     showToast("Error: Please select at least one time slot!");
@@ -1346,28 +1882,38 @@ bookingForm.addEventListener("submit", e => {
     datesToBook.push(date);
   }
 
-  datesToBook.forEach(dateStr => {
-    const nextId = bookings.length ? Math.max(...bookings.map(b => b.id)) + 1 : 1;
+  const bookingPromises = datesToBook.map(dateStr => {
     const newBooking = {
-      id: nextId,
-      facility:      selectedFacility.label,
       facilityId:    selectedFacility.id,
       purpose,
-      status:        "PENDING",
       date:          dateStr,
-      time:          `${start} – ${end}`,
-      attendees:     count,
-      requirements:  requirements || null,
+      startTime:     start,
+      endTime:       end,
+      attendeeCount: count,
+      requirements:  requirements || undefined,
       pocName,
       pocContact,
-      requester:     "Faculty User",
-      requesterRole: "Faculty",
-      recurring:     isRecurring
+      isExternal:    isExternal,
+      isRecurring:   isRecurring
     };
-    bookings.unshift(newBooking);
+    return store.dispatch(createBooking(newBooking));
   });
 
-  // Refresh visible panels instantly
+  Promise.all(bookingPromises).then(() => {
+    // Refresh visible panels instantly
+    if (currentRole === 'faculty') {
+      store.dispatch(fetchMyBookings()).then(() => {
+        renderRecentBookings();
+        renderCalendar();
+        if (facultyPage === "myBookings") renderMyBookings();
+      });
+    } else {
+      store.dispatch(fetchBookings()).then(() => {
+        renderAdminCalendar();
+        renderAdminDashboard();
+      });
+    }
+  });
   renderRecentBookings();
   renderCalendar();
   renderAdminCalendar();
@@ -1404,7 +1950,10 @@ function renderAdminDashboard() {
           <div class="requester-name">${b.requester}</div>
           <div class="requester-role">${b.requesterRole}</div>
         </td>
-        <td style="font-weight:700;">${b.facility}</td>
+        <td style="font-weight:700;">
+          ${b.facility}
+          ${b.isExternal ? `<div style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; margin-top:0.25rem; font-weight:800; width:fit-content;">EXT</div>` : ''}
+        </td>
         <td>
           <div style="font-weight:600;">${b.purpose}</div>
           ${b.recurring ? `
@@ -1442,20 +1991,31 @@ function renderAdminDashboard() {
     `).join("");
 
     adminPendingList.querySelectorAll(".btn-approve").forEach(btn => {
-      btn.addEventListener("click", () => updateStatus(parseInt(btn.dataset.id), "APPROVED"));
+      btn.addEventListener("click", () => updateStatus(btn.dataset.id, "APPROVED"));
     });
     adminPendingList.querySelectorAll(".btn-reject").forEach(btn => {
-      btn.addEventListener("click", () => updateStatus(parseInt(btn.dataset.id), "REJECTED"));
+      btn.addEventListener("click", () => updateStatus(btn.dataset.id, "REJECTED"));
     });
   }
 
-  adminAllList.innerHTML = bookings.map(b => `
+  const historyBookings = bookings.filter(b => b.status !== 'PENDING');
+  if (!historyBookings.length) {
+    adminAllList.innerHTML = `
+      <tr><td colspan="6" class="empty-row">
+        <i data-lucide="archive" style="width:24px;height:24px;opacity:0.4;"></i>
+        <div>No completed bookings yet.</div>
+      </td></tr>`;
+  } else {
+    adminAllList.innerHTML = historyBookings.map(b => `
     <tr>
       <td>
         <div class="requester-name">${b.requester}</div>
         <div class="requester-role">${b.requesterRole}</div>
       </td>
-      <td style="font-weight:700;">${b.facility}</td>
+      <td style="font-weight:700;">
+        ${b.facility}
+        ${b.isExternal ? `<div style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; margin-top:0.25rem; font-weight:800; width:fit-content;">EXT</div>` : ''}
+      </td>
       <td>
         <div style="font-weight:600;">${b.purpose}</div>
         ${b.recurring ? `
@@ -1483,7 +2043,15 @@ function renderAdminDashboard() {
         <div style="font-weight:600;">${formatDate(b.date)}</div>
         <div style="font-size:0.78rem;color:var(--text-muted);">${b.time}</div>
       </td>
-      <td><div class="feed-status ${b.status.toLowerCase()}">${b.status}</div></td>
+      <td>
+        <div class="feed-status ${b.status.toLowerCase()}">${b.status === 'APPROVED' ? 'Accepted' : b.status === 'REJECTED' ? 'Rejected' : b.status}</div>
+        ${(b.status === "APPROVED" || b.status === "REJECTED") && b.approvedByName ? `
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.3rem; display:flex; align-items:center; gap:0.25rem;">
+            <i data-lucide="${b.status === 'APPROVED' ? 'user-check' : 'user-x'}" style="width:11px; height:11px; color:${b.status === 'APPROVED' ? 'var(--success)' : '#ef4444'};"></i>
+            <span>${b.status === 'APPROVED' ? 'Accepted' : 'Rejected'} by <strong>${b.approvedByName}</strong></span>
+          </div>
+        ` : ""}
+      </td>
       <td>
         ${b.status === "APPROVED" ? `
           <div class="actions-cell">
@@ -1492,17 +2060,18 @@ function renderAdminDashboard() {
             </button>
           </div>
         ` : `
-          <span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">None</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">—</span>
         `}
       </td>
     </tr>
   `).join("");
 
-  adminAllList.querySelectorAll(".btn-cancel-approved").forEach(btn => {
-    btn.addEventListener("click", () => {
-      updateStatus(parseInt(btn.dataset.id), "REJECTED");
+    adminAllList.querySelectorAll(".btn-cancel-approved").forEach(btn => {
+      btn.addEventListener("click", () => {
+        updateStatus(btn.dataset.id, "REJECTED");
+      });
     });
-  });
+  }
 
   renderUpcomingBookings();
   renderUtilizationReports();
@@ -1530,7 +2099,10 @@ function renderUpcomingBookings() {
   upcomingList.innerHTML = upcoming.map(b => `
     <div class="upcoming-card">
       <div class="upcoming-main-info">
-        <div class="upcoming-facility">${b.facility}</div>
+        <div class="upcoming-facility">
+          ${b.facility}
+          ${b.isExternal ? `<span style="font-size:0.6rem; background:#ef4444; color:white; padding:1px 4px; border-radius:4px; margin-left:0.4rem; vertical-align:middle; font-weight:800;">EXT</span>` : ''}
+        </div>
         <div class="upcoming-purpose">${b.purpose}</div>
       </div>
       <div class="upcoming-meta">
@@ -1726,35 +2298,53 @@ function initCancellationModal() {
     }
     
     if (pendingCancellationBookingId !== null) {
-      const b = bookings.find(x => x.id === pendingCancellationBookingId);
-      if (b) {
-        b.status = pendingCancellationStatus;
-        b.cancelReason = reason;
+      store.dispatch(updateBookingStatus({
+        id: pendingCancellationBookingId,
+        status: pendingCancellationStatus,
+        remarks: reason
+      })).then(() => {
+        // Refresh data after update
+        if (currentRole === 'faculty') {
+          store.dispatch(fetchMyBookings()).then(() => {
+            renderRecentBookings();
+            renderCalendar();
+            if (facultyPage === "myBookings") renderMyBookings();
+          });
+        } else {
+          store.dispatch(fetchBookings()).then(() => {
+            renderAdminDashboard();
+            renderCalendar();
+            renderAdminCalendar();
+          });
+        }
         
-        renderAdminDashboard();
-        renderCalendar();
-        renderAdminCalendar();
-        
-        showToast(`${b.facility} booking cancelled!`);
-      }
-      closeModal();
+        showToast(`Booking ${pendingCancellationStatus.toLowerCase()} successfully!`);
+        closeModal();
+      });
     }
   });
 }
 
 function updateStatus(id, status) {
-  if (status === "REJECTED") {
-    openCancellationModal(id, "REJECTED");
+  if (status === "REJECTED" || status === "CANCELLED") {
+    openCancellationModal(id, status);
     return;
   }
 
-  const b = bookings.find(x => x.id === id);
-  if (!b) return;
-  b.status = status;
-  renderAdminDashboard();
-  renderCalendar();
-  renderAdminCalendar();
-  showToast(`${b.facility} booking ${status.toLowerCase()}!`);
+  console.log('[updateStatus] id:', id, 'status:', status);
+  store.dispatch(updateBookingStatus({ id, status })).then((action) => {
+    if (action.type.endsWith('/rejected')) {
+      console.error('[updateStatus] PATCH failed:', action.payload);
+      showToast('Error: ' + (action.payload || 'Failed to update booking'));
+      return;
+    }
+    store.dispatch(fetchBookings()).then(() => {
+      renderAdminDashboard();
+      renderCalendar();
+      renderAdminCalendar();
+      showToast(`Booking ${status.toLowerCase()} successfully!`);
+    });
+  });
 }
 
 /* =========================================
@@ -1786,36 +2376,66 @@ function renderAdminManage() {
   }
 
   // Render users list
-  if (!users.length) {
-    usersList.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No registered users.</td></tr>`;
-  } else {
-    usersList.innerHTML = users.map(u => `
-      <tr>
-        <td>
-          <div style="font-weight:700; color:var(--text-main);">${u.name}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted);">${u.role}</div>
-        </td>
-        <td style="font-size:0.83rem; font-weight:500;">${u.contact}</td>
-        <td>
-          <div class="actions-cell">
-            ${isSuperAdmin ? `
-              <button class="btn-reject btn-action btn-delete-user" data-id="${u.id}" title="Delete User" style="background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.12); color:#ef4444;">
-                <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
-              </button>
-            ` : `<span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">N/A</span>`}
-          </div>
-        </td>
-      </tr>
-    `).join("");
+  usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;"><i data-lucide="loader" style="width:16px;height:16px;display:inline-block;animation:spin 1s linear infinite;"></i> Loading users…</td></tr>`;
+  lucide.createIcons();
 
-    if (isSuperAdmin) {
-      usersList.querySelectorAll(".btn-delete-user").forEach(btn => {
-        btn.addEventListener("click", () => {
-          window.deleteUser(parseInt(btn.dataset.id));
-        });
-      });
+  const token = localStorage.getItem('token');
+  fetch('http://localhost:5000/api/admin/users', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error) {
+      usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:1.5rem;">Error loading users: ${data.error}</td></tr>`;
+      return;
     }
-  }
+    const profiles = data.users;
+    supabaseUsers = profiles;
+
+    if (!profiles.length) {
+      usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No users found.</td></tr>`;
+    } else {
+      const roleColors = { superadmin: "#8b5cf6", admin: "#2563eb", faculty: "#059669", viewer: "#64748b" };
+      usersList.innerHTML = profiles.map(u => `
+        <tr>
+          <td>
+            <div style="font-weight:700; color:var(--text-main);">${escapeHtml(u.name)}</div>
+            <div style="font-size:0.73rem; color:var(--text-muted);">${escapeHtml(u.email)}</div>
+          </td>
+          <td>
+            <span style="font-size:0.72rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:20px; background:${roleColors[u.role] || '#64748b'}22; color:${roleColors[u.role] || '#64748b'}; text-transform:capitalize;">${u.role}</span>
+          </td>
+          <td>
+            ${u.first_login
+              ? `<span style="font-size:0.7rem;font-weight:700;color:#f59e0b;display:inline-flex;align-items:center;gap:0.25rem;"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pending first login</span>`
+              : `<span style="font-size:0.7rem;font-weight:700;color:#10b981;display:inline-flex;align-items:center;gap:0.25rem;"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Active</span>`
+            }
+          </td>
+          <td>
+            <div class="actions-cell">
+              ${isSuperAdmin ? `
+                <button class="btn-reject btn-action btn-delete-user" data-uid="${u.id}" title="Delete User" style="background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.12); color:#ef4444;">
+                  <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+                </button>
+              ` : `<span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">N/A</span>`}
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      if (isSuperAdmin) {
+        usersList.querySelectorAll(".btn-delete-user").forEach(btn => {
+          btn.addEventListener("click", () => {
+            window.deleteUser(btn.dataset.uid);
+          });
+        });
+      }
+    }
+    lucide.createIcons();
+  })
+  .catch(err => {
+    usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:1.5rem;">Error loading users: ${err.message}</td></tr>`;
+  });
   
   // Render venues list
   if (!facilities.length) {
@@ -1875,36 +2495,64 @@ window.toggleAddUserForm = function() {
   }
 };
 
-window.submitAddUser = function() {
+window.submitAddUser = async function() {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
   }
-  const nameInput = document.getElementById("addUserNameInput");
-  const roleInput = document.getElementById("addUserRoleInput");
-  const contactInput = document.getElementById("addUserContactInput");
-  
-  if (!nameInput || !roleInput || !contactInput) return;
-  
-  const name = nameInput.value.trim();
-  const role = roleInput.value.trim();
-  const contact = contactInput.value.trim();
-  
-  if (!name || !role || !contact) {
-    showToast("Error: All fields are required!");
+  const nameInput    = document.getElementById("addUserNameInput");
+  const emailInput   = document.getElementById("addUserEmailInput");
+  const roleSelect   = document.getElementById("addUserRoleSelect");
+  const tempPwdInput = document.getElementById("addUserTempPwdInput");
+  const errEl        = document.getElementById("addUserServerError");
+  const saveBtn      = document.getElementById("saveUserBtn");
+
+  if (!nameInput || !emailInput || !roleSelect || !tempPwdInput) return;
+
+  const name    = nameInput.value.trim();
+  const email   = emailInput.value.trim();
+  const role    = roleSelect.value;
+  const tempPwd = tempPwdInput.value.trim();
+
+  if (errEl) errEl.classList.add("hidden");
+
+  if (!name || !email || !tempPwd) {
+    if (errEl) { errEl.textContent = "All fields are required."; errEl.classList.remove("hidden"); }
     return;
   }
-  
-  const nextId = users.length ? Math.max(...users.map(u => u.id)) + 1 : 1;
-  users.push({ id: nextId, name, role, contact });
-  
-  nameInput.value = "";
-  roleInput.value = "";
-  contactInput.value = "";
-  document.getElementById("addUserFormContainer").classList.add("hidden");
-  
-  renderAdminManage();
-  showToast(`User ${name} registered successfully!`);
+  if (tempPwd.length < 6) {
+    if (errEl) { errEl.textContent = "Temporary password must be at least 6 characters."; errEl.classList.remove("hidden"); }
+    return;
+  }
+
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Creating…"; }
+
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost:5000/api/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ name, email: email.toLowerCase(), password: tempPwd, role })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create user");
+
+    nameInput.value    = "";
+    emailInput.value   = "";
+    tempPwdInput.value = "";
+    document.getElementById("addUserFormContainer").classList.add("hidden");
+
+    renderAdminManage();
+    showToast(`User ${name} created successfully!`);
+  } catch (err) {
+    if (errEl) { errEl.textContent = err.message || "Failed to create user."; errEl.classList.remove("hidden"); }
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Create User"; }
+  }
 };
 
 window.toggleAddVenueForm = function() {
@@ -1918,7 +2566,7 @@ window.toggleAddVenueForm = function() {
   }
 };
 
-window.submitAddVenue = function() {
+window.submitAddVenue = async function() {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
@@ -1958,50 +2606,87 @@ window.submitAddVenue = function() {
     image = urlInput.value.trim();
   }
   
-  facilities.push({
-    id,
-    label,
-    icon,
-    capacity,
-    available: true,
-    category,
-    desc,
-    image
-  });
-  
-  nameInput.value = "";
-  capacityInput.value = "";
-  iconInput.value = "";
-  descInput.value = "";
-  if (urlInput) urlInput.value = "";
-  if (fileInput) fileInput.value = "";
-  uploadedVenueImageBase64 = null;
-  
-  document.getElementById("addVenueFormContainer").classList.add("hidden");
-  
-  renderAdminManage();
-  renderGrid();
-  renderCalendar();
-  renderAdminCalendar();
-  renderAdminDashboard();
-  showToast(`Venue ${label} created successfully!`);
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost:5000/api/facilities', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name: label,
+        capacity: capacity,
+        category: category,
+        description: desc,
+        icon: icon,
+        images: image ? [image] : [],
+        type: 'OTHER',
+        location: 'Main Campus',
+        isActive: true
+      })
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to create venue");
+    }
+
+    nameInput.value = "";
+    capacityInput.value = "";
+    iconInput.value = "";
+    descInput.value = "";
+    if (urlInput) urlInput.value = "";
+    if (fileInput) fileInput.value = "";
+    uploadedVenueImageBase64 = null;
+    
+    document.getElementById("addVenueFormContainer").classList.add("hidden");
+    
+    // Refresh facilities via Redux
+    await store.dispatch(fetchFacilities());
+    
+    renderAdminManage();
+    renderGrid();
+    renderCalendar();
+    renderAdminCalendar();
+    renderAdminDashboard();
+    showToast(`Venue ${label} created successfully!`);
+  } catch (err) {
+    showToast(`Error: ${err.message}`);
+  }
 };
 
-window.deleteUser = function(id) {
+window.deleteUser = async function(uid) {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
   }
-  const uIndex = users.findIndex(u => u.id === id);
-  if (uIndex === -1) return;
-  const uName = users[uIndex].name;
-  
-  users.splice(uIndex, 1);
-  renderAdminManage();
-  showToast(`User ${uName} removed!`);
+  const profile = supabaseUsers.find(u => u.id === uid);
+  const uName   = profile ? profile.name : "User";
+
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`http://localhost:5000/api/admin/users/${uid}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to delete user");
+    }
+
+    supabaseUsers = supabaseUsers.filter(u => u.id !== uid);
+    renderAdminManage();
+    showToast(`User ${uName} removed!`);
+  } catch (err) {
+    showToast(`Error: ${err.message}`);
+  }
 };
 
-window.deleteVenue = function(facilityId) {
+window.deleteVenue = async function(facilityId) {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
@@ -2010,13 +2695,30 @@ window.deleteVenue = function(facilityId) {
   if (fIndex === -1) return;
   const fLabel = facilities[fIndex].label;
   
-  facilities.splice(fIndex, 1);
-  renderAdminManage();
-  renderGrid();
-  renderCalendar();
-  renderAdminCalendar();
-  renderAdminDashboard();
-  showToast(`Venue ${fLabel} deleted!`);
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`http://localhost:5000/api/facilities/${facilityId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to delete venue");
+    }
+
+    await store.dispatch(fetchFacilities());
+    renderAdminManage();
+    renderGrid();
+    renderCalendar();
+    renderAdminCalendar();
+    renderAdminDashboard();
+    showToast(`Venue ${fLabel} deleted!`);
+  } catch(err) {
+    showToast(`Error: ${err.message}`);
+  }
 };
 
 /* =========================================
@@ -2079,11 +2781,71 @@ function initDateSelectorNav() {
     });
   }
 }
+async function initApp() {
+  if (localStorage.getItem('token')) {
+    enterDashboard();
+  } else {
+    showLoginPage();
+  }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   initSearch();
   initCancellationModal();
   initDateSelectorNav();
+
+  // Set up password visibility toggles
+  setupPasswordToggle("toggleLoginPwd",   "toggleLoginPwdIcon",   "loginPassword");
+  setupPasswordToggle("toggleCurrentPwd", "toggleCurrentPwdIcon", "currentPassword");
+  setupPasswordToggle("toggleNewPwd",     "toggleNewPwdIcon",     "newPassword");
+  setupPasswordToggle("toggleConfirmPwd", "toggleConfirmPwdIcon", "confirmPassword");
+
+  // Profile Dropdown toggle
+  const badge = document.getElementById("navUserBadge");
+  if (badge) {
+    badge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById("profileDropdownMenu");
+      if (menu) menu.classList.toggle("hidden");
+    });
+  }
+
+  // Close dropdown on click outside
+  document.addEventListener("click", () => {
+    const menu = document.getElementById("profileDropdownMenu");
+    if (menu) menu.classList.add("hidden");
+  });
+
+  // Dropdown Action: Change Password
+  const dropdownChangePwdBtn = document.getElementById("dropdownChangePwdBtn");
+  if (dropdownChangePwdBtn) {
+    dropdownChangePwdBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openChangePasswordScreen();
+    });
+  }
+
+  const dropdownLogoutBtn = document.getElementById("dropdownLogoutBtn");
+  if (dropdownLogoutBtn) {
+    dropdownLogoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      store.dispatch(logoutAction());
+      currentRole        = null;
+      currentUserProfile = null;
+      supabaseUsers      = [];
+      hideAllViews();
+      loginView.classList.remove("hidden");
+      lucide.createIcons();
+    });
+  }
+
+  // Settings page "Change Password" buttons
+  document.querySelectorAll(".open-change-pwd-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openChangePasswordScreen();
+    });
+  });
   
   // Set up venue image file listener
   const fileInput = document.getElementById("addVenueImageFileInput");
@@ -2158,5 +2920,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   
+  initApp();
   lucide.createIcons();
 });

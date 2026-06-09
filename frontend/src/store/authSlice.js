@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { API_BASE_URL } from '../config.js';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = API_BASE_URL;
 
 // Async thunks
 export const loginUser = createAsyncThunk('auth/login', async ({ email, password }, thunkAPI) => {

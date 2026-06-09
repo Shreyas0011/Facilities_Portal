@@ -4,6 +4,7 @@
 import { store } from './src/store/index.js';
 import { loginUser, fetchMe, logout as logoutAction, changePassword } from './src/store/authSlice.js';
 import { fetchFacilities, fetchBookings, fetchMyBookings, createBooking, updateBookingStatus } from './src/store/dataSlice.js';
+import { API_BASE_URL } from './src/config.js';
 
 console.log("MAIN LOADED");
 console.log("REDUX STORE INITIALIZED", store.getState());
@@ -174,8 +175,8 @@ async function showPublicCalendar() {
 
   try {
     const [facRes, bookRes] = await Promise.all([
-      fetch('http://localhost:5000/api/facilities'),
-      fetch('http://localhost:5000/api/bookings/public'),
+      fetch(`${API_BASE_URL}/facilities`),
+      fetch(`${API_BASE_URL}/bookings/public`),
     ]);
     if (!facRes.ok) throw new Error(`Facilities fetch failed (${facRes.status})`);
     if (!bookRes.ok) throw new Error(`Bookings fetch failed (${bookRes.status})`);
@@ -2380,7 +2381,7 @@ function renderAdminManage() {
   lucide.createIcons();
 
   const token = localStorage.getItem('token');
-  fetch('http://localhost:5000/api/admin/users', {
+  fetch(`${API_BASE_URL}/admin/users`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
   .then(res => res.json())
@@ -2529,7 +2530,7 @@ window.submitAddUser = async function() {
 
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/auth/signup', {
+    const res = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2608,7 +2609,7 @@ window.submitAddVenue = async function() {
   
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/facilities', {
+    const res = await fetch(`${API_BASE_URL}/facilities`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2666,7 +2667,7 @@ window.deleteUser = async function(uid) {
 
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost:5000/api/admin/users/${uid}`, {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${uid}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -2697,7 +2698,7 @@ window.deleteVenue = async function(facilityId) {
   
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost:5000/api/facilities/${facilityId}`, {
+    const res = await fetch(`${API_BASE_URL}/facilities/${facilityId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`

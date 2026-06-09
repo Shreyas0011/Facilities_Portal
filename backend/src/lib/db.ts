@@ -36,7 +36,7 @@ const seedInMemoryDB = async () => {
     console.log('Seeding in-memory database...');
     
     // Seed Users
-    const hashedPassword = await bcrypt.hash('Transcend@2026', 12);
+    const hashedPassword = await bcrypt.hash('Transcend@2026', 10);
     const users = [];
     for (const u of usersToSeed) {
       const created = await User.create({

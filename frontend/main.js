@@ -380,9 +380,11 @@ async function enterDashboard(role) {
   currentUserProfile = state.auth.user;
   currentRole = currentUserProfile?.role;
   
-  // Also fetch data when entering dashboard
-  await store.dispatch(fetchFacilities());
-  await store.dispatch(fetchBookings());
+  // Also fetch data when entering dashboard concurrently
+  await Promise.all([
+    store.dispatch(fetchFacilities()),
+    store.dispatch(fetchBookings())
+  ]);
 
   currentRole = currentUserProfile.role;
   hideAllViews();

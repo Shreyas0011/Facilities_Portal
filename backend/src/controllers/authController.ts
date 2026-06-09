@@ -39,7 +39,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction): P
     const existing = await User.findOne({ email: validated.email });
     if (existing) throw new AppError('User with this email already exists', 409);
 
-    const hashedPassword = await bcrypt.hash(validated.password, 12);
+    const hashedPassword = await bcrypt.hash(validated.password, 10);
 
     const user = await User.create({
       name:       validated.name,
@@ -177,7 +177,7 @@ export const changePassword = async (req: AuthRequest, res: Response, next: Next
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) throw new AppError('Invalid current password', 401);
 
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.firstLogin = false; // Unset firstLogin after password change
     await user.save();

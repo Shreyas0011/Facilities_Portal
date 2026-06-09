@@ -66,7 +66,7 @@ const seedDB = async () => {
     console.log('Connected to MongoDB');
 
     const defaultPassword = 'Transcend@2026';
-    const hashedPassword = await bcrypt.hash(defaultPassword, 12);
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
     console.log(`Seeding ${usersToSeed.length} users...`);
 

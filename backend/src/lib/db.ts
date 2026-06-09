@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { Facility } from '../models/Facility';
@@ -7,7 +6,7 @@ import { Booking } from '../models/Booking';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/facility_portal';
 
-let mongoMemoryServer: MongoMemoryServer | null = null;
+let mongoMemoryServer: any = null;
 
 const usersToSeed = [
   { name: 'Prasanna Kumar K', email: 'prasannak@transcendgroup.org', role: 'superadmin' },
@@ -100,15 +99,25 @@ const seedInMemoryDB = async () => {
 };
 
 export const connectDB = async (): Promise<void> => {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   try {
     const conn = await mongoose.connect(MONGODB_URI, {
       dbName: 'facility_portal',
-      serverSelectionTimeoutMS: 2000,
+      serverSelectionTimeoutMS: isProduction ? 10000 : 2000,
     });
     console.log(`✅ MongoDB connected: ${conn.connection.host}`);
   } catch (error: any) {
+    if (isProduction) {
+      // In production, never fall back to in-memory — fail fast with a clear message
+      console.error('❌ MongoDB connection failed in production. Check your MONGODB_URI environment variable on Render.');
+      console.error(error.message);
+      process.exit(1);
+    }
+
     console.warn('⚠️ MongoDB connection to Atlas failed. Spinning up in-memory MongoDB server...');
     try {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
       mongoMemoryServer = await MongoMemoryServer.create();
       const uri = mongoMemoryServer.getUri();
       console.log(`🚀 In-memory MongoDB Server started at: ${uri}`);

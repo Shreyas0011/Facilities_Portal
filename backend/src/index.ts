@@ -16,6 +16,7 @@ import notificationRoutes from './routes/notifications';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // ─── Security middleware ───────────────────────────────────────────────────────

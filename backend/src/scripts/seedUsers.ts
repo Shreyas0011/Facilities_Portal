@@ -13,8 +13,8 @@ const usersToSeed = [
   // Super Admin
   { name: 'Prasanna Kumar K', email: 'prasannak@transcendgroup.org', role: 'superadmin' },
   { name: 'Pankaj M', email: 'pankajmatta@transcendgroup.org', role: 'superadmin' },
-  { name: 'Siddharth K T', email: 'siddharth.kt@transcendgroup.org', role: 'superadmin' },
-  { name: 'Shwetha S', email: 'shwetha.s@transcendgroup.org', role: 'superadmin' },
+  { name: 'Siddharth K T', email: 'siddharthkt@transcendgroup.org', role: 'superadmin' },
+  { name: 'Shwetha S', email: 'shwethas@transcendgroup.org', role: 'superadmin' },
 
   // Admin for approval
   { name: 'Prasad K', email: 'prasad@transcendgroup.org', role: 'admin' },

@@ -196,9 +196,7 @@ export const googleAuth = async (req: Request, res: Response, next: NextFunction
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (!user) {
-      user = await prisma.user.create({
-        data: { name, email, googleId, avatar, role: 'viewer' },
-      });
+      user = await User.create({ name, email, googleId, avatar, role: 'viewer' });
     } else if (!user.googleId) {
       user = await User.findByIdAndUpdate(user._id, { googleId, avatar }, { new: true })!;
     }

@@ -117,24 +117,10 @@ export const getAnalytics = async (req: AuthRequest, res: Response, next: NextFu
 
 export const getPendingApprovals = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const bookings = await prisma.booking.findMany({
-      where: { status: 'PENDING', approvalRequired: true },
-      include: {
-        facility: { select: { id: true, name: true, location: true, type: true } },
-        user: { select: { id: true, name: true, email: true, role: true, department: true } },
-        approval: {
-          include: {
-            approvedBy: {
-              select: {
-                name: true,
-                role: true,
-              }
-            }
-          }
-        },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const bookings = await Booking.find({ status: 'PENDING' })
+      .populate('facilityId', 'name location type')
+      .populate('userId', 'name email role department')
+      .sort({ createdAt: 1 });
     res.json({ bookings });
   } catch (error) {
     next(error);

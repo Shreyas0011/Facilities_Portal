@@ -197,35 +197,18 @@ export const getMyBookings = async (req: AuthRequest, res: Response, next: NextF
     if (status)           filter.status = status;
     if (upcoming === 'true') filter.date = { $gte: new Date() };
 
-    const bookings = await prisma.booking.findMany({
-      where,
-      include: {
-        facility: { select: { id: true, name: true, location: true, type: true, images: true } },
-        approval: {
-          select: {
-            status: true,
-            remarks: true,
-            timestamp: true,
-            approvedBy: {
-              select: {
-                name: true,
-                role: true,
-              }
-            }
-          }
-        },
-      },
-      orderBy: { date: 'asc' },
-    });
+    const bookings = await Booking.find(filter)
+      .populate('facilityId', 'name location type images')
+      .sort({ date: 1 });
 
     // Attach approvals
-    const bookingIds = bookings.map((b) => b._id);
+    const bookingIds = bookings.map((b: any) => b._id);
     const approvals  = await Approval.find({ bookingId: { $in: bookingIds } })
       .populate('approvedById', 'name role');
 
-    const approvalMap = new Map(approvals.map((a) => [a.bookingId.toString(), a]));
+    const approvalMap = new Map(approvals.map((a: any) => [a.bookingId.toString(), a]));
 
-    const result = bookings.map((b) => ({
+    const result = bookings.map((b: any) => ({
       ...b.toJSON(),
       approval: approvalMap.get(b._id.toString()) ?? null,
     }));
@@ -250,32 +233,18 @@ export const getAllBookings = async (req: AuthRequest, res: Response, next: Next
       if (to)   filter.date.$lte = new Date(to as string);
     }
 
-    const bookings = await prisma.booking.findMany({
-      where,
-      include: {
-        facility: { select: { id: true, name: true, location: true, type: true } },
-        user: { select: { id: true, name: true, email: true, role: true, department: true } },
-        approval: {
-          include: {
-            approvedBy: {
-              select: {
-                name: true,
-                role: true,
-              }
-            }
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const bookings = await Booking.find(filter)
+      .populate('facilityId', 'name location type')
+      .populate('userId', 'name email role department')
+      .sort({ createdAt: -1 });
 
-    const bookingIds = bookings.map((b) => b._id);
+    const bookingIds = bookings.map((b: any) => b._id);
     const approvals  = await Approval.find({ bookingId: { $in: bookingIds } })
       .populate('approvedById', 'name role');
 
-    const approvalMap = new Map(approvals.map((a) => [a.bookingId.toString(), a]));
+    const approvalMap = new Map(approvals.map((a: any) => [a.bookingId.toString(), a]));
 
-    const result = bookings.map((b) => ({
+    const result = bookings.map((b: any) => ({
       ...b.toJSON(),
       approval: approvalMap.get(b._id.toString()) ?? null,
     }));
@@ -296,7 +265,7 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response, next:
     if (!booking) throw new AppError('Booking not found', 404);
 
     if (status === 'CANCELLED') {
-      if (booking.userId !== req.user!.id && !['admin', 'superadmin'].includes(req.user!.role)) {
+      if (booking.userId.toString() !== req.user!.id && !['admin', 'superadmin'].includes(req.user!.role)) {
         throw new AppError('Not authorized to cancel this booking', 403);
       }
     }
@@ -327,24 +296,16 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response, next:
       );
     }
 
-    const updatedBooking = await prisma.booking.update({
-      where: { id },
-      data: { status },
-      include: {
-        facility: { select: { name: true } },
-        user: { select: { name: true, email: true } },
-        approval: {
-          include: {
-            approvedBy: {
-              select: {
-                name: true,
-                role: true,
-              }
-            }
-          }
-        },
-      },
-    });
+    booking.status = status;
+    await booking.save();
+    
+    let facilityName = 'Facility';
+    if (booking.facilityId) {
+       const facility = await Facility.findById(booking.facilityId);
+       if (facility) facilityName = facility.name;
+    }
+    
+    const approval = await Approval.findOne({ bookingId: id }).populate('approvedById', 'name role');
 
     const statusMessages: Record<string, string> = {
       APPROVED:  `Your booking for ${facilityName} has been approved!`,
@@ -375,7 +336,7 @@ export const deleteBooking = async (req: AuthRequest, res: Response, next: NextF
     const booking = await Booking.findById(id);
     if (!booking) throw new AppError('Booking not found', 404);
 
-    if (booking.userId !== req.user!.id && !['admin', 'superadmin'].includes(req.user!.role)) {
+    if (booking.userId.toString() !== req.user!.id && !['admin', 'superadmin'].includes(req.user!.role)) {
       throw new AppError('Not authorized', 403);
     }
 

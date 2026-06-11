@@ -8,9 +8,7 @@ console.log("SUPABASE LOADED");
 /* =========================================
    DATA
    ========================================= */
-let facilities = [];
-let bookings = [];
-let users = [];
+
 
 const categories = [
   { id: "all",        label: "All Amenities" },

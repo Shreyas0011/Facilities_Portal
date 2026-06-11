@@ -1,13 +1,18 @@
 import { Response, NextFunction } from 'express';
-import { prisma } from '../lib/prisma';
+import mongoose from 'mongoose';
+import { Booking } from '../models/Booking';
+import { Approval } from '../models/Approval';
+import { Facility } from '../models/Facility';
+import { User } from '../models/User';
+import { MaintenanceBlock } from '../models/MaintenanceBlock';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 
 export const getAnalytics = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const now = new Date();
+    const now           = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo  = new Date(now.getTime() -  7 * 24 * 60 * 60 * 1000);
 
     const [
       totalBookings,
@@ -17,70 +22,76 @@ export const getAnalytics = async (req: AuthRequest, res: Response, next: NextFu
       totalFacilities,
       totalUsers,
       recentBookings,
-      facilityUsage,
-      bookingsByStatus,
-      dailyTrend,
     ] = await Promise.all([
-      prisma.booking.count(),
-      prisma.booking.count({ where: { status: 'PENDING' } }),
-      prisma.booking.count({ where: { status: 'APPROVED' } }),
-      prisma.booking.count({ where: { status: 'CANCELLED' } }),
-      prisma.facility.count({ where: { isActive: true } }),
-      prisma.user.count({ where: { isActive: true } }),
-      prisma.booking.findMany({
-        where: { createdAt: { gte: sevenDaysAgo } },
-        include: {
-          facility: { select: { name: true } },
-          user: { select: { name: true, role: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      }),
-      prisma.booking.groupBy({
-        by: ['facilityId'],
-        where: { createdAt: { gte: thirtyDaysAgo } },
-        _count: { id: true },
-        orderBy: { _count: { id: 'desc' } },
-        take: 5,
-      }),
-      prisma.booking.groupBy({
-        by: ['status'],
-        _count: { id: true },
-      }),
-      prisma.booking.groupBy({
-        by: ['createdAt'],
-        where: { createdAt: { gte: sevenDaysAgo } },
-        _count: { id: true },
-      }),
+      Booking.countDocuments(),
+      Booking.countDocuments({ status: 'PENDING' }),
+      Booking.countDocuments({ status: 'APPROVED' }),
+      Booking.countDocuments({ status: 'CANCELLED' }),
+      Facility.countDocuments({ isActive: true }),
+      User.countDocuments({ isActive: true }),
+      Booking.find({ createdAt: { $gte: sevenDaysAgo } })
+        .populate('facilityId', 'name')
+        .populate('userId', 'name role')
+        .sort({ createdAt: -1 })
+        .limit(10),
     ]);
 
-    // Get facility names for usage
-    const facilityIds = facilityUsage.map((f: any) => f.facilityId);
-    const facilities = await prisma.facility.findMany({
-      where: { id: { in: facilityIds } },
-      select: { id: true, name: true, type: true },
-    });
+    // Top 5 facilities by booking count (last 30 days)
+    const facilityUsage = await Booking.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: '$facilityId', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from:         'facilities',
+          localField:   '_id',
+          foreignField: '_id',
+          as:           'facility',
+        },
+      },
+      { $unwind: { path: '$facility', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          facilityId: '$_id',
+          count:      1,
+          facility: {
+            id:   { $toString: '$facility._id' },
+            name: '$facility.name',
+            type: '$facility.type',
+          },
+        },
+      },
+    ]);
 
-    const topFacilities = facilityUsage.map((f: any) => ({
-      ...f,
-      facility: facilities.find((fac: any) => fac.id === f.facilityId),
-    }));
+    // Bookings grouped by status
+    const bookingsByStatus = await Booking.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $project: { status: '$_id', count: 1, _id: 0 } },
+    ]);
 
-    // Peak hours analysis
-    const allBookings = await prisma.booking.findMany({
-      where: { createdAt: { gte: thirtyDaysAgo }, status: 'APPROVED' },
-      select: { startTime: true },
-    });
+    // Daily trend (last 7 days)
+    const dailyTrend = await Booking.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id:   { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { date: '$_id', count: 1, _id: 0 } },
+    ]);
 
-    const hourCounts: Record<string, number> = {};
-    allBookings.forEach((b: any) => {
-      const hour = b.startTime.split(':')[0];
-      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-    });
-    const peakHours = Object.entries(hourCounts)
-      .map(([hour, count]) => ({ hour: `${hour}:00`, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
+    // Peak hours
+    const hourData = await Booking.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo }, status: 'APPROVED' } },
+      { $project: { hour: { $substr: ['$startTime', 0, 2] } } },
+      { $group: { _id: '$hour', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 8 },
+      { $project: { hour: { $concat: ['$_id', ':00'] }, count: 1, _id: 0 } },
+    ]);
 
     res.json({
       overview: {
@@ -91,12 +102,12 @@ export const getAnalytics = async (req: AuthRequest, res: Response, next: NextFu
         totalFacilities,
         totalUsers,
         cancellationRate: totalBookings > 0 ? ((cancelledBookings / totalBookings) * 100).toFixed(1) : 0,
-        approvalRate: totalBookings > 0 ? ((approvedBookings / totalBookings) * 100).toFixed(1) : 0,
+        approvalRate:     totalBookings > 0 ? ((approvedBookings  / totalBookings) * 100).toFixed(1) : 0,
       },
       recentBookings,
-      topFacilities,
+      topFacilities: facilityUsage,
       bookingsByStatus,
-      peakHours,
+      peakHours:     hourData,
       dailyTrend,
     });
   } catch (error) {
@@ -133,25 +144,27 @@ export const getPendingApprovals = async (req: AuthRequest, res: Response, next:
 export const getUsers = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { role, search } = req.query;
-    const where: any = {};
-    if (role) where.role = role;
+    const filter: Record<string, any> = {};
+    if (role) filter.role = role;
     if (search) {
-      where.OR = [
-        { name: { contains: search as string } },
-        { email: { contains: search as string } },
+      filter.$or = [
+        { name:  { $regex: search as string, $options: 'i' } },
+        { email: { $regex: search as string, $options: 'i' } },
       ];
     }
 
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true, name: true, email: true, role: true,
-        department: true, isActive: true, createdAt: true,
-        _count: { select: { bookings: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json({ users });
+    const users = await User.find(filter)
+      .select('id name email role department isActive createdAt')
+      .sort({ createdAt: -1 });
+
+    const usersWithCount = await Promise.all(
+      users.map(async (u) => {
+        const bookingCount = await Booking.countDocuments({ userId: u._id });
+        return { ...u.toJSON(), _count: { bookings: bookingCount } };
+      })
+    );
+
+    res.json({ users: usersWithCount });
   } catch (error) {
     next(error);
   }
@@ -159,19 +172,23 @@ export const getUsers = async (req: AuthRequest, res: Response, next: NextFuncti
 
 export const updateUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params;
-    const { role, isActive } = req.body;
+    const id              = req.params.id as string;
+    const { role, isActive }  = req.body;
+    if (!mongoose.Types.ObjectId.isValid(id)) throw new AppError('Invalid user ID', 400);
 
     // Super admin only for role changes
     if (role && req.user!.role !== 'superadmin') {
       throw new AppError('Only super admins can change user roles', 403);
     }
 
-    const user = await prisma.user.update({
-      where: { id },
-      data: { role, isActive },
-      select: { id: true, name: true, email: true, role: true, isActive: true },
-    });
+    const update: Record<string, any> = {};
+    if (role     !== undefined) update.role     = role;
+    if (isActive !== undefined) update.isActive = isActive;
+
+    const user = await User.findByIdAndUpdate(id, update, { new: true, runValidators: true })
+      .select('id name email role isActive');
+    if (!user) throw new AppError('User not found', 404);
+
     res.json({ message: 'User updated', user });
   } catch (error) {
     next(error);
@@ -182,21 +199,19 @@ export const createMaintenanceBlock = async (req: AuthRequest, res: Response, ne
   try {
     const { facilityId, blockedDate, startTime, endTime, reason } = req.body;
 
-    const facility = await prisma.facility.findUnique({ where: { id: facilityId } });
+    const facility = await Facility.findById(facilityId);
     if (!facility) throw new AppError('Facility not found', 404);
 
-    const block = await prisma.maintenanceBlock.create({
-      data: {
-        facilityId,
-        blockedDate: new Date(blockedDate),
-        startTime,
-        endTime,
-        reason,
-      },
-      include: { facility: { select: { name: true } } },
+    const block = await MaintenanceBlock.create({
+      facilityId,
+      blockedDate: new Date(blockedDate),
+      startTime,
+      endTime,
+      reason,
     });
 
-    res.status(201).json({ message: 'Maintenance block created', block });
+    const populated = await block.populate('facilityId', 'name');
+    res.status(201).json({ message: 'Maintenance block created', block: populated });
   } catch (error) {
     next(error);
   }
@@ -204,10 +219,9 @@ export const createMaintenanceBlock = async (req: AuthRequest, res: Response, ne
 
 export const getMaintenanceBlocks = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const blocks = await prisma.maintenanceBlock.findMany({
-      include: { facility: { select: { name: true, location: true } } },
-      orderBy: { blockedDate: 'asc' },
-    });
+    const blocks = await MaintenanceBlock.find()
+      .populate('facilityId', 'name location')
+      .sort({ blockedDate: 1 });
     res.json({ blocks });
   } catch (error) {
     next(error);
@@ -216,8 +230,12 @@ export const getMaintenanceBlocks = async (req: AuthRequest, res: Response, next
 
 export const deleteMaintenanceBlock = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params;
-    await prisma.maintenanceBlock.delete({ where: { id } });
+    const id = req.params.id as string;
+    if (!mongoose.Types.ObjectId.isValid(id)) throw new AppError('Invalid block ID', 400);
+
+    const block = await MaintenanceBlock.findByIdAndDelete(id);
+    if (!block) throw new AppError('Maintenance block not found', 404);
+
     res.json({ message: 'Maintenance block removed' });
   } catch (error) {
     next(error);

@@ -3,6 +3,7 @@ import {
   createBooking,
   getMyBookings,
   getAllBookings,
+  getPublicBookings,
   updateBookingStatus,
   deleteBooking,
 } from '../controllers/bookingController';
@@ -10,6 +11,10 @@ import { authenticate, authorize } from '../middleware/auth';
 
 const router = Router();
 
+// ── Public route (no auth required) ─────────────────────────────────────────
+router.get('/public', getPublicBookings);
+
+// ── All routes below require authentication ──────────────────────────────────
 router.use(authenticate);
 
 router.post('/', createBooking);
@@ -19,3 +24,4 @@ router.patch('/:id/status', updateBookingStatus);
 router.delete('/:id', deleteBooking);
 
 export default router;
+

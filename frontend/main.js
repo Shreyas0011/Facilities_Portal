@@ -8,34 +8,9 @@ console.log("SUPABASE LOADED");
 /* =========================================
    DATA
    ========================================= */
-const facilities = [
-  { id: "mph",                 label: "MPH",                   icon: "warehouse",      capacity: "300",         available: true,  category: "academic",   location: "TPU Com",        desc: "Multi-purpose hall for indoor sports, assemblies, and events.", image: null },
-  { id: "pcr_1",               label: "PCR 1",                 icon: "presentation",   capacity: "30",          available: true,  category: "academic",   location: "TPU Com",        desc: "Smart classroom equipped with modern presentation resources.", image: null },
-  { id: "pcr_2",               label: "PCR 2",                 icon: "presentation",   capacity: "30",          available: true,  category: "academic",   location: "TPU Com",        desc: "Collaborative learning space with high-speed internet and displays.", image: null },
-  { id: "pcr_4",               label: "PCR 4",                 icon: "presentation",   capacity: "30",          available: true,  category: "academic",   location: "TPU Com",        desc: "Dedicated presentation room with hybrid conferencing setup.", image: null },
-  { id: "av_room",             label: "AV Room",               icon: "clapperboard",   capacity: "50",          available: true,  category: "academic",   location: "TPU Com",        desc: "Acoustically treated room for media preview and small screenings.", image: null },
-  { id: "comp_lab_1",          label: "Comp Lab 1",            icon: "monitor",        capacity: "40",          available: true,  category: "academic",   location: "TPU Com",        desc: "Computer lab featuring workstations with specialized software.", image: null },
-  { id: "comp_lab_2",          label: "Comp Lab 2",            icon: "monitor",        capacity: "40",          available: true,  category: "academic",   location: "TPU Com",        desc: "Advanced programming and database systems laboratory room.", image: null },
-  { id: "swimming",            label: "Swimming",              icon: "waves",          capacity: "Open Space",  available: true,  category: "recreation", location: "Sports Complex", desc: "Half-Olympic size indoor swimming pool with temperature controls.", image: null },
-  { id: "fitness",             label: "Fitness",               icon: "dumbbell",       capacity: "50",          available: true,  category: "recreation", location: "Sports Complex", desc: "Fully equipped gymnasium with cardio machines and weights.", image: null },
-  { id: "bb",                  label: "BB",                    icon: "basketball",     capacity: "Open Space",  available: true,  category: "recreation", location: "Sports Complex", desc: "Indoor wooden-floor court for basketball games and practice.", image: null },
-  { id: "bt",                  label: "BT",                    icon: "swords",         capacity: "Open Space",  available: true,  category: "recreation", location: "Sports Complex", desc: "Multi-court indoor badminton facility with synthetic flooring.", image: null },
-  { id: "revel",               label: "Revel",                 icon: "disc",           capacity: "50",          available: true,  category: "recreation", location: "Sports Complex", desc: "Recreation lounge and dynamic student activities hub.", image: null },
-  { id: "indoor_play",         label: "Indoor Play Area",      icon: "smile",          capacity: "Open Space",  available: true,  category: "recreation", location: "TPU Sci",        desc: "Indoor recreational play area for table games and activities.", image: null },
-  { id: "auditorium",          label: "Auditorium",            icon: "mic-2",          capacity: "500",         available: false, category: "media",      location: "TPU Sci",        desc: "Grand auditorium with 500-seat capacity, surround PA system, and backstage.", image: null },
-  { id: "turf_lg_1",           label: "Turf LG 1",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Outdoor artificial grass turf for football and athletic sessions.", image: null },
-  { id: "turf_lg_2",           label: "Turf LG 2",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Lower ground football turf with floodlight support.", image: null },
-  { id: "turf_lg_3",           label: "Turf LG 3",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Premium synthetic grass field for training and matches.", image: null },
-  { id: "turf_lg_4",           label: "Turf LG 4",             icon: "layout-grid",    capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Additional outdoor lower ground sports pitch.", image: null },
-  { id: "turf_ug_5",           label: "Turf UG 5",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Upper ground turf suitable for small-sided games and practice.", image: null },
-  { id: "turf_ug_6",           label: "Turf UG 6",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Upper ground synthetic field with spectator seating.", image: null },
-  { id: "turf_ug_7",           label: "Turf UG 7",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Synthetic multi-sport grass turf on the upper level.", image: null },
-  { id: "turf_ug_8",           label: "Turf UG 8",             icon: "grid",           capacity: "Open Space",  available: true,  category: "recreation", location: "New Turf",       desc: "Dedicated practice pitch on the upper level complex.", image: null },
-  { id: "tgis_turf",           label: "TGIS Turf",             icon: "award",          capacity: "Open Space",  available: true,  category: "recreation", location: "TGIS",           desc: "TGIS campus sports turf for tournaments and training.", image: null },
-  { id: "tgis_dance",          label: "TGIS Dance & Fitness",  icon: "activity",       capacity: "40",          available: true,  category: "recreation", location: "TGIS",           desc: "TGIS studio with full-length mirrors and wooden flooring.", image: null },
-  { id: "tgis_karate",         label: "TGIS Karate",           icon: "shield",         capacity: "30",          available: true,  category: "recreation", location: "TGIS",           desc: "TGIS martial arts training room with safety mats and bags.", image: null },
-  { id: "tt",                  label: "TT",                    icon: "table",          capacity: "8",           available: true,  category: "recreation", location: "Boys Hostel",    desc: "Table tennis room with tournament-grade tables in Boys Hostel.", image: null }
-];
+let facilities = [];
+let bookings = [];
+let users = [];
 
 const categories = [
   { id: "all",        label: "All Amenities" },
@@ -55,11 +30,6 @@ const bookings = [
   { id: 7, facility: "PCR 2",          purpose: "Corporate Tech Seminar",       status: "REJECTED",  date: "2026-10-20", time: "09:00 – 13:00", attendees: 110, requirements: "Dual screen projector, premium audio", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "pcr_2", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849", approvedByName: "Mr. John Doe", approvedByRole: "admin" }
 ];
 
-let users = [
-  { id: 1, name: "Dr. Sarah Jenkins", role: "Dept. Chair", contact: "+1 (555) 019-2834" },
-  { id: 2, name: "Prof. Alex Mercer", role: "Computer Science", contact: "+1 (555) 014-9821" },
-  { id: 3, name: "Dr. Aris Thorne", role: "Physics Professor", contact: "+1 (555) 017-3849" }
-];
 
 /* =========================================
    STATE
@@ -390,7 +360,12 @@ async function enterDashboard(role) {
 
   if (currentRole === "viewer") {
     calendarViewPortal.classList.remove("hidden");
+    console.log("[Viewer] Portal shown. Facilities:", facilities.length, "Bookings:", bookings.length);
+    // Start live clock and populate stats
+    startCalViewClock();
+    renderCalViewStats();
     renderCalendarViewPortal();
+    console.log("[Viewer] Calendar rendered.");
     lucide.createIcons();
     return;
   }
@@ -697,10 +672,105 @@ function renderGrid() {
 }
 
 /* =========================================
+   HERO GALLERY (Superadmin image management)
+   ========================================= */
+const HERO_IMAGES_KEY = 'heroGalleryImages';
+
+function getHeroImages() {
+  try { return JSON.parse(localStorage.getItem(HERO_IMAGES_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveHeroImages(imgs) {
+  localStorage.setItem(HERO_IMAGES_KEY, JSON.stringify(imgs));
+}
+
+function renderHeroGallery() {
+  const leftPanel  = document.getElementById('heroImgLeft');
+  const rightPanel = document.getElementById('heroImgRight');
+  if (!leftPanel || !rightPanel) return;
+
+  const imgs = getHeroImages();
+  const isAdmin = currentRole === 'superadmin';
+
+  const makeItem = (img, idx) => {
+    const div = document.createElement('div');
+    div.className = 'hero-gallery-item';
+    div.innerHTML = `
+      <img src="${img}" alt="Gallery image ${idx + 1}" loading="lazy" />
+      ${isAdmin ? `<button class="hero-gallery-delete" data-idx="${idx}" title="Remove image">✕</button>` : ''}
+    `;
+    return div;
+  };
+
+  leftPanel.innerHTML  = '';
+  rightPanel.innerHTML = '';
+
+  imgs.forEach((img, idx) => {
+    const item = makeItem(img, idx);
+    if (idx % 2 === 0) leftPanel.appendChild(item);
+    else               rightPanel.appendChild(item);
+  });
+
+  // Wire delete buttons
+  [leftPanel, rightPanel].forEach(panel => {
+    panel.querySelectorAll('.hero-gallery-delete').forEach(btn => {
+      btn.addEventListener('click', () => deleteHeroImage(parseInt(btn.dataset.idx)));
+    });
+  });
+}
+
+function deleteHeroImage(idx) {
+  const imgs = getHeroImages();
+  imgs.splice(idx, 1);
+  saveHeroImages(imgs);
+  renderHeroGallery();
+  showToast('Image removed.');
+}
+
+function initHeroGallery() {
+  // Show upload panel for superadmin
+  const panel = document.getElementById('heroImageAdminPanel');
+  if (panel) panel.style.display = currentRole === 'superadmin' ? 'block' : 'none';
+
+  renderHeroGallery();
+  lucide.createIcons();
+
+  const input = document.getElementById('heroImageUploadInput');
+  if (!input) return;
+
+  input.addEventListener('change', () => {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+
+    let processed = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imgs = getHeroImages();
+        imgs.push(e.target.result);
+        saveHeroImages(imgs);
+        processed++;
+        if (processed === files.length) {
+          renderHeroGallery();
+          showToast(`${files.length} image${files.length > 1 ? 's' : ''} added!`);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = '';
+  });
+}
+
+/* =========================================
    FACULTY: RECENT BOOKINGS (below grid)
    ========================================= */
 function renderRecentBookings() {
-  const recent = [...bookings].slice(0, 3);
+  if (!recentList) return;
+  const recent = bookings
+    .filter(b => b.requesterId === currentUserProfile.id)
+    .slice(-4)
+    .reverse();
   if (!recent.length) {
     recentList.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:2rem;">No recent bookings yet.</p>`;
     return;
@@ -751,16 +821,67 @@ function renderCalendarViewPortal() {
   renderUnifiedCalendar("calendarViewWrapper", false, true);
 }
 
+// Live clock for viewer topbar
+let _calViewClockInterval = null;
+function startCalViewClock() {
+  const el = document.getElementById('calViewLiveDate');
+  if (!el) return;
+  if (_calViewClockInterval) clearInterval(_calViewClockInterval);
+  const tick = () => {
+    const now = new Date();
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    el.innerHTML = `<i data-lucide="clock" style="width:12px;height:12px;"></i> ${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} &nbsp;&middot;&nbsp; ${hh}:${mm}`;
+    lucide.createIcons();
+  };
+  tick();
+  _calViewClockInterval = setInterval(tick, 30000);
+}
+
+// Stats strip for viewer portal
+function renderCalViewStats() {
+  const el = document.getElementById('calViewStats');
+  if (!el) return;
+  const approved = bookings.filter(b => b.status === 'APPROVED').length;
+  const pending  = bookings.filter(b => b.status === 'PENDING').length;
+  const todayKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const todayCount = bookings.filter(b => b.date === todayKey && (b.status === 'APPROVED' || b.status === 'PENDING')).length;
+  el.innerHTML = `
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value" style="color:#34d399;">${approved}</span>
+      <span class="cal-view-stat-label"><span class="cal-view-stat-dot" style="background:#34d399;"></span>Approved</span>
+    </div>
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value" style="color:#fbbf24;">${pending}</span>
+      <span class="cal-view-stat-label"><span class="cal-view-stat-dot" style="background:#fbbf24;"></span>Pending</span>
+    </div>
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value" style="color:#60a5fa;">${todayCount}</span>
+      <span class="cal-view-stat-label"><span class="cal-view-stat-dot" style="background:#60a5fa;"></span>Today</span>
+    </div>
+    <div class="cal-view-stat-card">
+      <span class="cal-view-stat-value">${facilities.length}</span>
+      <span class="cal-view-stat-label">Venues</span>
+    </div>
+  `;
+}
+
 /* =========================================
    UNIFIED INTERACTIVE CALENDAR ENGINE
    ========================================= */
-let calendarDate = new Date(2026, 9, 1); // Start in October 2026 for visibility
+let calendarDate = new Date(); // Start on today's date
 let calendarViewMode = "month"; // "month" | "week" | "day"
 let calendarFilterSerial = "all"; // "all" | "01" ... "09"
 
 function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = false) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) {
+    console.error("[Calendar] Container not found:", containerId);
+    return;
+  }
+  console.log("[Calendar] Rendering", containerId, "| bookings:", bookings.length, "| facilities:", facilities.length);
 
   let titleText = "";
   if (calendarViewMode === "month") {
@@ -808,19 +929,19 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
 
   container.querySelector(".btn-cal-prev").addEventListener("click", () => {
     adjustCalendarDate(-1);
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
   container.querySelector(".btn-cal-today").addEventListener("click", () => {
     calendarDate = new Date();
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
   container.querySelector(".btn-cal-next").addEventListener("click", () => {
     adjustCalendarDate(1);
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
@@ -829,7 +950,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
   filterDropdown.value = calendarFilterSerial;
   filterDropdown.addEventListener("change", e => {
     calendarFilterSerial = e.target.value;
-    if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+    if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
     renderCalendar();
     renderAdminCalendar();
   });
@@ -837,7 +958,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
   container.querySelectorAll(".calendar-view-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       calendarViewMode = btn.dataset.view;
-      if (currentRole === "calendarView") { renderCalendarViewPortal(); return; }
+      if (currentRole === "viewer") { renderCalendarViewPortal(); return; }
       renderCalendar();
       renderAdminCalendar();
     });
@@ -961,7 +1082,7 @@ function renderWeekView(container, events, isForAdmin) {
             <div class="calendar-event-chip ${e.status.toLowerCase()}" 
                  style="white-space:normal; font-size:0.75rem; padding:0.4rem;"
                  title="${e.time} - ${e.facility} (${e.purpose})"
-                 onclick="window.showCalendarEventDetail(${e.id})">
+                 onclick="window.showCalendarEventDetail('${e.id}')">
               <strong style="display:block; font-size:0.65rem; color:var(--text-muted);">${e.time}</strong>
               ${e.isExternal ? 'EXT' : e.facility}
               <div style="font-size:0.65rem; font-weight:normal; opacity:0.8; margin-top:0.1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.purpose}</div>
@@ -1014,7 +1135,7 @@ function renderDayView(container, events, isForAdmin) {
           ${slotEvents.length ? slotEvents.map(e => `
             <div class="cal-event ${e.status.toLowerCase()}" 
                  style="margin:0; padding:0.6rem 1rem; cursor:pointer;" 
-                 onclick="window.showCalendarEventDetail(${e.id})">
+                 onclick="window.showCalendarEventDetail('${e.id}')">
               <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                 <div>
                   <strong style="color:var(--text-main); font-size:0.85rem;">${e.isExternal ? 'EXT' : e.facility}</strong>
@@ -1041,7 +1162,7 @@ function renderDayView(container, events, isForAdmin) {
 }
 
 function showCalendarEventDetail(bookingId) {
-  const b = bookings.find(x => x.id === bookingId);
+  const b = bookings.find(x => String(x.id) === String(bookingId));
   if (!b) return;
 
   let overlay = document.getElementById("calDetailOverlay");
@@ -1162,16 +1283,17 @@ function renderMyBookings() {
     });
   });
 
-  const filtered = myBookingsFilter === "all"
-    ? bookings
-    : bookings.filter(b => b.status === myBookingsFilter);
+  let list = bookings.filter(b => b.requesterId === currentUserProfile.id);
+  if (myBookingsFilter !== "all") {
+    list = list.filter(b => b.status === myBookingsFilter);
+  }
 
-  if (!filtered.length) {
+  if (!list.length) {
     container.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:3rem;">No bookings found.</p>`;
     return;
   }
 
-  container.innerHTML = filtered.map(b => `
+  container.innerHTML = list.map(b => `
     <div class="my-booking-card">
       <div class="my-booking-left">
         <div class="my-booking-facility">
@@ -1724,18 +1846,15 @@ bookingForm.addEventListener("submit", e => {
     datesToBook.push(date);
   }
 
-  datesToBook.forEach(dateStr => {
-    const nextId = bookings.length ? Math.max(...bookings.map(b => b.id)) + 1 : 1;
+  const bookingPromises = datesToBook.map(dateStr => {
     const newBooking = {
-      id: nextId,
-      facility:      selectedFacility.label,
       facilityId:    selectedFacility.id,
       purpose,
-      status:        "PENDING",
       date:          dateStr,
-      time:          `${start} – ${end}`,
-      attendees:     count,
-      requirements:  requirements || null,
+      startTime:     start,
+      endTime:       end,
+      attendeeCount: count,
+      requirements:  requirements || undefined,
       pocName,
       pocContact,
       requester:     "Faculty User",
@@ -1748,7 +1867,21 @@ bookingForm.addEventListener("submit", e => {
     localStorage.setItem('newBookingEvent', JSON.stringify({ booking: newBooking, timestamp: Date.now() }));
   });
 
-  // Refresh visible panels instantly
+  Promise.all(bookingPromises).then(() => {
+    // Refresh visible panels instantly
+    if (currentRole === 'faculty') {
+      store.dispatch(fetchMyBookings()).then(() => {
+        renderRecentBookings();
+        renderCalendar();
+        if (facultyPage === "myBookings") renderMyBookings();
+      });
+    } else {
+      store.dispatch(fetchBookings()).then(() => {
+        renderAdminCalendar();
+        renderAdminDashboard();
+      });
+    }
+  });
   renderRecentBookings();
   renderCalendar();
   renderAdminCalendar();
@@ -1826,14 +1959,22 @@ function renderAdminDashboard() {
     `).join("");
 
     adminPendingList.querySelectorAll(".btn-approve").forEach(btn => {
-      btn.addEventListener("click", () => updateStatus(parseInt(btn.dataset.id), "APPROVED"));
+      btn.addEventListener("click", () => updateStatus(btn.dataset.id, "APPROVED"));
     });
     adminPendingList.querySelectorAll(".btn-reject").forEach(btn => {
-      btn.addEventListener("click", () => updateStatus(parseInt(btn.dataset.id), "REJECTED"));
+      btn.addEventListener("click", () => updateStatus(btn.dataset.id, "REJECTED"));
     });
   }
 
-  adminAllList.innerHTML = bookings.map(b => `
+  const historyBookings = bookings.filter(b => b.status !== 'PENDING');
+  if (!historyBookings.length) {
+    adminAllList.innerHTML = `
+      <tr><td colspan="6" class="empty-row">
+        <i data-lucide="archive" style="width:24px;height:24px;opacity:0.4;"></i>
+        <div>No completed bookings yet.</div>
+      </td></tr>`;
+  } else {
+    adminAllList.innerHTML = historyBookings.map(b => `
     <tr>
       <td>
         <div class="requester-name">${b.requester}</div>
@@ -1886,17 +2027,18 @@ function renderAdminDashboard() {
             </button>
           </div>
         ` : `
-          <span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">None</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">—</span>
         `}
       </td>
     </tr>
   `).join("");
 
-  adminAllList.querySelectorAll(".btn-cancel-approved").forEach(btn => {
-    btn.addEventListener("click", () => {
-      updateStatus(parseInt(btn.dataset.id), "REJECTED");
+    adminAllList.querySelectorAll(".btn-cancel-approved").forEach(btn => {
+      btn.addEventListener("click", () => {
+        updateStatus(btn.dataset.id, "REJECTED");
+      });
     });
-  });
+  }
 
   renderUpcomingBookings();
   renderUtilizationReports();
@@ -2130,20 +2272,16 @@ function initCancellationModal() {
         b.approvedByName = currentRole === "superadmin" ? "Dr. Robert Chen" : "Mr. John Doe";
         b.approvedByRole = currentRole === "superadmin" ? "superadmin" : "admin";
         
-        renderAdminDashboard();
-        renderCalendar();
-        renderAdminCalendar();
-        
-        showToast(`${b.facility} booking cancelled!`);
-      }
-      closeModal();
+        showToast(`Booking ${pendingCancellationStatus.toLowerCase()} successfully!`);
+        closeModal();
+      });
     }
   });
 }
 
 function updateStatus(id, status) {
-  if (status === "REJECTED") {
-    openCancellationModal(id, "REJECTED");
+  if (status === "REJECTED" || status === "CANCELLED") {
+    openCancellationModal(id, status);
     return;
   }
 
@@ -2399,7 +2537,7 @@ window.toggleAddVenueForm = function() {
   }
 };
 
-window.submitAddVenue = function() {
+window.submitAddVenue = async function() {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
@@ -2439,33 +2577,54 @@ window.submitAddVenue = function() {
     image = urlInput.value.trim();
   }
   
-  facilities.push({
-    id,
-    label,
-    icon,
-    capacity,
-    available: true,
-    category,
-    desc,
-    image
-  });
-  
-  nameInput.value = "";
-  capacityInput.value = "";
-  iconInput.value = "";
-  descInput.value = "";
-  if (urlInput) urlInput.value = "";
-  if (fileInput) fileInput.value = "";
-  uploadedVenueImageBase64 = null;
-  
-  document.getElementById("addVenueFormContainer").classList.add("hidden");
-  
-  renderAdminManage();
-  renderGrid();
-  renderCalendar();
-  renderAdminCalendar();
-  renderAdminDashboard();
-  showToast(`Venue ${label} created successfully!`);
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/facilities`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name: label,
+        capacity: capacity,
+        category: category,
+        description: desc,
+        icon: icon,
+        images: image ? [image] : [],
+        type: 'OTHER',
+        location: 'Main Campus',
+        isActive: true
+      })
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to create venue");
+    }
+
+    nameInput.value = "";
+    capacityInput.value = "";
+    iconInput.value = "";
+    descInput.value = "";
+    if (urlInput) urlInput.value = "";
+    if (fileInput) fileInput.value = "";
+    uploadedVenueImageBase64 = null;
+    
+    document.getElementById("addVenueFormContainer").classList.add("hidden");
+    
+    // Refresh facilities via Redux
+    await store.dispatch(fetchFacilities());
+    
+    renderAdminManage();
+    renderGrid();
+    renderCalendar();
+    renderAdminCalendar();
+    renderAdminDashboard();
+    showToast(`Venue ${label} created successfully!`);
+  } catch (err) {
+    showToast(`Error: ${err.message}`);
+  }
 };
 
 window.deleteUser = async function(uid) {
@@ -2490,7 +2649,7 @@ window.deleteUser = async function(uid) {
   }
 };
 
-window.deleteVenue = function(facilityId) {
+window.deleteVenue = async function(facilityId) {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
@@ -2499,13 +2658,30 @@ window.deleteVenue = function(facilityId) {
   if (fIndex === -1) return;
   const fLabel = facilities[fIndex].label;
   
-  facilities.splice(fIndex, 1);
-  renderAdminManage();
-  renderGrid();
-  renderCalendar();
-  renderAdminCalendar();
-  renderAdminDashboard();
-  showToast(`Venue ${fLabel} deleted!`);
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/facilities/${facilityId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to delete venue");
+    }
+
+    await store.dispatch(fetchFacilities());
+    renderAdminManage();
+    renderGrid();
+    renderCalendar();
+    renderAdminCalendar();
+    renderAdminDashboard();
+    showToast(`Venue ${fLabel} deleted!`);
+  } catch(err) {
+    showToast(`Error: ${err.message}`);
+  }
 };
 
 /* =========================================

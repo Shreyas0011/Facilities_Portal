@@ -111,7 +111,16 @@ export const getPendingApprovals = async (req: AuthRequest, res: Response, next:
       include: {
         facility: { select: { id: true, name: true, location: true, type: true } },
         user: { select: { id: true, name: true, email: true, role: true, department: true } },
-        approval: true,
+        approval: {
+          include: {
+            approvedBy: {
+              select: {
+                name: true,
+                role: true,
+              }
+            }
+          }
+        },
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -154,7 +163,7 @@ export const updateUser = async (req: AuthRequest, res: Response, next: NextFunc
     const { role, isActive } = req.body;
 
     // Super admin only for role changes
-    if (role && req.user!.role !== 'SUPER_ADMIN') {
+    if (role && req.user!.role !== 'superadmin') {
       throw new AppError('Only super admins can change user roles', 403);
     }
 

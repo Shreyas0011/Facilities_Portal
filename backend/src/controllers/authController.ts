@@ -10,7 +10,7 @@ const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['STUDENT', 'FACULTY', 'CLUB', 'ADMIN']).default('STUDENT'),
+  role: z.enum(['superadmin', 'admin', 'faculty', 'viewer']).default('viewer'),
   department: z.string().optional(),
 });
 
@@ -139,7 +139,7 @@ export const googleAuth = async (req: Request, res: Response, next: NextFunction
 
     if (!user) {
       user = await prisma.user.create({
-        data: { name, email, googleId, avatar, role: 'STUDENT' },
+        data: { name, email, googleId, avatar, role: 'viewer' },
       });
     } else if (!user.googleId) {
       user = await prisma.user.update({

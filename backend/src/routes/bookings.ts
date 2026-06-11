@@ -14,7 +14,7 @@ router.use(authenticate);
 
 router.post('/', createBooking);
 router.get('/my-bookings', getMyBookings);
-router.get('/', authorize('ADMIN', 'SUPER_ADMIN'), getAllBookings);
+router.get('/', authorize('admin', 'superadmin'), getAllBookings);
 router.patch('/:id/status', updateBookingStatus);
 router.delete('/:id', deleteBooking);
 

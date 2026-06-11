@@ -1,4 +1,11 @@
 /* =========================================
+   SUPABASE IMPORT
+   ========================================= */
+import { supabase } from './supabase.js';
+console.log("MAIN LOADED");
+console.log("SUPABASE LOADED");
+
+/* =========================================
    DATA
    ========================================= */
 const facilities = [
@@ -39,13 +46,13 @@ const categories = [
 
 // Shared bookings store
 const bookings = [
-  { id: 1, facility: "Auditorium",     purpose: "Annual Research Colloquium Keynote",    status: "APPROVED", date: "2026-10-24", time: "09:00 – 12:00", attendees: 150, requirements: "Stage setup, wireless microphones, slide clicker", requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair",      facilityId: "auditorium", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834" },
+  { id: 1, facility: "Auditorium",     purpose: "Annual Research Colloquium Keynote",    status: "APPROVED", date: "2026-10-24", time: "09:00 – 12:00", attendees: 150, requirements: "Stage setup, wireless microphones, slide clicker", requester: "Dr. Sarah Jenkins", requesterRole: "Dept. Chair",      facilityId: "auditorium", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834", approvedByName: "Dr. Robert Chen", approvedByRole: "superadmin" },
   { id: 2, facility: "AV Room",        purpose: "Micro-Lecture Series Recording",        status: "PENDING",  date: "2026-10-25", time: "14:00 – 15:30", attendees: 4,   requirements: "High-quality audio interface, 2 condenser microphones", requester: "Prof. Alex Mercer",  requesterRole: "Media Studies",    facilityId: "av_room", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
-  { id: 3, facility: "MPH",            purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "2026-10-26", time: "11:00 – 13:00", attendees: 25,  requirements: "Projector, whiteboard markers", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "mph", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849" },
-  { id: 4, facility: "PCR 1",          purpose: "Makeup Class for Applied Machine Learning", status: "APPROVED", date: "2026-10-27", time: "10:00 – 12:00", attendees: 45,  requirements: "Projector, whiteboard, slide clicker", requester: "Prof. Alex Mercer",  requesterRole: "Computer Science", facilityId: "pcr_1", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
-  { id: 5, facility: "BB",             purpose: "Inter-department Basketball Match",  status: "APPROVED", date: "2026-10-28", time: "17:00 – 19:30", attendees: 80,  requirements: "Scoreboard access, extra chairs", requester: "Dr. Sarah Jenkins", requesterRole: "Athletics Board", facilityId: "bb", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834" },
+  { id: 3, facility: "MPH",            purpose: "Introduction to Quantum Physics Class", status: "APPROVED", date: "2026-10-26", time: "11:00 – 13:00", attendees: 25,  requirements: "Projector, whiteboard markers", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "mph", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849", approvedByName: "Mr. John Doe", approvedByRole: "admin" },
+  { id: 4, facility: "PCR 1",          purpose: "Makeup Class for Applied Machine Learning", status: "APPROVED", date: "2026-10-27", time: "10:00 – 12:00", attendees: 45,  requirements: "Projector, whiteboard, slide clicker", requester: "Prof. Alex Mercer",  requesterRole: "Computer Science", facilityId: "pcr_1", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821", approvedByName: "Mr. John Doe", approvedByRole: "admin" },
+  { id: 5, facility: "BB",             purpose: "Inter-department Basketball Match",  status: "APPROVED", date: "2026-10-28", time: "17:00 – 19:30", attendees: 80,  requirements: "Scoreboard access, extra chairs", requester: "Dr. Sarah Jenkins", requesterRole: "Athletics Board", facilityId: "bb", pocName: "Dr. Sarah Jenkins", pocContact: "+1 (555) 019-2834", approvedByName: "Dr. Robert Chen", approvedByRole: "superadmin" },
   { id: 6, facility: "PCR 1",          purpose: "Student Club Brainstorming Session",     status: "CANCELLED", date: "2026-10-22", time: "15:00 – 17:00", attendees: 15,  requirements: "None", requester: "Prof. Alex Mercer",  requesterRole: "Club Advisor",    facilityId: "pcr_1", pocName: "Prof. Alex Mercer", pocContact: "+1 (555) 014-9821" },
-  { id: 7, facility: "PCR 2",          purpose: "Corporate Tech Seminar",       status: "REJECTED",  date: "2026-10-20", time: "09:00 – 13:00", attendees: 110, requirements: "Dual screen projector, premium audio", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "pcr_2", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849" }
+  { id: 7, facility: "PCR 2",          purpose: "Corporate Tech Seminar",       status: "REJECTED",  date: "2026-10-20", time: "09:00 – 13:00", attendees: 110, requirements: "Dual screen projector, premium audio", requester: "Dr. Aris Thorne",   requesterRole: "Physics Professor", facilityId: "pcr_2", pocName: "Dr. Aris Thorne", pocContact: "+1 (555) 017-3849", approvedByName: "Mr. John Doe", approvedByRole: "admin" }
 ];
 
 let users = [
@@ -59,13 +66,15 @@ let users = [
    ========================================= */
 let searchQuery       = "";
 let selectedFacility  = null;
-let currentRole       = null;         // "faculty" | "admin"
+let currentRole       = null;         // "superadmin" | "admin" | "faculty" | "viewer"
+let currentUserProfile = null;        // { id, name, email, role, first_login }
 let facultyPage       = "amenities";  // "amenities" | "calendar" | "myBookings"
 let adminPage         = "queue";      // "queue" | "calendar"
 let myBookingsFilter  = "all";
 let pendingCancellationBookingId = null;
 let pendingCancellationStatus = "REJECTED";
 let uploadedVenueImageBase64 = null;
+let supabaseUsers     = [];           // profiles fetched from Supabase for Manage page
 
 /* =========================================
    DOM REFS
@@ -75,15 +84,11 @@ const navLinks         = document.getElementById("navLinks");
 const navUserBadge     = document.getElementById("navUserBadge");
 const logoutBtn        = document.getElementById("logoutBtn");
 
-const loginView        = document.getElementById("loginView");
-const facultyPortal    = document.getElementById("facultyPortal");
-const adminPortal      = document.getElementById("adminPortal");
+const loginView          = document.getElementById("loginView");
+const changePasswordView = document.getElementById("changePasswordView");
+const facultyPortal      = document.getElementById("facultyPortal");
+const adminPortal        = document.getElementById("adminPortal");
 const calendarViewPortal = document.getElementById("calendarViewPortal");
-
-const btnFacultyLogin  = document.getElementById("btnFacultyLogin");
-const btnAdminLogin    = document.getElementById("btnAdminLogin");
-const btnSuperAdminLogin = document.getElementById("btnSuperAdminLogin");
-const btnCalendarViewLogin = document.getElementById("btnCalendarViewLogin");
 
 // Faculty pages
 const pageFacultyAmenities  = document.getElementById("pageFacultyAmenities");
@@ -105,26 +110,285 @@ const closeModalBtn = document.getElementById("closeModal");
 const bookingForm   = document.getElementById("bookingForm");
 
 /* =========================================
-   LOGIN GATE
+   HELPERS: hide / show all view panels
    ========================================= */
-btnFacultyLogin.addEventListener("click", () => login("faculty"));
-btnAdminLogin.addEventListener("click",   () => login("admin"));
-if (btnSuperAdminLogin) {
-  btnSuperAdminLogin.addEventListener("click", () => login("superadmin"));
-}
-if (btnCalendarViewLogin) {
-  btnCalendarViewLogin.addEventListener("click", () => login("calendarView"));
-}
-
-function login(role) {
-  currentRole = role;
+function hideAllViews() {
   loginView.classList.add("hidden");
+  if (changePasswordView) changePasswordView.classList.add("hidden");
+  facultyPortal.classList.add("hidden");
+  adminPortal.classList.add("hidden");
+  calendarViewPortal.classList.add("hidden");
+  mainNavbar.classList.add("hidden");
+  const tempPasswordBanner = document.getElementById("tempPasswordBanner");
+  if (tempPasswordBanner) tempPasswordBanner.classList.add("hidden");
+}
 
-  if (role === "calendarView") {
-    // Calendar-only view: no navbar, just the read-only calendar portal
-    mainNavbar.classList.add("hidden");
-    facultyPortal.classList.add("hidden");
-    adminPortal.classList.add("hidden");
+/* =========================================
+   AUTH FLOW — Supabase
+   ========================================= */
+
+// ── Login form submit ──────────────────────────────────────────────────
+const loginForm       = document.getElementById("loginForm");
+const loginErrorEl    = document.getElementById("loginError");
+const loginSubmitBtn  = document.getElementById("loginSubmitBtn");
+const loginBtnText    = document.getElementById("loginBtnText");
+
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    if (!email || !password) {
+      showAuthError(loginErrorEl, "Please enter your email and password.");
+      return;
+    }
+
+    setLoginLoading(true);
+    loginErrorEl.classList.add("hidden");
+
+    try {
+      console.log("STEP 1 - Login button clicked", { email });
+      
+      console.log("BEFORE AUTH");
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      console.log("AFTER AUTH", { data, error });
+
+      if (error) {
+        console.error("AUTH ERROR", error);
+        showAuthError(loginErrorEl, "Invalid username or password");
+        return;
+      }
+
+      const user = data?.user;
+      if (!user) {
+        showAuthError(loginErrorEl, "Invalid username or password");
+        return;
+      }
+
+      console.log("STEP 3 - Fetching profile", { userId: user.id });
+      const { data: profile, error: profileErr } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+        
+      console.log("STEP 4 - Profile response", { profile, profileErr });
+
+      if (profileErr || !profile) {
+        console.error("PROFILE ERROR", profileErr);
+        showAuthError(loginErrorEl, "Profile not found in the database. Please contact your administrator.");
+        return;
+      }
+
+      // Read role and first_login
+      currentUserProfile = profile;
+      currentRole = profile.role;
+
+      console.log("STEP 5 - About to route user", {
+        role: profile.role,
+        first_login: profile.first_login
+      });
+
+      enterDashboard(profile.role);
+      console.log("STEP 6 - Route complete");
+    } catch (err) {
+      console.error("LOGIN EXCEPTION", err);
+      showAuthError(loginErrorEl, "Invalid username or password");
+    } finally {
+      setLoginLoading(false);
+    }
+  });
+}
+
+function setLoginLoading(loading) {
+  if (!loginSubmitBtn) return;
+  loginSubmitBtn.disabled = loading;
+  if (loginBtnText) loginBtnText.textContent = loading ? "Signing in…" : "Sign In";
+}
+
+// ── Password-visibility toggle ─────────────────────────────────────────
+function setupPasswordToggle(toggleBtnId, iconId, inputId) {
+  const btn = document.getElementById(toggleBtnId);
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const input = document.getElementById(inputId);
+    const icon  = document.getElementById(iconId);
+    if (!input) return;
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    if (icon) {
+      icon.setAttribute("data-lucide", isHidden ? "eye-off" : "eye");
+      lucide.createIcons();
+    }
+  });
+}
+
+// ── Change Password form ───────────────────────────────────────────────
+const changePasswordForm = document.getElementById("changePasswordForm");
+const changePwdError     = document.getElementById("changePwdError");
+const changePwdBtn       = document.getElementById("changePwdBtn");
+const changePwdBtnText   = document.getElementById("changePwdBtnText");
+
+if (changePasswordForm) {
+  // Live password strength meter
+  const newPwdInput = document.getElementById("newPassword");
+  if (newPwdInput) {
+    newPwdInput.addEventListener("input", () => {
+      updatePasswordStrength(newPwdInput.value);
+    });
+  }
+
+  changePasswordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const currentPwd = document.getElementById("currentPassword").value;
+    const newPwd     = document.getElementById("newPassword").value;
+    const confirmPwd = document.getElementById("confirmPassword").value;
+
+    changePwdError.classList.add("hidden");
+
+    if (!currentPwd) {
+      showAuthError(changePwdError, "Please enter your current password.");
+      return;
+    }
+    if (newPwd.length < 8) {
+      showAuthError(changePwdError, "Password must be at least 8 characters.");
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      showAuthError(changePwdError, "Passwords do not match.");
+      return;
+    }
+
+    if (changePwdBtn) changePwdBtn.disabled = true;
+    if (changePwdBtnText) changePwdBtnText.textContent = "Updating…";
+
+    try {
+      // Verify current password by attempting to sign in again
+      const { error: verifyErr } = await supabase.auth.signInWithPassword({
+        email: currentUserProfile.email,
+        password: currentPwd
+      });
+      if (verifyErr) {
+        throw new Error("Incorrect current password.");
+      }
+
+      // 1. Update the password in Supabase Auth
+      const { error: updateErr } = await supabase.auth.updateUser({ password: newPwd });
+      if (updateErr) throw updateErr;
+
+      // 2. Set first_login = false in profiles table
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .update({ first_login: false })
+        .eq("id", currentUserProfile.id);
+      if (profileErr) throw profileErr;
+
+      // 3. Update local profile state
+      currentUserProfile.first_login = false;
+
+      // Remove the warning banner if it is visible
+      const tempPasswordBanner = document.getElementById("tempPasswordBanner");
+      if (tempPasswordBanner) {
+        tempPasswordBanner.classList.add("hidden");
+      }
+
+      showToast("Password updated successfully!");
+
+      setTimeout(() => {
+        enterDashboard(currentUserProfile.role);
+      }, 900);
+    } catch (err) {
+      showAuthError(changePwdError, err.message || "Failed to update password.");
+      if (changePwdBtn) changePwdBtn.disabled = false;
+      if (changePwdBtnText) changePwdBtnText.textContent = "Set Password & Continue";
+    }
+  });
+}
+
+function updatePasswordStrength(pwd) {
+  const bar   = document.getElementById("pwdStrengthBar");
+  const label = document.getElementById("pwdStrengthLabel");
+  if (!bar || !label) return;
+
+  let score = 0;
+  if (pwd.length >= 8)  score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+  const levels = [
+    { pct: "0%",   color: "transparent", text: "" },
+    { pct: "25%",  color: "#ef4444",     text: "Weak" },
+    { pct: "50%",  color: "#f59e0b",     text: "Fair" },
+    { pct: "75%",  color: "#3b82f6",     text: "Good" },
+    { pct: "90%",  color: "#10b981",     text: "Strong" },
+    { pct: "100%", color: "#059669",     text: "Very Strong" },
+  ];
+  const lvl = levels[Math.min(score, 5)];
+  bar.style.width  = lvl.pct;
+  bar.style.background = lvl.color;
+  label.textContent = lvl.text;
+  label.style.color = lvl.color;
+}
+
+// ── Enter the appropriate dashboard ────────────────────────────────────
+async function enterDashboard(role) {
+  // Check if session exists
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    showLoginPage();
+    return;
+  }
+
+  // Ensure current user profile is fetched and matches the session user
+  if (!currentUserProfile || currentUserProfile.id !== session.user.id) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+    if (error || !profile) {
+      showLoginPage();
+      return;
+    }
+    currentUserProfile = profile;
+  }
+
+  currentRole = currentUserProfile.role;
+  hideAllViews();
+
+  const tempPasswordBanner = document.getElementById("tempPasswordBanner");
+  if (currentUserProfile && currentUserProfile.first_login) {
+    if (tempPasswordBanner) {
+      tempPasswordBanner.classList.remove("hidden");
+    }
+  } else {
+    if (tempPasswordBanner) {
+      tempPasswordBanner.classList.add("hidden");
+    }
+  }
+
+  const dismissWarningBannerBtn = document.getElementById("dismissWarningBannerBtn");
+  if (dismissWarningBannerBtn) {
+    dismissWarningBannerBtn.onclick = () => {
+      const banner = document.getElementById("tempPasswordBanner");
+      if (banner) banner.classList.add("hidden");
+    };
+  }
+
+  const bannerChangePasswordBtn = document.getElementById("bannerChangePasswordBtn");
+  if (bannerChangePasswordBtn) {
+    bannerChangePasswordBtn.onclick = () => {
+      openChangePasswordScreen();
+    };
+  }
+
+  if (currentRole === "viewer") {
     calendarViewPortal.classList.remove("hidden");
     renderCalendarViewPortal();
     lucide.createIcons();
@@ -132,32 +396,76 @@ function login(role) {
   }
 
   mainNavbar.classList.remove("hidden");
-  calendarViewPortal.classList.add("hidden");
 
-  if (role === "faculty") {
+  if (currentRole === "faculty") {
     facultyPortal.classList.remove("hidden");
-    adminPortal.classList.add("hidden");
     setFacultyNav();
     renderGrid();
     renderRecentBookings();
   } else {
+    // admin or superadmin
     adminPortal.classList.remove("hidden");
-    facultyPortal.classList.add("hidden");
-    if (role === "admin" && adminPage === "manage") {
+    if (currentRole === "admin" && adminPage === "manage") {
       adminPage = "dashboard";
     }
     setAdminNav();
     switchAdminPage(adminPage);
+
+    // Show popup for the most recent pending booking to simulate real-time notification
+    const pendingBooking = bookings.find(b => b.status === "PENDING");
+    if (pendingBooking) {
+      setTimeout(() => {
+        if (typeof showAdminNewBookingModal === 'function') {
+          showAdminNewBookingModal(pendingBooking);
+        }
+      }, 600);
+    }
   }
   lucide.createIcons();
 }
 
-logoutBtn.addEventListener("click", () => {
-  currentRole = null;
-  mainNavbar.classList.add("hidden");
-  facultyPortal.classList.add("hidden");
-  adminPortal.classList.add("hidden");
-  calendarViewPortal.classList.add("hidden");
+function openChangePasswordScreen() {
+  hideAllViews();
+  const changePwdError = document.getElementById("changePwdError");
+  if (changePwdError) changePwdError.classList.add("hidden");
+  
+  changePasswordView.classList.remove("hidden");
+  
+  const currentPasswordInput = document.getElementById("currentPassword");
+  const newPasswordInput = document.getElementById("newPassword");
+  const confirmPasswordInput = document.getElementById("confirmPassword");
+  if (currentPasswordInput) currentPasswordInput.value = "";
+  if (newPasswordInput) newPasswordInput.value = "";
+  if (confirmPasswordInput) confirmPasswordInput.value = "";
+  
+  const cancelBtn = document.getElementById("cancelChangePwdBtn");
+  if (cancelBtn) {
+    if (currentUserProfile && !currentUserProfile.first_login) {
+      cancelBtn.style.display = "block";
+      cancelBtn.onclick = () => {
+        enterDashboard(currentUserProfile.role);
+      };
+    } else {
+      cancelBtn.style.display = "none";
+    }
+  }
+  lucide.createIcons();
+}
+
+// ── Auth error helper ──────────────────────────────────────────────────
+function showAuthError(el, msg) {
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+
+// ── Logout ─────────────────────────────────────────────────────────────
+logoutBtn.addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  currentRole        = null;
+  currentUserProfile = null;
+  supabaseUsers      = [];
+  hideAllViews();
   loginView.classList.remove("hidden");
   lucide.createIcons();
 });
@@ -165,23 +473,54 @@ logoutBtn.addEventListener("click", () => {
 // Calendar-View-only exit button
 const calViewLogoutBtn = document.getElementById("calViewLogoutBtn");
 if (calViewLogoutBtn) {
-  calViewLogoutBtn.addEventListener("click", () => {
-    currentRole = null;
-    calendarViewPortal.classList.add("hidden");
+  calViewLogoutBtn.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    currentRole        = null;
+    currentUserProfile = null;
+    hideAllViews();
     loginView.classList.remove("hidden");
     lucide.createIcons();
   });
 }
 
+const loginViewCalendarBtn = document.getElementById("loginViewCalendarBtn");
+if (loginViewCalendarBtn) {
+  loginViewCalendarBtn.addEventListener("click", () => {
+    currentRole = "calendarView";
+    hideAllViews();
+    calendarViewPortal.classList.remove("hidden");
+    renderCalendarViewPortal();
+    lucide.createIcons();
+  });
+}
+
+function showLoginPage() {
+  currentRole        = null;
+  currentUserProfile = null;
+  supabaseUsers      = [];
+  hideAllViews();
+  loginView.classList.remove("hidden");
+  lucide.createIcons();
+}
+
+// ── Restore session on page reload ────────────────────────────────────
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === "SIGNED_OUT") {
+    showLoginPage();
+  }
+});
+
 /* =========================================
    NAVBAR BUILDERS
    ========================================= */
 function setFacultyNav() {
-  navUserBadge.innerHTML = `<i data-lucide="user" style="width:14px;height:14px;"></i> <span>Faculty Portal</span>`;
+  const displayName = currentUserProfile ? currentUserProfile.name : "Faculty";
+  navUserBadge.innerHTML = `<i data-lucide="user" style="width:14px;height:14px;"></i> <span>${escapeHtml(displayName)}</span>`;
   navLinks.innerHTML = `
     <a href="#" class="${facultyPage === 'amenities'   ? 'active' : ''}" data-page="amenities">Amenities</a>
     <a href="#" class="${facultyPage === 'calendar'    ? 'active' : ''}" data-page="calendar">Calendar</a>
     <a href="#" class="${facultyPage === 'myBookings'  ? 'active' : ''}" data-page="myBookings">My Bookings</a>
+    <a href="#" class="${facultyPage === 'settings'    ? 'active' : ''}" data-page="settings">Settings</a>
   `;
   navLinks.querySelectorAll("a[data-page]").forEach(a => {
     a.addEventListener("click", e => {
@@ -193,16 +532,18 @@ function setFacultyNav() {
 }
 
 function setAdminNav() {
+  const displayName = currentUserProfile ? currentUserProfile.name : (currentRole === "superadmin" ? "Super Admin" : "Admin");
   if (currentRole === "superadmin") {
-    navUserBadge.innerHTML = `<i data-lucide="shield-alert" style="width:14px;height:14px;color:#8b5cf6;"></i> <span style="color:#8b5cf6;font-weight:700;">Super Admin</span>`;
+    navUserBadge.innerHTML = `<i data-lucide="shield-alert" style="width:14px;height:14px;color:#8b5cf6;"></i> <span style="color:#8b5cf6;font-weight:700;">${escapeHtml(displayName)}</span>`;
   } else {
-    navUserBadge.innerHTML = `<i data-lucide="shield" style="width:14px;height:14px;"></i> <span>Admin Console</span>`;
+    navUserBadge.innerHTML = `<i data-lucide="shield" style="width:14px;height:14px;"></i> <span>${escapeHtml(displayName)}</span>`;
   }
   navLinks.innerHTML = `
     <a href="#" class="${adminPage === 'dashboard' ? 'active' : ''}" data-page="dashboard">Dashboard</a>
     <a href="#" class="${adminPage === 'queue' ? 'active' : ''}" data-page="queue">Approval Queue</a>
     <a href="#" class="${adminPage === 'calendar' ? 'active' : ''}" data-page="calendar">Calendar</a>
     ${currentRole === "superadmin" ? `<a href="#" class="${adminPage === 'manage' ? 'active' : ''}" data-page="manage">Manage</a>` : ""}
+    <a href="#" class="${adminPage === 'settings' ? 'active' : ''}" data-page="settings">Settings</a>
   `;
   navLinks.querySelectorAll("a[data-page]").forEach(a => {
     a.addEventListener("click", e => {
@@ -211,6 +552,10 @@ function setAdminNav() {
     });
   });
   lucide.createIcons();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
 /* =========================================
@@ -225,6 +570,11 @@ function switchAdminPage(page) {
   document.getElementById("pageAdminQueue").classList.toggle("hidden", page !== "queue");
   document.getElementById("pageAdminCalendar").classList.toggle("hidden", page !== "calendar");
   document.getElementById("pageAdminManage").classList.toggle("hidden", page !== "manage");
+  
+  const pageAdminSettings = document.getElementById("pageAdminSettings");
+  if (pageAdminSettings) {
+    pageAdminSettings.classList.toggle("hidden", page !== "settings");
+  }
 
   renderAdminDashboard();
 
@@ -247,6 +597,11 @@ function switchFacultyPage(page) {
   pageFacultyAmenities.classList.toggle("hidden",  page !== "amenities");
   pageFacultyCalendar.classList.toggle("hidden",   page !== "calendar");
   pageFacultyMyBookings.classList.toggle("hidden", page !== "myBookings");
+  
+  const pageFacultySettings = document.getElementById("pageFacultySettings");
+  if (pageFacultySettings) {
+    pageFacultySettings.classList.toggle("hidden", page !== "settings");
+  }
 
   if (page === "calendar")   renderCalendar();
   if (page === "myBookings") renderMyBookings();
@@ -289,29 +644,12 @@ function renderGrid() {
 
   if (searchQuery) {
     const query = searchQuery.toLowerCase().trim();
-    const numericQuery = query.replace(/\.$/, "").trim(); // Remove trailing dot (e.g. "05." -> "05")
-
-    if (/^[0-9]+$/.test(numericQuery)) {
-      const val = parseInt(numericQuery, 10);
-      if (val >= 1 && val <= facilities.length) {
-        list = [facilities[val - 1]];
-      } else {
-        // Numeric but not a valid serial, fallback to normal search
-        list = facilities.filter(f => 
-          f.label.toLowerCase().includes(query) ||
-          f.desc.toLowerCase().includes(query) ||
-          f.category.toLowerCase().includes(query) ||
-          f.capacity.toLowerCase().includes(query)
-        );
-      }
-    } else {
-      list = facilities.filter(f => 
-        f.label.toLowerCase().includes(query) ||
-        f.desc.toLowerCase().includes(query) ||
-        f.category.toLowerCase().includes(query) ||
-        f.capacity.toLowerCase().includes(query)
-      );
-    }
+    list = facilities.filter(f => 
+      f.label.toLowerCase().includes(query) ||
+      f.desc.toLowerCase().includes(query) ||
+      f.category.toLowerCase().includes(query) ||
+      f.capacity.toLowerCase().includes(query)
+    );
   }
 
   if (!list.length) {
@@ -320,9 +658,6 @@ function renderGrid() {
   }
 
   gridContainer.innerHTML = list.map((f, i) => {
-    const originalIndex = facilities.findIndex(orig => orig.id === f.id);
-    const serialNumber = String(originalIndex + 1).padStart(2, '0');
-
     return `
       <div class="card animate-slide-up" style="animation-delay:${i * 0.05}s">
         <div class="card-image" style="${f.image ? `background-image: url('${f.image}'); background-size: cover; background-position: center; height: 160px;` : 'height: 160px;'}">
@@ -334,7 +669,6 @@ function renderGrid() {
         </div>
         <div class="card-body">
           <h3 class="card-title">
-            <span class="card-serial" style="color:var(--primary);font-weight:800;margin-right:0.3rem;">${serialNumber}</span>
             ${f.label}
           </h3>
           <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
@@ -373,14 +707,22 @@ function renderRecentBookings() {
   }
   recentList.innerHTML = recent.map(b => `
     <div class="recent-card">
-      <div class="recent-left">
-        <div class="recent-facility">${b.facility}</div>
+      <div class="recent-info">
+        <div class="recent-facility">
+          ${b.facility}
+          ${b.isExternal ? `<span style="font-size:0.6rem; background:#ef4444; color:white; padding:1px 4px; border-radius:4px; margin-left:0.4rem; vertical-align:middle; font-weight:800;">EXT</span>` : ''}
+        </div>
         <div class="recent-purpose">${b.purpose}</div>
         <div class="recent-meta">
           <span><i data-lucide="calendar" style="width:12px;height:12px;"></i> ${formatDate(b.date)}</span>
           <span><i data-lucide="clock" style="width:12px;height:12px;"></i> ${b.time}</span>
           <span><i data-lucide="users" style="width:12px;height:12px;"></i> ${b.attendees} Ppl</span>
         </div>
+        ${(b.status === "APPROVED" || b.status === "REJECTED") && b.approvedByName ? `
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.4rem;display:flex;align-items:center;gap:0.25rem;">
+          <i data-lucide="shield" style="width:11px;height:11px;color:var(--primary);"></i>
+          <span>${b.status === 'APPROVED' ? 'Approved' : 'Declined'} by <strong>${b.approvedByName}</strong></span>
+        </div>` : ""}
       </div>
       <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
     </div>
@@ -448,9 +790,8 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
       <div class="calendar-controls-right">
         <select class="calendar-filter-select filter-serial-dropdown">
           <option value="all">All Amenities</option>
-          ${facilities.map((f, i) => {
-            const serial = String(i + 1).padStart(2, '0');
-            return `<option value="${serial}" ${calendarFilterSerial === serial ? "selected" : ""}>${serial}. ${f.label}</option>`;
+          ${facilities.map(f => {
+            return `<option value="${f.id}" ${calendarFilterSerial === f.id ? "selected" : ""}>${f.label}</option>`;
           }).join("")}
         </select>
 
@@ -507,9 +848,7 @@ function renderUnifiedCalendar(containerId, isForAdmin = false, isReadOnly = fal
   const activeBookings = bookings.filter(b => b.status === "APPROVED" || b.status === "PENDING");
   const filteredEvents = activeBookings.filter(b => {
     if (calendarFilterSerial === "all") return true;
-    const origIdx = facilities.findIndex(f => f.id === b.facilityId);
-    const serial = String(origIdx + 1).padStart(2, '0');
-    return serial === calendarFilterSerial;
+    return b.facilityId === calendarFilterSerial;
   });
 
   if (calendarViewMode === "month") {
@@ -576,7 +915,7 @@ function renderMonthView(container, events, isForAdmin) {
             <div class="calendar-event-chip ${e.status.toLowerCase()}" 
                  title="${e.time} - ${e.facility} (${e.purpose})"
                  onclick="window.showCalendarEventDetail(${e.id})">
-              ${e.time.split(" – ")[0]} ${e.facility}
+              ${e.time.split(" – ")[0]} ${e.isExternal ? 'EXT' : e.facility}
             </div>
           `).join("")}
         </div>
@@ -624,7 +963,7 @@ function renderWeekView(container, events, isForAdmin) {
                  title="${e.time} - ${e.facility} (${e.purpose})"
                  onclick="window.showCalendarEventDetail(${e.id})">
               <strong style="display:block; font-size:0.65rem; color:var(--text-muted);">${e.time}</strong>
-              ${e.facility}
+              ${e.isExternal ? 'EXT' : e.facility}
               <div style="font-size:0.65rem; font-weight:normal; opacity:0.8; margin-top:0.1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.purpose}</div>
             </div>
           `).join("") : `<div style="text-align:center; color:var(--text-muted); font-size:0.7rem; padding:2rem 0;">No bookings</div>`}
@@ -678,7 +1017,7 @@ function renderDayView(container, events, isForAdmin) {
                  onclick="window.showCalendarEventDetail(${e.id})">
               <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                 <div>
-                  <strong style="color:var(--text-main); font-size:0.85rem;">${e.facility}</strong>
+                  <strong style="color:var(--text-main); font-size:0.85rem;">${e.isExternal ? 'EXT' : e.facility}</strong>
                   <span style="font-size:0.75rem; color:var(--text-muted); margin-left:0.5rem;">(${e.time})</span>
                   <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.1rem;">
                     Purpose: ${e.purpose} | Requester: ${e.requester} (${e.requesterRole})
@@ -705,9 +1044,6 @@ function showCalendarEventDetail(bookingId) {
   const b = bookings.find(x => x.id === bookingId);
   if (!b) return;
 
-  const origIdx = facilities.findIndex(f => f.id === b.facilityId);
-  const serial = String(origIdx + 1).padStart(2, '0');
-
   let overlay = document.getElementById("calDetailOverlay");
   if (!overlay) {
     overlay = document.createElement("div");
@@ -726,7 +1062,7 @@ function showCalendarEventDetail(bookingId) {
           <i data-lucide="info"></i>
           <span>Reservation Details</span>
         </div>
-        <h2 style="margin-top:0.5rem;"><span style="color:var(--primary); font-weight:800; margin-right:0.3rem;">${serial}</span> ${b.facility}</h2>
+        <h2 style="margin-top:0.5rem;">${b.facility}</h2>
       </div>
       <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem;">
         <div>
@@ -739,8 +1075,9 @@ function showCalendarEventDetail(bookingId) {
 
         <div>
           <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Purpose & Attendees</div>
-          <div style="font-size:0.95rem; font-weight:600; color:var(--text-main); margin-top:0.15rem;">
+          <div style="font-size:0.95rem; font-weight:600; color:var(--text-main); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
             ${b.purpose}
+            ${b.isExternal ? `<span style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; font-weight:800;">EXT</span>` : ''}
           </div>
           <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
             <i data-lucide="users" style="width:14px;"></i>
@@ -771,6 +1108,20 @@ function showCalendarEventDetail(bookingId) {
             ${b.requirements}
           </div>
         </div>` : ""}
+
+        ${(b.status === "APPROVED" || b.status === "REJECTED") && b.approvedByName ? `
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Approval Details</div>
+          <div style="font-size:0.9rem; font-weight:600; color:var(--text-main); margin-top:0.15rem; display:flex; align-items:center; gap:0.4rem;">
+            <i data-lucide="${b.status === 'APPROVED' ? 'check-circle' : 'x-circle'}" style="width:15px; color:${b.status === 'APPROVED' ? 'var(--success)' : '#ef4444'};"></i>
+            <span>${b.status === 'APPROVED' ? 'Approved' : 'Declined'} by <strong>${b.approvedByName}</strong></span>
+          </div>
+          ${b.cancelReason ? `
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem; font-style:italic;">
+            Remarks: ${b.cancelReason}
+          </div>` : ""}
+        </div>
+        ` : ""}
 
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--surface-border); padding-top:1rem; margin-top:0.5rem;">
           <div style="font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:0.4rem;">
@@ -823,7 +1174,10 @@ function renderMyBookings() {
   container.innerHTML = filtered.map(b => `
     <div class="my-booking-card">
       <div class="my-booking-left">
-        <div class="my-booking-facility">${b.facility}</div>
+        <div class="my-booking-facility">
+          ${b.facility}
+          ${b.isExternal ? `<span style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; margin-left:0.5rem; vertical-align:middle; font-weight:800;">EXT</span>` : ''}
+        </div>
         <div class="my-booking-purpose">${b.purpose}</div>
         <div class="my-booking-meta">
           <span><i data-lucide="calendar" style="width:13px;height:13px;"></i> ${formatDate(b.date)}</span>
@@ -843,8 +1197,16 @@ function renderMyBookings() {
       </div>
       <div class="my-booking-status-col">
         <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
-        ${b.status === "APPROVED" ? `<div class="my-booking-note"><i data-lucide="check-circle" style="width:12px;height:12px;color:var(--success);"></i> Confirmed by Admin</div>` : ""}
-        ${b.status === "REJECTED" ? `<div class="my-booking-note" style="color:#ef4444;"><i data-lucide="x-circle" style="width:12px;height:12px;"></i> Request Declined</div>` : ""}
+        ${b.status === "APPROVED" ? `
+          <div class="my-booking-note" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; text-align:right;">
+            <span style="display:inline-flex; align-items:center; gap:4px; color:var(--success); font-weight:600;"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Confirmed</span>
+            ${b.approvedByName ? `<span style="font-size:0.7rem; color:var(--text-muted);">By: <strong>${b.approvedByName}</strong></span>` : ""}
+          </div>` : ""}
+        ${b.status === "REJECTED" ? `
+          <div class="my-booking-note" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; color:#ef4444; text-align:right;">
+            <span style="display:inline-flex; align-items:center; gap:4px; font-weight:600;"><i data-lucide="x-circle" style="width:12px;height:12px;"></i> Declined</span>
+            ${b.approvedByName ? `<span style="font-size:0.7rem; color:var(--text-muted);">By: <strong>${b.approvedByName}</strong></span>` : ""}
+          </div>` : ""}
         ${b.status === "PENDING"  ? `<div class="my-booking-note"><i data-lucide="clock" style="width:12px;height:12px;color:var(--warning);"></i> Awaiting Review</div>` : ""}
       </div>
     </div>
@@ -992,6 +1354,9 @@ function openBookingModal(facilityId) {
   const recurringPanel = document.getElementById("recurringOptionsPanel");
   if (recurringPanel) recurringPanel.classList.add("hidden");
   
+  const externalCheckbox = document.getElementById("bookingExternal");
+  if (externalCheckbox) externalCheckbox.checked = false;
+  
   initDateSelector();
   renderTimeSlots();
   
@@ -1014,14 +1379,38 @@ let selectedStartSlotIdx = null;
 let selectedEndSlotIdx = null;
 
 const TIME_SLOTS = [
-  { start: "08:00", end: "09:00" },
-  { start: "09:00", end: "10:00" },
-  { start: "10:00", end: "11:00" },
-  { start: "11:00", end: "12:00" },
-  { start: "12:00", end: "13:00" },
-  { start: "13:00", end: "14:00" },
-  { start: "14:00", end: "15:00" },
-  { start: "15:00", end: "16:00" }
+  { start: "06:00", end: "06:30" },
+  { start: "06:30", end: "07:00" },
+  { start: "07:00", end: "07:30" },
+  { start: "07:30", end: "08:00" },
+  { start: "08:00", end: "08:30" },
+  { start: "08:30", end: "09:00" },
+  { start: "09:00", end: "09:30" },
+  { start: "09:30", end: "10:00" },
+  { start: "10:00", end: "10:30" },
+  { start: "10:30", end: "11:00" },
+  { start: "11:00", end: "11:30" },
+  { start: "11:30", end: "12:00" },
+  { start: "12:00", end: "12:30" },
+  { start: "12:30", end: "13:00" },
+  { start: "13:00", end: "13:30" },
+  { start: "13:30", end: "14:00" },
+  { start: "14:00", end: "14:30" },
+  { start: "14:30", end: "15:00" },
+  { start: "15:00", end: "15:30" },
+  { start: "15:30", end: "16:00" },
+  { start: "16:00", end: "16:30" },
+  { start: "16:30", end: "17:00" },
+  { start: "17:00", end: "17:30" },
+  { start: "17:30", end: "18:00" },
+  { start: "18:00", end: "18:30" },
+  { start: "18:30", end: "19:00" },
+  { start: "19:00", end: "19:30" },
+  { start: "19:30", end: "20:00" },
+  { start: "20:00", end: "20:30" },
+  { start: "20:30", end: "21:00" },
+  { start: "21:00", end: "21:30" },
+  { start: "21:30", end: "22:00" }
 ];
 
 function timeToMinutes(timeStr) {
@@ -1145,8 +1534,10 @@ function updateSelectedTimeInputs() {
     startInput.value = startSlot.start;
     endInput.value = endSlot.end;
 
-    const duration = (selectedEndSlotIdx !== null ? (selectedEndSlotIdx - selectedStartSlotIdx + 1) : 1);
-    summary.innerHTML = `<i data-lucide="check-circle" style="width:14px;height:14px;color:var(--success);"></i> <span>Selected: ${startSlot.start} – ${endSlot.end} (${duration} Hr${duration > 1 ? 's' : ''})</span>`;
+    const durationBlocks = (selectedEndSlotIdx !== null ? (selectedEndSlotIdx - selectedStartSlotIdx + 1) : 1);
+    const hours = durationBlocks / 2;
+    const durationText = hours === 0.5 ? "30 Mins" : (hours + " Hr" + (hours > 1 ? "s" : ""));
+    summary.innerHTML = `<i data-lucide="check-circle" style="width:14px;height:14px;color:var(--success);"></i> <span>Selected: ${startSlot.start} – ${endSlot.end} (${durationText})</span>`;
   }
   if (typeof updateRecurringSummary === "function") {
     updateRecurringSummary();
@@ -1169,36 +1560,27 @@ function initDateSelector() {
     const d = new Date();
     d.setDate(today.getDate() + dateSelectorOffset + i);
     const iso = d.toISOString().split("T")[0];
-    const isSunday = d.getDay() === 0;
-
     let classes = "date-card";
-    if (isSunday) {
-      classes += " disabled";
-    } else if (hidden.value === iso) {
+    if (hidden.value === iso) {
       classes += " active";
     }
 
     html += `
-      <div class="${classes}" ${isSunday ? '' : `data-val="${iso}"`}>
+      <div class="${classes}" data-val="${iso}">
         <div class="date-card-day">${DAYS[d.getDay()]}</div>
         <div class="date-card-num">${d.getDate()}</div>
         <div class="date-card-month">${MONTHS[d.getMonth()]}</div>
-        ${isSunday ? '<div style="font-size: 0.52rem; font-weight: 700; color: var(--text-muted); margin-top: 0.2rem; letter-spacing: 0.5px;">CLOSED</div>' : ''}
       </div>`;
   }
 
   selector.innerHTML = html;
 
-  // Auto-select the first non-Sunday date if none is selected
+  // Auto-select the first date if none is selected
   if (!hidden.value) {
-    for (let i = 0; i < 5; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() + dateSelectorOffset + i);
-      if (d.getDay() !== 0) {
-        hidden.value = d.toISOString().split("T")[0];
-        break;
-      }
-    }
+    const d = new Date();
+    d.setDate(today.getDate() + dateSelectorOffset);
+    hidden.value = d.toISOString().split("T")[0];
+
     // Re-render to show active class
     initDateSelector();
     return;
@@ -1239,22 +1621,18 @@ bookingForm.addEventListener("submit", e => {
   const pocName  = document.getElementById("pocName").value.trim();
   const pocContact = document.getElementById("pocContact").value.trim();
   const isRecurring = document.getElementById("bookingRecurring").checked;
+  const isExternal = document.getElementById("bookingExternal") ? document.getElementById("bookingExternal").checked : false;
   
   if (!start || !end) {
     showToast("Error: Please select at least one time slot!");
     return;
   }
   
-  // Frontend Sunday Check
   const selectedDateObj = new Date(date);
-  if (selectedDateObj.getDay() === 0) {
-    showToast("Error: Bookings are not allowed on Sundays!");
-    return;
-  }
 
-  // Frontend Time Range Check (08:00 to 16:00)
-  if (start < "08:00" || start > "16:00" || end < "08:00" || end > "16:00") {
-    showToast("Error: Bookings must be between 8:00 AM and 4:00 PM!");
+  // Frontend Time Range Check (06:00 to 22:00)
+  if (start < "06:00" || start > "22:00" || end < "06:00" || end > "22:00") {
+    showToast("Error: Bookings must be between 6:00 AM and 10:00 PM!");
     return;
   }
 
@@ -1362,9 +1740,12 @@ bookingForm.addEventListener("submit", e => {
       pocContact,
       requester:     "Faculty User",
       requesterRole: "Faculty",
-      recurring:     isRecurring
+      recurring:     isRecurring,
+      isExternal:    isExternal
     };
     bookings.unshift(newBooking);
+    // Fire cross-tab event for admin popup
+    localStorage.setItem('newBookingEvent', JSON.stringify({ booking: newBooking, timestamp: Date.now() }));
   });
 
   // Refresh visible panels instantly
@@ -1404,7 +1785,10 @@ function renderAdminDashboard() {
           <div class="requester-name">${b.requester}</div>
           <div class="requester-role">${b.requesterRole}</div>
         </td>
-        <td style="font-weight:700;">${b.facility}</td>
+        <td style="font-weight:700;">
+          ${b.facility}
+          ${b.isExternal ? `<div style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; margin-top:0.25rem; font-weight:800; width:fit-content;">EXT</div>` : ''}
+        </td>
         <td>
           <div style="font-weight:600;">${b.purpose}</div>
           ${b.recurring ? `
@@ -1455,7 +1839,10 @@ function renderAdminDashboard() {
         <div class="requester-name">${b.requester}</div>
         <div class="requester-role">${b.requesterRole}</div>
       </td>
-      <td style="font-weight:700;">${b.facility}</td>
+      <td style="font-weight:700;">
+        ${b.facility}
+        ${b.isExternal ? `<div style="font-size:0.65rem; background:#ef4444; color:white; padding:1px 5px; border-radius:4px; margin-top:0.25rem; font-weight:800; width:fit-content;">EXT</div>` : ''}
+      </td>
       <td>
         <div style="font-weight:600;">${b.purpose}</div>
         ${b.recurring ? `
@@ -1483,7 +1870,14 @@ function renderAdminDashboard() {
         <div style="font-weight:600;">${formatDate(b.date)}</div>
         <div style="font-size:0.78rem;color:var(--text-muted);">${b.time}</div>
       </td>
-      <td><div class="feed-status ${b.status.toLowerCase()}">${b.status}</div></td>
+      <td>
+        <div class="feed-status ${b.status.toLowerCase()}">${b.status}</div>
+        ${(b.status === "APPROVED" || b.status === "REJECTED") && b.approvedByName ? `
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">
+            By: <strong>${b.approvedByName}</strong>
+          </div>
+        ` : ""}
+      </td>
       <td>
         ${b.status === "APPROVED" ? `
           <div class="actions-cell">
@@ -1530,7 +1924,10 @@ function renderUpcomingBookings() {
   upcomingList.innerHTML = upcoming.map(b => `
     <div class="upcoming-card">
       <div class="upcoming-main-info">
-        <div class="upcoming-facility">${b.facility}</div>
+        <div class="upcoming-facility">
+          ${b.facility}
+          ${b.isExternal ? `<span style="font-size:0.6rem; background:#ef4444; color:white; padding:1px 4px; border-radius:4px; margin-left:0.4rem; vertical-align:middle; font-weight:800;">EXT</span>` : ''}
+        </div>
         <div class="upcoming-purpose">${b.purpose}</div>
       </div>
       <div class="upcoming-meta">
@@ -1730,6 +2127,8 @@ function initCancellationModal() {
       if (b) {
         b.status = pendingCancellationStatus;
         b.cancelReason = reason;
+        b.approvedByName = currentRole === "superadmin" ? "Dr. Robert Chen" : "Mr. John Doe";
+        b.approvedByRole = currentRole === "superadmin" ? "superadmin" : "admin";
         
         renderAdminDashboard();
         renderCalendar();
@@ -1751,6 +2150,10 @@ function updateStatus(id, status) {
   const b = bookings.find(x => x.id === id);
   if (!b) return;
   b.status = status;
+  if (status === "APPROVED") {
+    b.approvedByName = currentRole === "superadmin" ? "Dr. Robert Chen" : "Mr. John Doe";
+    b.approvedByRole = currentRole === "superadmin" ? "superadmin" : "admin";
+  }
   renderAdminDashboard();
   renderCalendar();
   renderAdminCalendar();
@@ -1786,36 +2189,57 @@ function renderAdminManage() {
   }
 
   // Render users list
-  if (!users.length) {
-    usersList.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No registered users.</td></tr>`;
-  } else {
-    usersList.innerHTML = users.map(u => `
-      <tr>
-        <td>
-          <div style="font-weight:700; color:var(--text-main);">${u.name}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted);">${u.role}</div>
-        </td>
-        <td style="font-size:0.83rem; font-weight:500;">${u.contact}</td>
-        <td>
-          <div class="actions-cell">
-            ${isSuperAdmin ? `
-              <button class="btn-reject btn-action btn-delete-user" data-id="${u.id}" title="Delete User" style="background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.12); color:#ef4444;">
-                <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
-              </button>
-            ` : `<span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">N/A</span>`}
-          </div>
-        </td>
-      </tr>
-    `).join("");
+  usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;"><i data-lucide="loader" style="width:16px;height:16px;display:inline-block;animation:spin 1s linear infinite;"></i> Loading users…</td></tr>`;
+  lucide.createIcons();
 
-    if (isSuperAdmin) {
-      usersList.querySelectorAll(".btn-delete-user").forEach(btn => {
-        btn.addEventListener("click", () => {
-          window.deleteUser(parseInt(btn.dataset.id));
-        });
-      });
+  supabase.from("profiles").select("*").order("name", { ascending: true }).then(({ data: profiles, error }) => {
+    if (error || !profiles) {
+      usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:1.5rem;">Error loading users: ${error?.message || "Unknown error"}</td></tr>`;
+      return;
     }
-  }
+    supabaseUsers = profiles;
+
+    if (!profiles.length) {
+      usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No users found.</td></tr>`;
+    } else {
+      const roleColors = { superadmin: "#8b5cf6", admin: "#2563eb", faculty: "#059669", viewer: "#64748b" };
+      usersList.innerHTML = profiles.map(u => `
+        <tr>
+          <td>
+            <div style="font-weight:700; color:var(--text-main);">${escapeHtml(u.name)}</div>
+            <div style="font-size:0.73rem; color:var(--text-muted);">${escapeHtml(u.email)}</div>
+          </td>
+          <td>
+            <span style="font-size:0.72rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:20px; background:${roleColors[u.role] || '#64748b'}22; color:${roleColors[u.role] || '#64748b'}; text-transform:capitalize;">${u.role}</span>
+          </td>
+          <td>
+            ${u.first_login
+              ? `<span style="font-size:0.7rem;font-weight:700;color:#f59e0b;display:inline-flex;align-items:center;gap:0.25rem;"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pending first login</span>`
+              : `<span style="font-size:0.7rem;font-weight:700;color:#10b981;display:inline-flex;align-items:center;gap:0.25rem;"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Active</span>`
+            }
+          </td>
+          <td>
+            <div class="actions-cell">
+              ${isSuperAdmin ? `
+                <button class="btn-reject btn-action btn-delete-user" data-uid="${u.id}" title="Delete User" style="background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.12); color:#ef4444;">
+                  <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+                </button>
+              ` : `<span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">N/A</span>`}
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      if (isSuperAdmin) {
+        usersList.querySelectorAll(".btn-delete-user").forEach(btn => {
+          btn.addEventListener("click", () => {
+            window.deleteUser(btn.dataset.uid);
+          });
+        });
+      }
+    }
+    lucide.createIcons();
+  });
   
   // Render venues list
   if (!facilities.length) {
@@ -1875,36 +2299,93 @@ window.toggleAddUserForm = function() {
   }
 };
 
-window.submitAddUser = function() {
+window.submitAddUser = async function() {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
   }
-  const nameInput = document.getElementById("addUserNameInput");
-  const roleInput = document.getElementById("addUserRoleInput");
-  const contactInput = document.getElementById("addUserContactInput");
-  
-  if (!nameInput || !roleInput || !contactInput) return;
-  
-  const name = nameInput.value.trim();
-  const role = roleInput.value.trim();
-  const contact = contactInput.value.trim();
-  
-  if (!name || !role || !contact) {
-    showToast("Error: All fields are required!");
+  const nameInput    = document.getElementById("addUserNameInput");
+  const emailInput   = document.getElementById("addUserEmailInput");
+  const roleSelect   = document.getElementById("addUserRoleSelect");
+  const tempPwdInput = document.getElementById("addUserTempPwdInput");
+  const errEl        = document.getElementById("addUserServerError");
+  const saveBtn      = document.getElementById("saveUserBtn");
+
+  if (!nameInput || !emailInput || !roleSelect || !tempPwdInput) return;
+
+  const name    = nameInput.value.trim();
+  const email   = emailInput.value.trim();
+  const role    = roleSelect.value;
+  const tempPwd = tempPwdInput.value.trim();
+
+  if (errEl) errEl.classList.add("hidden");
+
+  if (!name || !email || !tempPwd) {
+    if (errEl) { errEl.textContent = "All fields are required."; errEl.classList.remove("hidden"); }
     return;
   }
-  
-  const nextId = users.length ? Math.max(...users.map(u => u.id)) + 1 : 1;
-  users.push({ id: nextId, name, role, contact });
-  
-  nameInput.value = "";
-  roleInput.value = "";
-  contactInput.value = "";
-  document.getElementById("addUserFormContainer").classList.add("hidden");
-  
-  renderAdminManage();
-  showToast(`User ${name} registered successfully!`);
+  if (tempPwd.length < 6) {
+    if (errEl) { errEl.textContent = "Temporary password must be at least 6 characters."; errEl.classList.remove("hidden"); }
+    return;
+  }
+
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Creating…"; }
+
+  try {
+    // To prevent logging out the current superadmin during signup, use a temporary client without persisting the session
+    const { createClient } = await import('@supabase/supabase-js');
+    const tempSupabase = createClient(
+      import.meta.env.VITE_SUPABASE_URL || 'https://agwvljqlxqbcbrfydgjb.supabase.co',
+      import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_D6Qd6v5qGFUFL-wjN2Ul7g_kSi090VR',
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      }
+    );
+
+    // Sign up the new user
+    const { data: signUpData, error: signUpErr } = await tempSupabase.auth.signUp({
+      email,
+      password: tempPwd,
+      options: {
+        data: {
+          name,
+          role
+        }
+      }
+    });
+
+    if (signUpErr) throw signUpErr;
+
+    const user = signUpData.user;
+    if (!user) throw new Error("Failed to retrieve new user details.");
+
+    // Insert into profiles table
+    const { error: profileErr } = await supabase.from("profiles").upsert({
+      id:          user.id,
+      name,
+      email:       email.toLowerCase(),
+      role,
+      first_login: true
+    }, { onConflict: "id" });
+
+    if (profileErr) throw profileErr;
+
+    nameInput.value    = "";
+    emailInput.value   = "";
+    tempPwdInput.value = "";
+    document.getElementById("addUserFormContainer").classList.add("hidden");
+
+    renderAdminManage();
+    showToast(`User ${name} created successfully!`);
+  } catch (err) {
+    if (errEl) { errEl.textContent = err.message || "Failed to create user."; errEl.classList.remove("hidden"); }
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Create User"; }
+  }
 };
 
 window.toggleAddVenueForm = function() {
@@ -1987,18 +2468,26 @@ window.submitAddVenue = function() {
   showToast(`Venue ${label} created successfully!`);
 };
 
-window.deleteUser = function(id) {
+window.deleteUser = async function(uid) {
   if (currentRole !== "superadmin") {
     showToast("Error: Unauthorized action!");
     return;
   }
-  const uIndex = users.findIndex(u => u.id === id);
-  if (uIndex === -1) return;
-  const uName = users[uIndex].name;
-  
-  users.splice(uIndex, 1);
-  renderAdminManage();
-  showToast(`User ${uName} removed!`);
+  const profile = supabaseUsers.find(u => u.id === uid);
+  const uName   = profile ? profile.name : "User";
+
+  try {
+    // Delete from profiles table directly.
+    // NOTE: For auth cleanup to happen automatically, ensure the on_profile_deleted PostgreSQL trigger is set up.
+    const { error: profileErr } = await supabase.from("profiles").delete().eq("id", uid);
+    if (profileErr) throw profileErr;
+
+    supabaseUsers = supabaseUsers.filter(u => u.id !== uid);
+    renderAdminManage();
+    showToast(`User ${uName} removed!`);
+  } catch (err) {
+    showToast(`Error: ${err.message}`);
+  }
 };
 
 window.deleteVenue = function(facilityId) {
@@ -2079,11 +2568,88 @@ function initDateSelectorNav() {
     });
   }
 }
+async function initApp() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && session.user) {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+      if (profile && !error) {
+        currentUserProfile = profile;
+        await enterDashboard(profile.role);
+      } else {
+        showLoginPage();
+      }
+    } else {
+      showLoginPage();
+    }
+  } catch (err) {
+    console.error("Initialization error:", err);
+    showLoginPage();
+  }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   initSearch();
   initCancellationModal();
   initDateSelectorNav();
+
+  // Set up password visibility toggles
+  setupPasswordToggle("toggleLoginPwd",   "toggleLoginPwdIcon",   "loginPassword");
+  setupPasswordToggle("toggleCurrentPwd", "toggleCurrentPwdIcon", "currentPassword");
+  setupPasswordToggle("toggleNewPwd",     "toggleNewPwdIcon",     "newPassword");
+  setupPasswordToggle("toggleConfirmPwd", "toggleConfirmPwdIcon", "confirmPassword");
+
+  // Profile Dropdown toggle
+  const badge = document.getElementById("navUserBadge");
+  if (badge) {
+    badge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById("profileDropdownMenu");
+      if (menu) menu.classList.toggle("hidden");
+    });
+  }
+
+  // Close dropdown on click outside
+  document.addEventListener("click", () => {
+    const menu = document.getElementById("profileDropdownMenu");
+    if (menu) menu.classList.add("hidden");
+  });
+
+  // Dropdown Action: Change Password
+  const dropdownChangePwdBtn = document.getElementById("dropdownChangePwdBtn");
+  if (dropdownChangePwdBtn) {
+    dropdownChangePwdBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openChangePasswordScreen();
+    });
+  }
+
+  // Dropdown Action: Logout
+  const dropdownLogoutBtn = document.getElementById("dropdownLogoutBtn");
+  if (dropdownLogoutBtn) {
+    dropdownLogoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await supabase.auth.signOut();
+      currentRole        = null;
+      currentUserProfile = null;
+      supabaseUsers      = [];
+      hideAllViews();
+      loginView.classList.remove("hidden");
+      lucide.createIcons();
+    });
+  }
+
+  // Settings page "Change Password" buttons
+  document.querySelectorAll(".open-change-pwd-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openChangePasswordScreen();
+    });
+  });
   
   // Set up venue image file listener
   const fileInput = document.getElementById("addVenueImageFileInput");
@@ -2158,5 +2724,58 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   
+  initApp();
   lucide.createIcons();
+});
+
+/* =========================================
+   ADMIN: NEW BOOKING POPUP LOGIC
+   ========================================= */
+let currentPopupBooking = null;
+
+function showAdminNewBookingModal(booking) {
+  currentPopupBooking = booking;
+  const modal = document.getElementById("adminNewBookingModal");
+  if (!modal) return;
+  
+  document.getElementById("popupFacilityName").innerText = booking.facility;
+  document.getElementById("popupDateTime").innerText = `${formatDate(booking.date)} (${booking.time})`;
+  document.getElementById("popupRequester").innerText = `${booking.requester} (${booking.requesterRole})`;
+  document.getElementById("popupPurpose").innerText = booking.purpose;
+  
+  modal.classList.add("active");
+}
+
+document.getElementById("closeAdminNewBookingModal")?.addEventListener("click", () => {
+  document.getElementById("adminNewBookingModal").classList.remove("active");
+});
+
+document.getElementById("popupRejectBtn")?.addEventListener("click", () => {
+  if (currentPopupBooking) {
+    updateStatus(currentPopupBooking.id, "REJECTED");
+    document.getElementById("adminNewBookingModal").classList.remove("active");
+  }
+});
+
+document.getElementById("popupAcceptBtn")?.addEventListener("click", () => {
+  if (currentPopupBooking) {
+    updateStatus(currentPopupBooking.id, "APPROVED");
+    document.getElementById("adminNewBookingModal").classList.remove("active");
+  }
+});
+
+window.addEventListener("storage", (e) => {
+  if (e.key === "newBookingEvent" && e.newValue) {
+    const data = JSON.parse(e.newValue);
+    if (!bookings.some(b => b.id === data.booking.id)) {
+       bookings.unshift(data.booking);
+       if (currentRole === "admin" || currentRole === "superadmin") {
+         renderAdminDashboard();
+         renderAdminCalendar();
+       }
+    }
+    if (currentRole === "admin" || currentRole === "superadmin") {
+      showAdminNewBookingModal(data.booking);
+    }
+  }
 });

@@ -88,12 +88,6 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       return;
     }
 
-    // Verify bookings are off on Sundays (6 days a week)
-    const dayOfWeek = date.getUTCDay();
-    if (dayOfWeek === 0) {
-      res.status(400).json({ error: 'Bookings are not allowed on Sundays' });
-      return;
-    }
 
     // Validate time range
     const startMins = timeToMinutes(validated.startTime);
@@ -107,12 +101,12 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       return;
     }
 
-    // Enforce fixed timing: 8 AM to 4 PM (08:00 to 16:00)
-    const eightAm = timeToMinutes('08:00');
-    const fourPm = timeToMinutes('16:00');
-    if (startMins < eightAm || endMins > fourPm) {
+    // Enforce fixed timing: 6 AM to 10 PM (06:00 to 22:00)
+    const sixAm = timeToMinutes('06:00');
+    const tenPm = timeToMinutes('22:00');
+    if (startMins < sixAm || endMins > tenPm) {
       res.status(400).json({
-        error: 'Facility is only available between 08:00 AM and 04:00 PM',
+        error: 'Facility is only available between 06:00 AM and 10:00 PM',
       });
       return;
     }
@@ -146,8 +140,14 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       return;
     }
 
+    // Check permission: viewers are read-only and cannot book
+    if (req.user!.role === 'viewer') {
+      res.status(403).json({ error: 'Viewers do not have permission to book facilities' });
+      return;
+    }
+
     // Determine if approval is needed
-    const approvalRequired = facility.requiresApproval || req.user!.role === 'STUDENT';
+    const approvalRequired = facility.requiresApproval || req.user!.role === 'faculty';
 
     const booking = await prisma.booking.create({
       data: {
@@ -207,7 +207,19 @@ export const getMyBookings = async (req: AuthRequest, res: Response, next: NextF
       where,
       include: {
         facility: { select: { id: true, name: true, location: true, type: true, images: true } },
-        approval: { select: { status: true, remarks: true, timestamp: true } },
+        approval: {
+          select: {
+            status: true,
+            remarks: true,
+            timestamp: true,
+            approvedBy: {
+              select: {
+                name: true,
+                role: true,
+              }
+            }
+          }
+        },
       },
       orderBy: { date: 'asc' },
     });
@@ -237,7 +249,16 @@ export const getAllBookings = async (req: AuthRequest, res: Response, next: Next
       include: {
         facility: { select: { id: true, name: true, location: true, type: true } },
         user: { select: { id: true, name: true, email: true, role: true, department: true } },
-        approval: true,
+        approval: {
+          include: {
+            approvedBy: {
+              select: {
+                name: true,
+                role: true,
+              }
+            }
+          }
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -261,14 +282,14 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response, next:
 
     // Only owner can cancel their own booking
     if (status === 'CANCELLED') {
-      if (booking.userId !== req.user!.id && !['ADMIN', 'SUPER_ADMIN'].includes(req.user!.role)) {
+      if (booking.userId !== req.user!.id && !['admin', 'superadmin'].includes(req.user!.role)) {
         throw new AppError('Not authorized to cancel this booking', 403);
       }
     }
 
     // Only admins can approve/reject
     if (['APPROVED', 'REJECTED'].includes(status)) {
-      if (!['ADMIN', 'SUPER_ADMIN'].includes(req.user!.role)) {
+      if (!['admin', 'superadmin'].includes(req.user!.role)) {
         throw new AppError('Only admins can approve or reject bookings', 403);
       }
 
@@ -311,6 +332,16 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response, next:
       include: {
         facility: { select: { name: true } },
         user: { select: { name: true, email: true } },
+        approval: {
+          include: {
+            approvedBy: {
+              select: {
+                name: true,
+                role: true,
+              }
+            }
+          }
+        },
       },
     });
 
@@ -344,7 +375,7 @@ export const deleteBooking = async (req: AuthRequest, res: Response, next: NextF
     const booking = await prisma.booking.findUnique({ where: { id } });
     if (!booking) throw new AppError('Booking not found', 404);
 
-    if (booking.userId !== req.user!.id && !['ADMIN', 'SUPER_ADMIN'].includes(req.user!.role)) {
+    if (booking.userId !== req.user!.id && !['admin', 'superadmin'].includes(req.user!.role)) {
       throw new AppError('Not authorized', 403);
     }
 

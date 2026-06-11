@@ -15,7 +15,7 @@ model User {
   email       String    @unique
   password    String?
   googleId    String?   @unique
-  role        String    @default("STUDENT")
+  role        String    @default("viewer")
   department  String?
   avatar      String?
   isActive    Boolean   @default(true)

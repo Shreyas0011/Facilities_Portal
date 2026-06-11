@@ -9,6 +9,8 @@ console.log("SUPABASE LOADED");
    DATA
    ========================================= */
 
+let facilities = [];
+let users = [];
 
 const categories = [
   { id: "all",        label: "All Amenities" },
@@ -1033,7 +1035,7 @@ function renderMonthView(container, events, isForAdmin) {
           ${dayEvents.map(e => `
             <div class="calendar-event-chip ${e.status.toLowerCase()}" 
                  title="${e.time} - ${e.facility} (${e.purpose})"
-                 onclick="window.showCalendarEventDetail(${e.id})">
+                 onclick="window.showCalendarEventDetail('${e.id}')">
               ${e.time.split(" – ")[0]} ${e.isExternal ? 'EXT' : e.facility}
             </div>
           `).join("")}

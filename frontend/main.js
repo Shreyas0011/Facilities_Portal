@@ -2274,7 +2274,7 @@ function initCancellationModal() {
         
         showToast(`Booking ${pendingCancellationStatus.toLowerCase()} successfully!`);
         closeModal();
-      });
+      }
     }
   });
 }

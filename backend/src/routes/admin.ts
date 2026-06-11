@@ -4,6 +4,7 @@ import {
   getPendingApprovals,
   getUsers,
   updateUser,
+  deleteUser,
   createMaintenanceBlock,
   getMaintenanceBlocks,
   deleteMaintenanceBlock,
@@ -18,6 +19,7 @@ router.get('/analytics', getAnalytics);
 router.get('/pending-approvals', getPendingApprovals);
 router.get('/users', authorize('superadmin'), getUsers);
 router.patch('/users/:id', authorize('superadmin'), updateUser);
+router.delete('/users/:id', authorize('superadmin'), deleteUser);
 router.post('/maintenance', createMaintenanceBlock);
 router.get('/maintenance', getMaintenanceBlocks);
 router.delete('/maintenance/:id', deleteMaintenanceBlock);

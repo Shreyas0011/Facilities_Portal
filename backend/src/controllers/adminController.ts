@@ -227,3 +227,17 @@ export const deleteMaintenanceBlock = async (req: AuthRequest, res: Response, ne
     next(error);
   }
 };
+
+export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    if (!mongoose.Types.ObjectId.isValid(id)) throw new AppError('Invalid user ID', 400);
+
+    const user = await User.findByIdAndDelete(id);
+    if (!user) throw new AppError('User not found', 404);
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -2,6 +2,12 @@
    SUPABASE IMPORT
    ========================================= */
 import { supabase } from './supabase.js';
+import { API_BASE_URL } from './src/config.js';
+import { createIcons } from 'lucide';
+import * as icons from 'lucide';
+window.lucide = {
+  createIcons: (options = {}) => createIcons({ icons, ...options })
+};
 console.log("MAIN LOADED");
 console.log("SUPABASE LOADED");
 
@@ -120,50 +126,43 @@ if (loginForm) {
     try {
       console.log("STEP 1 - Login button clicked", { email });
       
-      console.log("BEFORE AUTH");
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
-      console.log("AFTER AUTH", { data, error });
+      const data = await response.json();
 
-      if (error) {
-        console.error("AUTH ERROR", error);
-        showAuthError(loginErrorEl, "Invalid username or password");
+      if (!response.ok) {
+        console.error("AUTH ERROR", data.error);
+        showAuthError(loginErrorEl, data.error || "Invalid username or password");
         return;
       }
 
-      const user = data?.user;
+      const user = data.user;
       if (!user) {
         showAuthError(loginErrorEl, "Invalid username or password");
         return;
       }
 
-      console.log("STEP 3 - Fetching profile", { userId: user.id });
-      const { data: profile, error: profileErr } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-        
-      console.log("STEP 4 - Profile response", { profile, profileErr });
+      // Save token to localStorage
+      localStorage.setItem('token', data.token);
 
-      if (profileErr || !profile) {
-        console.error("PROFILE ERROR", profileErr);
-        showAuthError(loginErrorEl, "Profile not found in the database. Please contact your administrator.");
-        return;
-      }
-
-      // Read role and first_login
-      currentUserProfile = profile;
-      currentRole = profile.role;
+      currentUserProfile = {
+        id: user.id || user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        first_login: user.firstLogin || user.first_login
+      };
+      currentRole = user.role;
 
       console.log("STEP 5 - About to route user", {
-        role: profile.role,
-        first_login: profile.first_login
+        role: user.role,
+        first_login: currentUserProfile.first_login
       });
 
-      enterDashboard(profile.role);
+      enterDashboard(user.role);
       console.log("STEP 6 - Route complete");
     } catch (err) {
       console.error("LOGIN EXCEPTION", err);
@@ -237,27 +236,21 @@ if (changePasswordForm) {
     if (changePwdBtnText) changePwdBtnText.textContent = "Updating…";
 
     try {
-      // Verify current password by attempting to sign in again
-      const { error: verifyErr } = await supabase.auth.signInWithPassword({
-        email: currentUserProfile.email,
-        password: currentPwd
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd })
       });
-      if (verifyErr) {
-        throw new Error("Incorrect current password.");
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Incorrect current password or update failed.");
       }
 
-      // 1. Update the password in Supabase Auth
-      const { error: updateErr } = await supabase.auth.updateUser({ password: newPwd });
-      if (updateErr) throw updateErr;
-
-      // 2. Set first_login = false in profiles table
-      const { error: profileErr } = await supabase
-        .from("profiles")
-        .update({ first_login: false })
-        .eq("id", currentUserProfile.id);
-      if (profileErr) throw profileErr;
-
-      // 3. Update local profile state
+      // Update local profile state
       currentUserProfile.first_login = false;
 
       // Remove the warning banner if it is visible
@@ -309,24 +302,35 @@ function updatePasswordStrength(pwd) {
 // ── Enter the appropriate dashboard ────────────────────────────────────
 async function enterDashboard(role) {
   // Check if session exists
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const token = localStorage.getItem('token');
+  if (!token) {
     showLoginPage();
     return;
   }
 
   // Ensure current user profile is fetched and matches the session user
-  if (!currentUserProfile || currentUserProfile.id !== session.user.id) {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-    if (error || !profile) {
+  if (!currentUserProfile) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (!response.ok || !data.user) {
+        showLoginPage();
+        return;
+      }
+      const user = data.user;
+      currentUserProfile = {
+        id: user.id || user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        first_login: user.firstLogin || user.first_login
+      };
+    } catch (err) {
       showLoginPage();
       return;
     }
-    currentUserProfile = profile;
   }
 
   currentRole = currentUserProfile.role;
@@ -436,7 +440,7 @@ function showAuthError(el, msg) {
 
 // ── Logout ─────────────────────────────────────────────────────────────
 logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  localStorage.removeItem('token');
   currentRole        = null;
   currentUserProfile = null;
   supabaseUsers      = [];
@@ -449,7 +453,7 @@ logoutBtn.addEventListener("click", async () => {
 const calViewLogoutBtn = document.getElementById("calViewLogoutBtn");
 if (calViewLogoutBtn) {
   calViewLogoutBtn.addEventListener("click", async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('token');
     currentRole        = null;
     currentUserProfile = null;
     hideAllViews();
@@ -478,12 +482,7 @@ function showLoginPage() {
   lucide.createIcons();
 }
 
-// ── Restore session on page reload ────────────────────────────────────
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === "SIGNED_OUT") {
-    showLoginPage();
-  }
-});
+// Session change handler (no-op since we use JWT tokens)
 
 /* =========================================
    NAVBAR BUILDERS
@@ -2330,11 +2329,23 @@ function renderAdminManage() {
   usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;"><i data-lucide="loader" style="width:16px;height:16px;display:inline-block;animation:spin 1s linear infinite;"></i> Loading users…</td></tr>`;
   lucide.createIcons();
 
-  supabase.from("profiles").select("*").order("name", { ascending: true }).then(({ data: profiles, error }) => {
-    if (error || !profiles) {
-      usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:1.5rem;">Error loading users: ${error?.message || "Unknown error"}</td></tr>`;
+  const token = localStorage.getItem('token');
+  fetch(`${API_BASE_URL}/admin/users`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error || !data.users) {
+      usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:1.5rem;">Error loading users: ${data.error || "Unknown error"}</td></tr>`;
       return;
     }
+    const profiles = data.users.map(u => ({
+      id: u._id || u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      first_login: u.firstLogin || u.first_login
+    }));
     supabaseUsers = profiles;
 
     if (!profiles.length) {
@@ -2377,6 +2388,9 @@ function renderAdminManage() {
       }
     }
     lucide.createIcons();
+  })
+  .catch(err => {
+    usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:1.5rem;">Error loading users: ${err.message}</td></tr>`;
   });
   
   // Render venues list
@@ -2470,47 +2484,15 @@ window.submitAddUser = async function() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Creating…"; }
 
   try {
-    // To prevent logging out the current superadmin during signup, use a temporary client without persisting the session
-    const { createClient } = await import('@supabase/supabase-js');
-    const tempSupabase = createClient(
-      import.meta.env.VITE_SUPABASE_URL || 'https://agwvljqlxqbcbrfydgjb.supabase.co',
-      import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_D6Qd6v5qGFUFL-wjN2Ul7g_kSi090VR',
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
-      }
-    );
-
-    // Sign up the new user
-    const { data: signUpData, error: signUpErr } = await tempSupabase.auth.signUp({
-      email,
-      password: tempPwd,
-      options: {
-        data: {
-          name,
-          role
-        }
-      }
+    const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, email, password: tempPwd, role })
     });
-
-    if (signUpErr) throw signUpErr;
-
-    const user = signUpData.user;
-    if (!user) throw new Error("Failed to retrieve new user details.");
-
-    // Insert into profiles table
-    const { error: profileErr } = await supabase.from("profiles").upsert({
-      id:          user.id,
-      name,
-      email:       email.toLowerCase(),
-      role,
-      first_login: true
-    }, { onConflict: "id" });
-
-    if (profileErr) throw profileErr;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create user");
 
     nameInput.value    = "";
     emailInput.value   = "";
@@ -2636,10 +2618,15 @@ window.deleteUser = async function(uid) {
   const uName   = profile ? profile.name : "User";
 
   try {
-    // Delete from profiles table directly.
-    // NOTE: For auth cleanup to happen automatically, ensure the on_profile_deleted PostgreSQL trigger is set up.
-    const { error: profileErr } = await supabase.from("profiles").delete().eq("id", uid);
-    if (profileErr) throw profileErr;
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/admin/users/${uid}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to delete user");
 
     supabaseUsers = supabaseUsers.filter(u => u.id !== uid);
     renderAdminManage();
@@ -2746,16 +2733,22 @@ function initDateSelectorNav() {
 }
 async function initApp() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session && session.user) {
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-      if (profile && !error) {
-        currentUserProfile = profile;
-        await enterDashboard(profile.role);
+    const token = localStorage.getItem('token');
+    if (token) {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok && data.user) {
+        const user = data.user;
+        currentUserProfile = {
+          id: user.id || user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          first_login: user.firstLogin || user.first_login
+        };
+        await enterDashboard(user.role);
       } else {
         showLoginPage();
       }
@@ -2809,7 +2802,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (dropdownLogoutBtn) {
     dropdownLogoutBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      await supabase.auth.signOut();
+      localStorage.removeItem('token');
       currentRole        = null;
       currentUserProfile = null;
       supabaseUsers      = [];

@@ -105,7 +105,7 @@ function QueuePage() {
         </tbody>
       </table>
       {detailBooking && (
-        <div className="modal-overlay" style={{ display: 'flex' }} onClick={e => e.target === e.currentTarget && setDetailBooking(null)}>
+        <div className="modal-overlay active" onClick={e => e.target === e.currentTarget && setDetailBooking(null)}>
           <div className="modal" style={{ maxWidth: 480 }}>
             <button className="modal-close" onClick={() => setDetailBooking(null)}>✕</button>
             <div className="modal-header">
@@ -547,7 +547,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
 
       {/* Real-time New Booking Request Notification Popup Modal */}
       {activePopupBooking && (
-        <div className="modal-overlay" style={{ display: 'flex', zIndex: 9999 }}>
+        <div className="modal-overlay active" style={{ zIndex: 9999 }}>
           <div className="modal animate-scale-in" style={{ maxWidth: 450, border: '2px solid var(--primary)' }}>
             <button className="modal-close" onClick={closePopup}>✕</button>
             <div className="modal-header" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.75rem' }}>

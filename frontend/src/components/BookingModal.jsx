@@ -118,7 +118,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   };
 
   return (
-    <div className="modal-overlay" style={{ display: 'flex' }} onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay active" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <button className="modal-close" onClick={onClose}><X size={18} /></button>
         <div className="modal-header">

@@ -3514,6 +3514,8 @@ body {
   justify-content: center;
   z-index: 1000;
   padding: 1.5rem;
+  opacity: 1;
+  pointer-events: auto;
   animation: fadeIn 0.2s ease-out;
 }
 

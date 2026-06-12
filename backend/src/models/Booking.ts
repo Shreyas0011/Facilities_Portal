@@ -9,11 +9,15 @@ export interface IBooking extends Document {
   startTime: string;
   endTime: string;
   purpose: string;
-  attendeesCount: number;
+  attendeesCount?: number;
   notes?: string;
   requirements?: string;
   pocName?: string;
   pocContact?: string;
+  isExternal?: boolean;
+  isRecurring?: boolean;
+  recurringDays?: number[];
+  recurringEndDate?: Date;
   status: BookingStatus;
   approvalRequired: boolean;
   createdAt: Date;
@@ -28,11 +32,15 @@ const BookingSchema = new Schema<IBooking>(
     startTime:       { type: String, required: true },
     endTime:         { type: String, required: true },
     purpose:         { type: String, required: true, minlength: 5 },
-    attendeesCount:  { type: Number, required: true, min: 1 },
+    attendeesCount:  { type: Number, default: 1 },
     notes:           { type: String },
     requirements:    { type: String },
     pocName:         { type: String },
     pocContact:      { type: String },
+    isExternal:      { type: Boolean, default: false },
+    isRecurring:     { type: Boolean, default: false },
+    recurringDays:   { type: [Number], default: [] },
+    recurringEndDate:{ type: Date },
     status: {
       type: String,
       enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'],

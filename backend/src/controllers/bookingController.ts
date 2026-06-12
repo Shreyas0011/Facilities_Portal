@@ -16,11 +16,15 @@ const bookingSchema = z.object({
   startTime:     z.string().regex(/^\d{2}:\d{2}$/, 'Format: HH:MM'),
   endTime:       z.string().regex(/^\d{2}:\d{2}$/, 'Format: HH:MM'),
   purpose:       z.string().min(5, 'Purpose must be at least 5 characters'),
-  attendeesCount: z.number().min(1),
+  attendeesCount: z.number().optional(),
   notes:         z.string().optional(),
   requirements:  z.string().optional(),
   pocName:       z.string().optional(),
   pocContact:    z.string().optional(),
+  isExternal:    z.boolean().optional(),
+  isRecurring:   z.boolean().optional(),
+  recurringDays: z.array(z.number()).optional(),
+  recurringEndDate: z.string().nullable().optional(),
 });
 
 const timeToMinutes = (time: string): number => {
@@ -127,7 +131,7 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
     const facility = await Facility.findOne({ _id: validated.facilityId, isActive: true });
     if (!facility) throw new AppError('Facility not found or inactive', 404);
 
-    if (validated.attendeesCount > facility.capacity) {
+    if (validated.attendeesCount !== undefined && validated.attendeesCount > facility.capacity) {
       res.status(400).json({ error: `Attendees count exceeds facility capacity of ${facility.capacity}` }); return;
     }
 
@@ -161,6 +165,10 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       requirements:    validated.requirements,
       pocName:         validated.pocName,
       pocContact:      validated.pocContact,
+      isExternal:      validated.isExternal,
+      isRecurring:     validated.isRecurring,
+      recurringDays:   validated.recurringDays,
+      recurringEndDate: validated.recurringEndDate ? new Date(validated.recurringEndDate) : null,
       status:          approvalRequired ? 'PENDING' : 'APPROVED',
       approvalRequired,
     });

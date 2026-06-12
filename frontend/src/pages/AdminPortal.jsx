@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { Shield, Layers, Calendar, Database, BarChart3, Lock, CheckCircle2, XCircle, Clock4, Users, Building, UserPlus, PlusCircle, Settings, Globe, RefreshCw, FileText, Package, Clock, User, Mail } from 'lucide-react';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
@@ -50,116 +49,64 @@ function QueuePage() {
   };
 
   const BookingRow = ({ b, showActions, onView }) => {
-    const [showRejectModal, setShowRejectModal] = useState(false);
-    const [rejectReason, setRejectReason] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
     const requesterName = b.userId?.name || b.requesterName || b.requester || 'Unknown';
     const requesterEmail = b.userId?.email || b.requesterEmail || '';
     const facilityName = b.facilityId?.name || b.facilityName || b.facility || 'Unknown';
     const attendeesCount = b.attendeesCount || b.attendees || 0;
 
-    const handleRejectSubmit = () => {
-      if (!rejectReason.trim()) return;
-      setIsSubmitting(true);
-      act(b._id || b.id, 'reject', rejectReason.trim()).finally(() => {
-        setIsSubmitting(false);
-        setShowRejectModal(false);
-        setRejectReason('');
-      });
-    };
-
     return (
-      <>
-        <tr>
+      <tr>
+        <td>
+          <div style={{ fontWeight: 700 }}>{requesterName}</div>
+          <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{requesterEmail}</div>
+        </td>
+        <td>{facilityName}</td>
+        <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.purpose}</td>
+        <td>
+          <div>{formatDate(b.date)}</div>m
+          <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{b.time || `${b.startTime} – ${b.endTime}`}</div>
+        </td>
+        {showActions ? (
+          <td>{attendeesCount}</td>
+        ) : (
           <td>
-            <div style={{ fontWeight: 700 }}>{requesterName}</div>
-            <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{requesterEmail}</div>
-          </td>
-          <td>{facilityName}</td>
-          <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.purpose}</td>
-          <td>
-            <div>{formatDate(b.date)}</div>
-            <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{b.time || `${b.startTime} – ${b.endTime}`}</div>
-          </td>
-          {showActions ? (
-            <td>{attendeesCount}</td>
-          ) : (
-            <td>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span className={`feed-status ${(b.status || '').toLowerCase()}`}>{b.status}</span>
-                {b.approval && (
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                    {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
-                    {b.approval.remarks ? ` (${b.approval.remarks})` : ''}
-                  </span>
-                )}
-              </div>
-            </td>
-          )}
-          <td>
-            {showActions ? (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button className="btn btn-primary" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', background: '#10b981', borderColor: '#10b981' }} onClick={() => act(b._id || b.id, 'approve')}>Approve</button>
-                <button className="btn btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => setShowRejectModal(true)}>Reject</button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.35rem' }}>
-                <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => onView(b)}>View</button>
-                {b.status === 'APPROVED' && (
-                  <button className="btn btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => setShowRejectModal(true)}>Reject</button>
-                )}
-              </div>
-            )}
-          </td>
-        </tr>
-
-        {showRejectModal && createPortal(
-          <div className="modal-overlay active" style={{ zIndex: 10000 }} onClick={(e) => e.target === e.currentTarget && setShowRejectModal(false)}>
-            <div className="modal animate-scale-in" style={{ maxWidth: 420, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid #ef4444' }}>
-              <div style={{ height: 6, background: '#ef4444' }} />
-              <button className="modal-close" onClick={() => setShowRejectModal(false)} style={{ top: 16, right: 16 }}>✕</button>
-              
-              <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
-                <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>Reject Booking</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Rejecting <strong style={{ color: 'var(--text-main)' }}>{facilityName}</strong> for {requesterName} on {formatDate(b.date)}.
-                </p>
-              </div>
-
-              <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', display: 'block', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-                    Reason for Rejection (Mandatory)
-                  </label>
-                  <input
-                    type="text"
-                    value={rejectReason}
-                    onChange={e => setRejectReason(e.target.value)}
-                    placeholder="Enter why this booking is being rejected..."
-                    style={{
-                      width: '100%', padding: '0.6rem 0.8rem', border: '1px solid #ef444450',
-                      borderRadius: 10, fontSize: '0.85rem', background: 'rgba(239,68,68,0.02)',
-                      outline: 'none', boxSizing: 'border-box'
-                    }}
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                <button className="btn btn-secondary" disabled={isSubmitting} onClick={() => setShowRejectModal(false)} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>
-                  Cancel
-                </button>
-                <button className="btn btn-outline" disabled={isSubmitting || !rejectReason.trim()} onClick={handleRejectSubmit} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>
-                  {isSubmitting ? 'Submitting...' : 'Confirm Rejection'}
-                </button>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span className={`feed-status ${(b.status || '').toLowerCase()}`}>{b.status}</span>
+              {b.approval && (
+                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                  {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
+                  {b.approval.remarks ? ` (${b.approval.remarks})` : ''}
+                </span>
+              )}
             </div>
-          </div>,
-          document.body
+          </td>
         )}
-      </>
+        <td>
+          {showActions ? (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn btn-primary" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', background: '#10b981', borderColor: '#10b981' }} onClick={() => act(b._id || b.id, 'approve')}>Approve</button>
+              <button className="btn btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => {
+                const r = prompt('Reason for rejection (mandatory):');
+                if (r === null) return;
+                if (!r.trim()) { alert('Rejection reason is mandatory.'); return; }
+                act(b._id || b.id, 'reject', r.trim());
+              }}>Reject</button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => onView(b)}>View</button>
+              {b.status === 'APPROVED' && (
+                <button className="btn btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => {
+                  const r = prompt('Reason for rejecting/revoking booking (mandatory):');
+                  if (r === null) return;
+                  if (!r.trim()) { alert('Rejection reason is mandatory.'); return; }
+                  act(b._id || b.id, 'reject', r.trim());
+                }}>Reject</button>
+              )}
+            </div>
+          )}
+        </td>
+      </tr>
     );
   };
 
@@ -179,7 +126,7 @@ function QueuePage() {
           }
         </tbody>
       </table>
-      {detailBooking && (
+      {detailBooking && createPortal(
         <div className="modal-overlay active" onClick={e => e.target === e.currentTarget && setDetailBooking(null)}>
           <div className="modal animate-scale-in" style={{ maxWidth: 520, borderRadius: 20, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
             {/* Top status bar indicator */}
@@ -212,7 +159,7 @@ function QueuePage() {
 
             {/* Content Body */}
             <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, overflowY: 'auto', scrollbarWidth: 'thin' }}>
-              
+
               {/* Details Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.25rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -260,7 +207,7 @@ function QueuePage() {
                 }}>
                   <RefreshCw size={16} style={{ color: '#7c3aed' }} />
                   <div style={{ fontSize: '0.8rem', color: '#7c3aed', fontWeight: 600 }}>
-                    Repeats every {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].filter((_, i) => detailBooking.recurringDays.includes(i)).join(', ')}
+                    Repeats every {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].filter((_, i) => detailBooking.recurringDays.includes(i)).join(', ')}
                     {detailBooking.recurringEndDate && ` until ${formatDate(detailBooking.recurringEndDate)}`}
                   </div>
                 </div>
@@ -356,7 +303,8 @@ function QueuePage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -765,7 +713,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
       {activePopupBooking && (
         <div className="modal-overlay active" style={{ zIndex: 9999 }}>
           <div className="modal animate-scale-in" style={{ maxWidth: 480, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid var(--primary)', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
-            
+
             {/* Pulsing indicator banner */}
             <div style={{
               height: 6,
@@ -801,7 +749,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
 
             {/* Content Body */}
             <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, overflowY: 'auto' }}>
-              
+
               {/* Details Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.25rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -831,7 +779,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
                 }}>
                   <RefreshCw size={16} style={{ color: '#7c3aed' }} />
                   <div style={{ fontSize: '0.8rem', color: '#7c3aed', fontWeight: 600 }}>
-                    Repeats every {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].filter((_, i) => activePopupBooking.recurringDays.includes(i)).join(', ')}
+                    Repeats every {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].filter((_, i) => activePopupBooking.recurringDays.includes(i)).join(', ')}
                     {activePopupBooking.recurringEndDate && ` until ${formatDate(activePopupBooking.recurringEndDate)}`}
                   </div>
                 </div>

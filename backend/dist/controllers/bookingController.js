@@ -122,12 +122,7 @@ const createBooking = async (req, res, next) => {
             res.status(400).json({ error: `Attendees count exceeds facility capacity of ${facility.capacity}` });
             return;
         }
-        const facilityStart = timeToMinutes(facility.availabilityStart);
-        const facilityEnd = timeToMinutes(facility.availabilityEnd);
-        if (startMins < facilityStart || endMins > facilityEnd) {
-            res.status(400).json({ error: `Facility is only available from ${facility.availabilityStart} to ${facility.availabilityEnd}` });
-            return;
-        }
+        // Per-facility window intentionally removed — global 06:00–22:00 rule above applies
         const conflict = await checkConflict(validated.facilityId, date, validated.startTime, validated.endTime);
         if (conflict.conflict) {
             res.status(409).json({ error: conflict.reason });

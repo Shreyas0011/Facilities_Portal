@@ -104,20 +104,12 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
     const date = new Date(validated.date);
     if (isNaN(date.getTime())) { res.status(400).json({ error: 'Invalid date format' }); return; }
 
-    if (date.getUTCDay() === 0) {
-      res.status(400).json({ error: 'Bookings are not allowed on Sundays' }); return;
-    }
-
 
     // Validate time range
     const startMins = timeToMinutes(validated.startTime);
     const endMins   = timeToMinutes(validated.endTime);
     if (startMins >= endMins) { res.status(400).json({ error: 'End time must be after start time' }); return; }
     if (endMins - startMins < 30) { res.status(400).json({ error: 'Minimum booking duration is 30 minutes' }); return; }
-    if (startMins < timeToMinutes('08:00') || endMins > timeToMinutes('16:00')) {
-      res.status(400).json({ error: 'Facility is only available between 08:00 AM and 04:00 PM' }); return;
-    }
-
     // Enforce fixed timing: 6 AM to 10 PM (06:00 to 22:00)
     const sixAm = timeToMinutes('06:00');
     const tenPm = timeToMinutes('22:00');

@@ -334,36 +334,24 @@ async function enterDashboard(role) {
   currentRole = currentUserProfile.role;
   hideAllViews();
 
-  const tempPasswordBanner = document.getElementById("tempPasswordBanner");
-  if (currentUserProfile && currentUserProfile.first_login) {
-    if (tempPasswordBanner) {
-      tempPasswordBanner.classList.remove("hidden");
-    }
-  } else {
-    if (tempPasswordBanner) {
-      tempPasswordBanner.classList.add("hidden");
-    }
+  // ── Force password change on first login ───────────────────────────────
+  if (currentUserProfile.first_login) {
+    openChangePasswordScreen();
+    return;
   }
 
-  const dismissWarningBannerBtn = document.getElementById("dismissWarningBannerBtn");
-  if (dismissWarningBannerBtn) {
-    dismissWarningBannerBtn.onclick = () => {
-      const banner = document.getElementById("tempPasswordBanner");
-      if (banner) banner.classList.add("hidden");
-    };
-  }
+  // Hide the temp-password banner for users who've already changed their password
+  const tempPasswordBanner = document.getElementById("tempPasswordBanner");
+  if (tempPasswordBanner) tempPasswordBanner.classList.add("hidden");
 
   const bannerChangePasswordBtn = document.getElementById("bannerChangePasswordBtn");
   if (bannerChangePasswordBtn) {
-    bannerChangePasswordBtn.onclick = () => {
-      openChangePasswordScreen();
-    };
+    bannerChangePasswordBtn.onclick = () => openChangePasswordScreen();
   }
 
   if (currentRole === "viewer") {
     calendarViewPortal.classList.remove("hidden");
     console.log("[Viewer] Portal shown. Facilities:", facilities.length, "Bookings:", bookings.length);
-    // Start live clock and populate stats
     startCalViewClock();
     renderCalViewStats();
     renderCalendarViewPortal();
@@ -388,7 +376,6 @@ async function enterDashboard(role) {
     setAdminNav();
     switchAdminPage(adminPage);
 
-    // Show popup for the most recent pending booking to simulate real-time notification
     const pendingBooking = bookings.find(b => b.status === "PENDING");
     if (pendingBooking) {
       setTimeout(() => {

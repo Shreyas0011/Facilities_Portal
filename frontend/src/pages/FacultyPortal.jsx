@@ -15,15 +15,72 @@ function AmenitiesPage({ onChangePassword }) {
   const { user, token } = useAuth();
   const [facilities, setFacilities] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedFacility, setSelectedFacility] = useState(null);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     fetch(`${API_BASE_URL}/facilities`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setFacilities(d.facilities || []));
     fetch(`${API_BASE_URL}/bookings/my-bookings`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setBookings(d.bookings || []));
+    fetch(`${API_BASE_URL}/bookings/public`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => setAllBookings(d.bookings || []));
   }, [token]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + (m || 0);
+  };
+
+  const isFacilityBookedOutToday = (facility) => {
+    const facilityId = facility._id || facility.id;
+    const todayStr = new Date().toLocaleDateString('en-CA'); // Gets YYYY-MM-DD in local time
+    
+    const todayBookings = allBookings.filter(b => {
+      const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
+      const bFacilityId = b.facilityId?._id || b.facilityId?.id || b.facilityId;
+      return bDate === todayStr && b.status === 'APPROVED' && bFacilityId === facilityId;
+    });
+
+    if (todayBookings.length === 0) return false;
+
+    // Calculate total operating hours
+    const startMins = timeToMinutes(facility.availabilityStart || '08:00');
+    const endMins = timeToMinutes(facility.availabilityEnd || '17:00');
+    const totalOperatingMins = endMins > startMins ? (endMins - startMins) : 540;
+
+    // Calculate booked hours (merge overlapping bookings)
+    const intervals = todayBookings.map(b => [
+      timeToMinutes(b.startTime || '08:00'),
+      timeToMinutes(b.endTime || '17:00')
+    ]).sort((a, b) => a[0] - b[0]);
+
+    let mergedIntervals = [];
+    if (intervals.length > 0) {
+      let current = intervals[0];
+      for (let i = 1; i < intervals.length; i++) {
+        const next = intervals[i];
+        if (next[0] <= current[1]) {
+          current[1] = Math.max(current[1], next[1]);
+        } else {
+          mergedIntervals.push(current);
+          current = next;
+        }
+      }
+      mergedIntervals.push(current);
+    }
+
+    const bookedMins = mergedIntervals.reduce((sum, interval) => sum + (interval[1] - interval[0]), 0);
+
+    // Booked out if booked minutes cover at least 95% of operating hours
+    return bookedMins >= (totalOperatingMins * 0.95);
+  };
 
   const filtered = search
     ? facilities.filter(f => [f.label || f.name, f.desc || f.description, f.category, f.capacity]
@@ -59,31 +116,34 @@ function AmenitiesPage({ onChangePassword }) {
         <div className="facilities-grid">
           {filtered.length === 0
             ? <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>No facilities found{search ? ` matching "${search}"` : ''}.</div>
-            : filtered.map((f, i) => (
-              <div key={f._id || f.id} className="card animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div className="card-image" style={f.image ? { backgroundImage: `url('${f.image}')`, backgroundSize: 'cover', backgroundPosition: 'center', height: 160 } : { height: 160 }}>
-                  <div className={`status-badge ${f.available ? 'available' : 'reserved'}`}>
-                    <div className={`status-dot ${f.available ? 'available' : 'reserved'}`} />
-                    {f.available ? 'Available' : 'Reserved'}
+            : filtered.map((f, i) => {
+              const isBookedOut = isFacilityBookedOutToday(f);
+              return (
+                <div key={f._id || f.id} className="card animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
+                  <div className="card-image" style={f.image ? { backgroundImage: `url('${f.image}')`, backgroundSize: 'cover', backgroundPosition: 'center', height: 160 } : { height: 160 }}>
+                    <div className={`status-badge ${!isBookedOut ? 'available' : 'reserved'}`}>
+                      <div className={`status-dot ${!isBookedOut ? 'available' : 'reserved'}`} />
+                      {!isBookedOut ? 'Available' : 'Reserved'}
+                    </div>
+                    {!f.image && <div className="card-icon"><ChevronRight size={32} /></div>}
                   </div>
-                  {!f.image && <div className="card-icon"><ChevronRight size={32} /></div>}
+                  <div className="card-body">
+                    <h3 className="card-title">{f.label || f.name}</h3>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <MapPin size={12} style={{ color: 'var(--primary)' }} />{f.location || 'Main Campus'}
+                    </div>
+                    <p className="card-desc">{f.desc || f.description}</p>
+                    <div className="card-footer">
+                      <div className="capacity"><Users size={14} />{f.capacity === 'Open Space' ? f.capacity : `${f.capacity} Seats`}</div>
+                      <button className="btn btn-primary btn-reserve" style={{ width: '100%' }}
+                        onClick={() => setSelectedFacility(f)}>
+                        Reserve Space <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="card-body">
-                  <h3 className="card-title">{f.label || f.name}</h3>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <MapPin size={12} style={{ color: 'var(--primary)' }} />{f.location || 'Main Campus'}
-                  </div>
-                  <p className="card-desc">{f.desc || f.description}</p>
-                  <div className="card-footer">
-                    <div className="capacity"><Users size={14} />{f.capacity === 'Open Space' ? f.capacity : `${f.capacity} Seats`}</div>
-                    <button className="btn btn-primary btn-reserve" style={{ width: '100%' }}
-                      onClick={() => setSelectedFacility(f)}>
-                      Reserve Space <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           }
         </div>
 
@@ -130,7 +190,10 @@ function AmenitiesPage({ onChangePassword }) {
         <BookingModal
           facility={selectedFacility}
           onClose={() => setSelectedFacility(null)}
-          onBooked={() => { setSelectedFacility(null); }}
+          onBooked={() => {
+            setSelectedFacility(null);
+            loadData();
+          }}
         />
       )}
     </>

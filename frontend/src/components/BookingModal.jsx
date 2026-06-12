@@ -32,6 +32,29 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   const [isExternal, setIsExternal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [existingBookings, setExistingBookings] = useState([]);
+
+  // Fetch approved bookings for this facility on the selected date
+  useEffect(() => {
+    if (!selectedDate) {
+      setExistingBookings([]);
+      return;
+    }
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const facId = facility._id || facility.id;
+    fetch(`${API_BASE_URL}/bookings/public`, { headers })
+      .then(r => r.json())
+      .then(d => {
+        const list = d.bookings || [];
+        const filtered = list.filter(b => {
+          const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
+          const bFacId = b.facilityId?._id || b.facilityId?.id || b.facilityId;
+          return bDate === selectedDate && bFacId === facId && b.status === 'APPROVED';
+        });
+        setExistingBookings(filtered);
+      })
+      .catch(() => {});
+  }, [selectedDate, facility, token]);
 
   const days = buildDateStrip(anchorDate);
 
@@ -43,6 +66,21 @@ export default function BookingModal({ facility, onClose, onBooked }) {
     if (!selectedSlots.length) return '';
     const sorted = [...selectedSlots].sort();
     return `${sorted[0]} – ${sorted[sorted.length - 1]}`;
+  };
+
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + (m || 0);
+  };
+
+  const isSlotBooked = (slot) => {
+    const slotMins = timeToMinutes(slot);
+    return existingBookings.some(b => {
+      const startMins = timeToMinutes(b.startTime);
+      const endMins = timeToMinutes(b.endTime);
+      return slotMins >= startMins && slotMins < endMins;
+    });
   };
 
   const formatDay = (d) => ({ day: d.toLocaleDateString('en-US', { weekday: 'short' }), date: d.getDate(), full: d.toISOString().split('T')[0] });
@@ -122,11 +160,17 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           <div className="form-group">
             <label>Select Time Slot(s)</label>
             <div className="time-slots-grid">
-              {TIME_SLOTS.map(slot => (
-                <button key={slot} type="button"
-                  className={`time-slot${selectedSlots.includes(slot) ? ' selected' : ''}`}
-                  onClick={() => toggleSlot(slot)}>{slot}</button>
-              ))}
+              {TIME_SLOTS.map(slot => {
+                const booked = isSlotBooked(slot);
+                const selected = selectedSlots.includes(slot);
+                return (
+                  <button key={slot} type="button"
+                    disabled={booked}
+                    className={`time-slot${selected ? ' selected' : ''}${booked ? ' booked' : ''}`}
+                    style={booked ? { background: '#f1f5f9', color: '#94a3b8', border: '1px dashed #cbd5e1', cursor: 'not-allowed' } : {}}
+                    onClick={() => toggleSlot(slot)}>{slot}</button>
+                );
+              })}
             </div>
             {selectedSlots.length > 0 && (
               <div className="time-range-summary" style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, marginTop: '0.4rem' }}>

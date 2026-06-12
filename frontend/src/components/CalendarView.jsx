@@ -10,7 +10,7 @@ export default function CalendarView() {
 
   // Filters State
   const [selectedVenue, setSelectedVenue] = useState('all');
-  const [viewMode, setViewMode] = useState('month');
+  const [viewMode, setViewMode] = useState('month'); // 'month' | 'week' | 'day'
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
 
@@ -33,6 +33,34 @@ export default function CalendarView() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  // Weekly calculations
+  const getSundayOfWeek = (d) => {
+    const sunday = new Date(d);
+    const day = sunday.getDay();
+    const diff = sunday.getDate() - day;
+    return new Date(sunday.setDate(diff));
+  };
+
+  const getDaysOfWeek = (sun) => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(sun);
+      day.setDate(sun.getDate() + i);
+      days.push(day);
+    }
+    return days;
+  };
+
+  const sunday = getSundayOfWeek(currentDate);
+  const weekDays = getDaysOfWeek(sunday);
+
+  const getWeekRangeString = () => {
+    const start = weekDays[0];
+    const end = weekDays[6];
+    const options = { month: 'short', day: 'numeric' };
+    return `${start.toLocaleDateString(undefined, options)} – ${end.toLocaleDateString(undefined, options)}, ${start.getFullYear()}`;
+  };
 
   // Time conversion helper
   const timeToMinutes = (timeStr) => {
@@ -77,6 +105,17 @@ export default function CalendarView() {
     });
   };
 
+  const getBookingsForDateObj = (dateObj) => {
+    const y = dateObj.getFullYear();
+    const m = dateObj.getMonth();
+    const d = dateObj.getDate();
+    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    return bookings.filter(b => {
+      const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
+      return bDate === dateStr && (b.status === 'APPROVED' || b.status === 'PENDING') && filterBooking(b);
+    });
+  };
+
   const statusColor = { APPROVED: '#10b981', PENDING: '#f59e0b' };
 
   const cells = [];
@@ -94,6 +133,7 @@ export default function CalendarView() {
           <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>View</label>
           <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: 8, padding: 2 }}>
             <button className={`btn ${viewMode === 'month' ? 'btn-primary' : 'btn-ghost'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', borderRadius: 6 }} onClick={() => setViewMode('month')}>Month</button>
+            <button className={`btn ${viewMode === 'week' ? 'btn-primary' : 'btn-ghost'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', borderRadius: 6 }} onClick={() => setViewMode('week')}>Week</button>
             <button className={`btn ${viewMode === 'day' ? 'btn-primary' : 'btn-ghost'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', borderRadius: 6 }} onClick={() => setViewMode('day')}>Day</button>
           </div>
         </div>
@@ -121,28 +161,46 @@ export default function CalendarView() {
         </div>
       </div>
 
-      {viewMode === 'day' ? (
-        <div className="day-view-container" style={{ background: 'rgba(255,255,255,0.6)', borderRadius: 16, padding: '1.5rem', border: '1px solid var(--surface-border)', backdropFilter: 'blur(10px)' }}>
-          {/* Day Navigation */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-              onClick={() => {
-                const prev = new Date(year, month, selectedDay - 1);
-                setCurrentDate(prev);
-                setSelectedDay(prev.getDate());
-              }}>‹ Prev Day</button>
-            <h4 style={{ fontWeight: 800, fontSize: '1.05rem', margin: 0 }}>
-              {new Date(year, month, selectedDay).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </h4>
-            <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-              onClick={() => {
-                const next = new Date(year, month, selectedDay + 1);
-                setCurrentDate(next);
-                setSelectedDay(next.getDate());
-              }}>Next Day ›</button>
-          </div>
+      {/* Unified Navigation Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem' }}
+          onClick={() => {
+            if (viewMode === 'month') {
+              setCurrentDate(new Date(year, month - 1, 1));
+            } else if (viewMode === 'week') {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() - 7);
+              setCurrentDate(d);
+            } else {
+              const prev = new Date(year, month, selectedDay - 1);
+              setCurrentDate(prev);
+              setSelectedDay(prev.getDate());
+            }
+          }}>‹ Prev</button>
+        <h3 style={{ fontWeight: 800, fontSize: '1.1rem', margin: 0 }}>
+          {viewMode === 'month' && monthName}
+          {viewMode === 'week' && getWeekRangeString()}
+          {viewMode === 'day' && new Date(year, month, selectedDay).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+        </h3>
+        <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem' }}
+          onClick={() => {
+            if (viewMode === 'month') {
+              setCurrentDate(new Date(year, month + 1, 1));
+            } else if (viewMode === 'week') {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() + 7);
+              setCurrentDate(d);
+            } else {
+              const next = new Date(year, month, selectedDay + 1);
+              setCurrentDate(next);
+              setSelectedDay(next.getDate());
+            }
+          }}>Next ›</button>
+      </div>
 
-          {/* Bookings List */}
+      {/* Day View */}
+      {viewMode === 'day' && (
+        <div className="day-view-container" style={{ background: 'rgba(255,255,255,0.6)', borderRadius: 16, padding: '1.5rem', border: '1px solid var(--surface-border)', backdropFilter: 'blur(10px)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {getBookingsForDay(selectedDay).length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>
@@ -178,17 +236,70 @@ export default function CalendarView() {
             )}
           </div>
         </div>
-      ) : (
-        <>
-          {/* Month Navigation */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem' }}
-              onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>‹ Prev</button>
-            <h3 style={{ fontWeight: 800, fontSize: '1.1rem' }}>{monthName}</h3>
-            <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem' }}
-              onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>Next ›</button>
-          </div>
+      )}
 
+      {/* Week View */}
+      {viewMode === 'week' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+          {weekDays.map((dateObj, idx) => {
+            const isToday = today.getDate() === dateObj.getDate() && today.getMonth() === dateObj.getMonth() && today.getFullYear() === dateObj.getFullYear();
+            const dayBookings = getBookingsForDateObj(dateObj);
+            
+            return (
+              <div key={idx}
+                onClick={() => {
+                  setCurrentDate(dateObj);
+                  setSelectedDay(dateObj.getDate());
+                  setViewMode('day');
+                }}
+                style={{
+                  minHeight: 250, padding: '0.6rem', borderRadius: 12, cursor: 'pointer',
+                  border: isToday ? '2px solid var(--primary)' : '1px solid var(--surface-border)',
+                  background: isToday ? 'rgba(37,99,235,0.04)' : 'rgba(255,255,255,0.6)',
+                  transition: 'all 0.2s ease',
+                  display: 'flex', flexDirection: 'column', gap: '0.5rem'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = isToday ? 'var(--primary)' : 'var(--surface-border)'; }}
+              >
+                <div style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.25rem', marginBottom: '0.25rem' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    {dateObj.toLocaleDateString(undefined, { weekday: 'short' })}
+                  </div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: isToday ? 'var(--primary)' : 'var(--text-main)' }}>
+                    {dateObj.getDate()}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1, overflowY: 'auto' }}>
+                  {dayBookings.length === 0 ? (
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '2rem' }}>No events</div>
+                  ) : (
+                    dayBookings.map((b, i) => (
+                      <div key={i} style={{ 
+                        fontSize: '0.65rem', padding: '4px 6px', borderRadius: 6, color: 'white', 
+                        background: statusColor[b.status] || '#64748b', fontWeight: 600,
+                        overflow: 'hidden', textOverflow: 'ellipsis'
+                      }}>
+                        <div style={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {b.startTime || b.time?.split(' – ')[0]}
+                        </div>
+                        <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {b.facilityId?.name || b.facilityName || b.facility}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Month View */}
+      {viewMode === 'month' && (
+        <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '2px', marginBottom: '4px' }}>
             {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
               <div key={d} style={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', padding: '0.5rem 0', textTransform: 'uppercase' }}>{d}</div>

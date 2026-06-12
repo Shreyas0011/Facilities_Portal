@@ -4,7 +4,7 @@ import { User } from '../models/User';
 import { Facility } from '../models/Facility';
 import { Booking } from '../models/Booking';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/facility_portal';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://shreyas777999_db_user:w6sR7zMWIlSbGFbL@facility.iendyxs.mongodb.net/facility_portal?retryWrites=true&w=majority';
 
 let mongoMemoryServer: any = null;
 

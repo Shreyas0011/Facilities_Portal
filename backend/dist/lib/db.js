@@ -42,7 +42,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const User_1 = require("../models/User");
 const Facility_1 = require("../models/Facility");
 const Booking_1 = require("../models/Booking");
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/facility_portal';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://shreyas777999_db_user:w6sR7zMWIlSbGFbL@facility.iendyxs.mongodb.net/facility_portal?retryWrites=true&w=majority';
 let mongoMemoryServer = null;
 const usersToSeed = [
     { name: 'Prasanna Kumar K', email: 'prasannak@transcendgroup.org', role: 'superadmin' },

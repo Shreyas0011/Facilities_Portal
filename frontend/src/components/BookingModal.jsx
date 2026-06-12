@@ -13,10 +13,7 @@ const PM_SLOTS = [
   '18:00','18:30','19:00','19:30','20:00','20:30',
 ];
 
-const SUPPLY_TAGS = [
-  'Projector', 'Microphone', 'Collar Mic', 'Speakers', 'Whiteboard',
-  'Podium', 'Stage Lights', 'Extension Cord', 'Laser Pointer', 'Display Screen',
-];
+
 
 function buildDateStrip(anchor) {
   const days = [];
@@ -80,16 +77,6 @@ export default function BookingModal({ facility, onClose, onBooked }) {
     if (isSlotBooked(slot)) return;
     setSelectedSlots(prev => prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot].sort());
   };
-
-  const toggleSupplyTag = (tag) => {
-    setSupplies(prev => {
-      const tags = prev.split(',').map(s => s.trim()).filter(Boolean);
-      if (tags.includes(tag)) return tags.filter(t => t !== tag).join(', ');
-      return [...tags, tag].join(', ');
-    });
-  };
-
-  const isTagSelected = (tag) => supplies.split(',').map(s => s.trim()).includes(tag);
 
   const getTimeRange = () => {
     if (!selectedSlots.length) return '';
@@ -197,11 +184,11 @@ export default function BookingModal({ facility, onClose, onBooked }) {
 
   return (
     <div className="modal-overlay active" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 560 }}>
+      <div className="modal" style={{ maxWidth: 560, display: 'flex', flexDirection: 'column', maxHeight: '90vh', overflow: 'hidden' }}>
         <button className="modal-close" onClick={onClose}><X size={18} /></button>
 
-        {/* Header */}
-        <div className="modal-header" style={{ marginBottom: '1.25rem' }}>
+        {/* Sticky Header */}
+        <div className="modal-header" style={{ marginBottom: '1.25rem', flexShrink: 0 }}>
           <div className="modal-badge"><CalendarPlus size={16} /><span>Reservation Request</span></div>
           <h3 style={{ margin: '0.35rem 0 0.15rem' }}>{facility.label || facility.name}</h3>
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -209,7 +196,9 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           </p>
         </div>
 
-        <form className="modal-form" onSubmit={handleSubmit}>
+        {/* Scrollable form body */}
+        <form className="modal-form" onSubmit={handleSubmit}
+          style={{ overflowY: 'auto', flex: 1, paddingRight: '0.25rem' }}>
 
           {/* ── DATE STRIP ── */}
           <div className="form-group">
@@ -319,40 +308,20 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           {/* ── ADDITIONAL SUPPLIES ── */}
           <div className="form-group">
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Package size={14} /> Additional Supplies Needed <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.75rem' }}>(Optional)</span>
+              <Package size={14} /> Additional Supplies Needed
+              <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.75rem' }}>(Optional)</span>
             </label>
-
-            {/* Quick-pick tag chips */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.5rem' }}>
-              {SUPPLY_TAGS.map(tag => {
-                const active = isTagSelected(tag);
-                return (
-                  <button key={tag} type="button" onClick={() => toggleSupplyTag(tag)}
-                    style={{
-                      padding: '0.25rem 0.65rem', borderRadius: 20, fontSize: '0.72rem', fontWeight: 600,
-                      border: active ? '1.5px solid var(--primary)' : '1px solid var(--surface-border)',
-                      background: active ? 'rgba(37,99,235,0.09)' : 'white',
-                      color: active ? 'var(--primary)' : 'var(--text-muted)',
-                      cursor: 'pointer', transition: 'all 0.15s',
-                    }}>
-                    {active ? '✓ ' : ''}{tag}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Free-text textarea */}
             <textarea
-              rows={2}
-              placeholder="Or type custom requirements, e.g., 2x extension cords, standing mic, HDMI adapter…"
+              rows={3}
+              placeholder="e.g., Projector, 2x collar microphones, whiteboard, extension cord, HDMI adapter…"
               value={supplies}
               onChange={e => setSupplies(e.target.value)}
               style={{
                 width: '100%', borderRadius: 12, border: '1.5px solid var(--surface-border)',
-                padding: '0.65rem 0.9rem', fontSize: '0.82rem', fontFamily: 'inherit',
+                padding: '0.7rem 1rem', fontSize: '0.82rem', fontFamily: 'inherit',
                 color: 'var(--text-main)', background: 'white', resize: 'vertical',
                 outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box',
-                minHeight: 60,
+                minHeight: 72, lineHeight: 1.5,
               }}
               onFocus={e => e.target.style.borderColor = 'var(--primary)'}
               onBlur={e => e.target.style.borderColor = 'var(--surface-border)'}

@@ -45,8 +45,6 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization'],
     optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
 };
-// Handle ALL preflight OPTIONS requests FIRST — before any other middleware
-app.options('*', (0, cors_1.default)(corsOptions));
 app.use((0, cors_1.default)(corsOptions));
 // Helmet after CORS so it doesn't strip Access-Control-* headers
 app.use((0, helmet_1.default)({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));

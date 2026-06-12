@@ -45,8 +45,6 @@ const corsOptions: cors.CorsOptions = {
   optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
 };
 
-// Handle ALL preflight OPTIONS requests FIRST — before any other middleware
-app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Helmet after CORS so it doesn't strip Access-Control-* headers

@@ -26,6 +26,8 @@ const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://facilities-portal-mu.vercel.app',
+    'https://www.tgi160.org',
+    'https://tgi160.org',
     // Pull any extra origin set in Render environment variables
     ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.trim()] : []),
 ];

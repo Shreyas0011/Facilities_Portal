@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const facilityController_1 = require("../controllers/facilityController");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.get('/', facilityController_1.getFacilities);
+router.get('/:id', facilityController_1.getFacilityById);
+router.get('/:id/availability', facilityController_1.getFacilityAvailability);
+router.post('/', auth_1.authenticate, (0, auth_1.authorize)('superadmin'), facilityController_1.createFacility);
+router.put('/:id', auth_1.authenticate, (0, auth_1.authorize)('superadmin'), facilityController_1.updateFacility);
+router.delete('/:id', auth_1.authenticate, (0, auth_1.authorize)('superadmin'), facilityController_1.deleteFacility);
+exports.default = router;

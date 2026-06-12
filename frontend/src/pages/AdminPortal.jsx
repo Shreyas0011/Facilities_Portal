@@ -763,7 +763,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
       )}
 
       {/* Real-time New Booking Request Notification Popup Modal */}
-      {activePopupBooking && (
+      {activePopupBooking && createPortal(
         <div className="modal-overlay active" style={{ zIndex: 9999 }}>
           <div className="modal animate-scale-in" style={{ maxWidth: 480, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid var(--primary)', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
 

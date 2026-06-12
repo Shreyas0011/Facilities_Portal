@@ -78,10 +78,25 @@ function QueuePage() {
           {showActions ? (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button className="btn btn-primary" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', background: '#10b981', borderColor: '#10b981' }} onClick={() => act(b._id || b.id, 'approve')}>Approve</button>
-              <button className="btn btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => { const r = prompt('Reason for rejection:'); if (r !== null) act(b._id || b.id, 'reject', r); }}>Reject</button>
+              <button className="btn btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => {
+                const r = prompt('Reason for rejection (mandatory):');
+                if (r === null) return;
+                if (!r.trim()) { alert('Rejection reason is mandatory.'); return; }
+                act(b._id || b.id, 'reject', r.trim());
+              }}>Reject</button>
             </div>
           ) : (
-            <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => onView(b)}>View</button>
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => onView(b)}>View</button>
+              {b.status === 'APPROVED' && (
+                <button className="btn btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => {
+                  const r = prompt('Reason for rejecting/revoking booking (mandatory):');
+                  if (r === null) return;
+                  if (!r.trim()) { alert('Rejection reason is mandatory.'); return; }
+                  act(b._id || b.id, 'reject', r.trim());
+                }}>Reject</button>
+              )}
+            </div>
           )}
         </td>
       </tr>
@@ -429,6 +444,15 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('seen_bookings');
+      setSeenBookings(saved ? JSON.parse(saved) : []);
+    } catch {
+      setSeenBookings([]);
+    }
+  }, [token]);
 
   // Poll for new pending bookings
   useEffect(() => {

@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
 
   const login = useCallback(async (email, password) => {
+    sessionStorage.removeItem('seen_bookings');
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,6 +32,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
+    sessionStorage.removeItem('seen_bookings');
     setToken(null);
     setUser(null);
   }, []);

@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -43,6 +10,8 @@ const Booking_1 = require("../models/Booking");
 const Approval_1 = require("../models/Approval");
 const Facility_1 = require("../models/Facility");
 const Notification_1 = require("../models/Notification");
+const MaintenanceBlock_1 = require("../models/MaintenanceBlock");
+const User_1 = require("../models/User");
 const errorHandler_1 = require("../middleware/errorHandler");
 const bookingSchema = zod_1.z.object({
     facilityId: zod_1.z.string().min(1),
@@ -82,8 +51,7 @@ const checkConflict = async (facilityId, date, startTime, endTime, excludeBookin
             return { conflict: true, reason: 'Time slot conflicts with an existing booking' };
         }
     }
-    const { MaintenanceBlock } = await Promise.resolve().then(() => __importStar(require('../models/MaintenanceBlock')));
-    const blocks = await MaintenanceBlock.find({
+    const blocks = await MaintenanceBlock_1.MaintenanceBlock.find({
         facilityId,
         blockedDate: { $gte: startOfDay, $lte: endOfDay },
     }).select('startTime endTime reason');
@@ -199,8 +167,7 @@ const createBooking = async (req, res, next) => {
         });
         // Notify all admins and superadmins
         try {
-            const { User } = await Promise.resolve().then(() => __importStar(require('../models/User')));
-            const admins = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+            const admins = await User_1.User.find({ role: { $in: ['admin', 'superadmin'] } });
             for (const admin of admins) {
                 await Notification_1.Notification.create({
                     userId: admin._id,

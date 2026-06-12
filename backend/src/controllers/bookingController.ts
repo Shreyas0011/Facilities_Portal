@@ -5,6 +5,8 @@ import { Booking } from '../models/Booking';
 import { Approval } from '../models/Approval';
 import { Facility } from '../models/Facility';
 import { Notification } from '../models/Notification';
+import { MaintenanceBlock } from '../models/MaintenanceBlock';
+import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 
@@ -56,7 +58,6 @@ const checkConflict = async (
     }
   }
 
-  const { MaintenanceBlock } = await import('../models/MaintenanceBlock');
   const blocks = await MaintenanceBlock.find({
     facilityId,
     blockedDate: { $gte: startOfDay, $lte: endOfDay },
@@ -173,7 +174,6 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
 
     // Notify all admins and superadmins
     try {
-      const { User } = await import('../models/User');
       const admins = await User.find({ role: { $in: ['admin', 'superadmin'] } });
       for (const admin of admins) {
         await Notification.create({

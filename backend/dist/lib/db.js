@@ -137,10 +137,9 @@ const connectDB = async () => {
     }
     catch (error) {
         if (isProduction) {
-            // In production, never fall back to in-memory — fail fast with a clear message
-            console.error('❌ MongoDB connection failed in production. Check your MONGODB_URI environment variable on Render.');
+            console.error('❌ MongoDB connection failed in production. The server will start but DB requests will fail. Check MONGODB_URI or MongoDB Atlas IP Access List.');
             console.error(error.message);
-            process.exit(1);
+            return;
         }
         console.warn('⚠️ MongoDB connection to Atlas failed. Spinning up in-memory MongoDB server...');
         try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, CalendarPlus, FileText, Phone, User, ChevronLeft, ChevronRight, Send, Package, Globe, Clock, RefreshCw } from 'lucide-react';
+import { X, CalendarPlus, FileText, ChevronLeft, ChevronRight, Send, Package, Globe, Clock, RefreshCw } from 'lucide-react';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
 
@@ -47,7 +47,7 @@ function ToggleCard({ icon, title, subtitle, value, onChange, color = 'var(--pri
         <div style={{ color: value ? color : 'var(--text-muted)' }}>{icon}</div>
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: 700, color: value ? color : 'var(--text-main)' }}>{title}</div>
-          <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)' }}>{subtitle}</div>
+          {subtitle && <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)' }}>{subtitle}</div>}
         </div>
       </div>
       {/* Toggle switch */}
@@ -73,8 +73,6 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [purpose, setPurpose] = useState('');
   const [supplies, setSupplies] = useState('');
-  const [pocName, setPocName] = useState(user?.name || '');
-  const [pocContact, setPocContact] = useState('');
   const [isExternal, setIsExternal] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringDays, setRecurringDays] = useState([]);
@@ -147,7 +145,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           time: getTimeRange(),
           purpose,
           requirements: supplies,
-          pocName, pocContact, isExternal,
+          isExternal,
           isRecurring,
           recurringDays: isRecurring ? recurringDays : [],
           recurringEndDate: isRecurring ? recurringEndDate : null,
@@ -333,29 +331,13 @@ export default function BookingModal({ facility, onClose, onBooked }) {
             />
           </div>
 
-          {/* ── POC ── */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>Point of Contact Name</label>
-              <div className="input-wrapper"><User size={16} />
-                <input type="text" placeholder="e.g., Dr. Jane Doe"
-                  value={pocName} onChange={e => setPocName(e.target.value)} required />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>POC Contact Number</label>
-              <div className="input-wrapper"><Phone size={16} />
-                <input type="tel" placeholder="+91 98765 43210"
-                  value={pocContact} onChange={e => setPocContact(e.target.value)} required />
-              </div>
-            </div>
-          </div>
+
 
           {/* ── EXTERNAL MEETING TOGGLE ── */}
           <ToggleCard
             icon={<Globe size={17} />}
             title="External Meeting"
-            subtitle="Guests from outside the institution are attending"
+            subtitle=""
             value={isExternal}
             onChange={setIsExternal}
           />

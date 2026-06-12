@@ -197,6 +197,22 @@ const createBooking = async (req, res, next) => {
             message: `Your booking for ${facility.name} on ${date.toDateString()} has been submitted${approvalRequired ? ' and is awaiting approval' : ' and approved'}.`,
             type: 'booking',
         });
+        // Notify all admins and superadmins
+        try {
+            const { User } = await Promise.resolve().then(() => __importStar(require('../models/User')));
+            const admins = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+            for (const admin of admins) {
+                await Notification_1.Notification.create({
+                    userId: admin._id,
+                    title: 'New Booking Request',
+                    message: `${req.user.name} has requested to reserve ${facility.name} on ${date.toDateString()}.`,
+                    type: 'booking',
+                });
+            }
+        }
+        catch (err) {
+            console.error('Failed to notify admins:', err);
+        }
         const populated = await booking.populate([
             { path: 'facilityId', select: 'name location' },
             { path: 'userId', select: 'name email' },

@@ -171,6 +171,22 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       type:    'booking',
     });
 
+    // Notify all admins and superadmins
+    try {
+      const { User } = await import('../models/User');
+      const admins = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+      for (const admin of admins) {
+        await Notification.create({
+          userId: admin._id,
+          title: 'New Booking Request',
+          message: `${req.user!.name} has requested to reserve ${facility.name} on ${date.toDateString()}.`,
+          type: 'booking',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to notify admins:', err);
+    }
+
     const populated = await booking.populate([
       { path: 'facilityId', select: 'name location' },
       { path: 'userId',     select: 'name email' },

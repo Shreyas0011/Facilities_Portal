@@ -21,7 +21,7 @@ function AmenitiesPage({ onChangePassword }) {
   useEffect(() => {
     fetch(`${API_BASE_URL}/facilities`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setFacilities(d.facilities || []));
-    fetch(`${API_BASE_URL}/bookings/my`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE_URL}/bookings/my-bookings`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setBookings(d.bookings || []));
   }, [token]);
 
@@ -98,12 +98,24 @@ function AmenitiesPage({ onChangePassword }) {
               : recent.map(b => (
                 <div key={b._id || b.id} className="recent-card">
                   <div className="recent-info">
-                    <div className="recent-facility">{b.facilityName || b.facility}</div>
+                    <div className="recent-facility">{b.facilityId?.name || b.facilityName || b.facility}</div>
                     <div className="recent-purpose">{b.purpose}</div>
-                    <div className="recent-meta">
-                      <span>{formatDate(b.date)}</span>
-                      <span>{b.time || `${b.startTime} – ${b.endTime}`}</span>
-                      <span>{b.attendees} Ppl</span>
+                    <div className="recent-meta" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', gap: '8px', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                        <span>{formatDate(b.date)}</span>
+                        <span>{b.time || `${b.startTime} – ${b.endTime}`}</span>
+                        <span>{b.attendeesCount || b.attendees} Ppl</span>
+                      </div>
+                      {b.approval && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '4px', marginTop: '2px' }}>
+                          <span>
+                            {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
+                          </span>
+                          {b.approval.remarks && (
+                            <span style={{ fontStyle: 'italic' }}>({b.approval.remarks})</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className={`feed-status ${(b.status || '').toLowerCase()}`}>{b.status}</div>
@@ -131,7 +143,7 @@ function MyBookingsPage() {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/bookings/my`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE_URL}/bookings/my-bookings`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setBookings(d.bookings || []));
   }, [token]);
 
@@ -157,12 +169,24 @@ function MyBookingsPage() {
             : filtered.map(b => (
               <div key={b._id || b.id} className="recent-card" style={{ marginBottom: '1rem' }}>
                 <div className="recent-info">
-                  <div className="recent-facility">{b.facilityName || b.facility}</div>
+                  <div className="recent-facility">{b.facilityId?.name || b.facilityName || b.facility}</div>
                   <div className="recent-purpose">{b.purpose}</div>
-                  <div className="recent-meta">
-                    <span>{formatDate(b.date)}</span>
-                    <span>{b.time || `${b.startTime} – ${b.endTime}`}</span>
-                    <span>{b.attendees} Attendees</span>
+                  <div className="recent-meta" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '8px', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                      <span>{formatDate(b.date)}</span>
+                      <span>{b.time || `${b.startTime} – ${b.endTime}`}</span>
+                      <span>{b.attendeesCount || b.attendees} Attendees</span>
+                    </div>
+                    {b.approval && (
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '4px', marginTop: '2px' }}>
+                        <span>
+                          {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
+                        </span>
+                        {b.approval.remarks && (
+                          <span style={{ fontStyle: 'italic' }}>({b.approval.remarks})</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className={`feed-status ${(b.status || '').toLowerCase()}`}>{b.status}</div>

@@ -26,38 +26,67 @@ function QueuePage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    window.addEventListener('reloadBookings', load);
+    return () => window.removeEventListener('reloadBookings', load);
+  }, [load]);
+
   const act = async (id, action, reason = '') => {
-    await fetch(`${API_BASE_URL}/bookings/${id}/${action}`, {
+    const status = action === 'approve' ? 'APPROVED' : 'REJECTED';
+    await fetch(`${API_BASE_URL}/bookings/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ reason, approvedByName: user?.name }),
+      body: JSON.stringify({ status, remarks: reason }),
     });
     load();
   };
 
-  const BookingRow = ({ b, showActions, onView }) => (
-    <tr>
-      <td><div style={{ fontWeight: 700 }}>{b.requesterName || b.requester}</div><div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{b.requesterEmail}</div></td>
-      <td>{b.facilityName || b.facility}</td>
-      <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.purpose}</td>
-      <td><div>{formatDate(b.date)}</div><div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{b.time || `${b.startTime} – ${b.endTime}`}</div></td>
-      {showActions ? (
-        <td>{b.attendees}</td>
-      ) : (
-        <td><span className={`feed-status ${(b.status || '').toLowerCase()}`}>{b.status}</span></td>
-      )}
-      <td>
+  const BookingRow = ({ b, showActions, onView }) => {
+    const requesterName = b.userId?.name || b.requesterName || b.requester || 'Unknown';
+    const requesterEmail = b.userId?.email || b.requesterEmail || '';
+    const facilityName = b.facilityId?.name || b.facilityName || b.facility || 'Unknown';
+    const attendeesCount = b.attendeesCount || b.attendees || 0;
+
+    return (
+      <tr>
+        <td>
+          <div style={{ fontWeight: 700 }}>{requesterName}</div>
+          <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{requesterEmail}</div>
+        </td>
+        <td>{facilityName}</td>
+        <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.purpose}</td>
+        <td>
+          <div>{formatDate(b.date)}</div>
+          <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{b.time || `${b.startTime} – ${b.endTime}`}</div>
+        </td>
         {showActions ? (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-primary" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', background: '#10b981', borderColor: '#10b981' }} onClick={() => act(b._id || b.id, 'approve')}>Approve</button>
-            <button className="btn btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => { const r = prompt('Reason for rejection:'); if (r !== null) act(b._id || b.id, 'reject', r); }}>Reject</button>
-          </div>
+          <td>{attendeesCount}</td>
         ) : (
-          <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => onView(b)}>View</button>
+          <td>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span className={`feed-status ${(b.status || '').toLowerCase()}`}>{b.status}</span>
+              {b.approval && (
+                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                  {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
+                  {b.approval.remarks ? ` (${b.approval.remarks})` : ''}
+                </span>
+              )}
+            </div>
+          </td>
         )}
-      </td>
-    </tr>
-  );
+        <td>
+          {showActions ? (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn btn-primary" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', background: '#10b981', borderColor: '#10b981' }} onClick={() => act(b._id || b.id, 'approve')}>Approve</button>
+              <button className="btn btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => { const r = prompt('Reason for rejection:'); if (r !== null) act(b._id || b.id, 'reject', r); }}>Reject</button>
+            </div>
+          ) : (
+            <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => onView(b)}>View</button>
+          )}
+        </td>
+      </tr>
+    );
+  };
 
   const [detailBooking, setDetailBooking] = useState(null);
 
@@ -81,23 +110,25 @@ function QueuePage() {
             <button className="modal-close" onClick={() => setDetailBooking(null)}>✕</button>
             <div className="modal-header">
               <div className="modal-badge">Booking Detail</div>
-              <h3>{detailBooking.facilityName || detailBooking.facility}</h3>
+              <h3>{detailBooking.facilityId?.name || detailBooking.facilityName || detailBooking.facility}</h3>
               <p><span className={`feed-status ${(detailBooking.status || '').toLowerCase()}`}>{detailBooking.status}</span></p>
             </div>
             <div style={{ padding: '1rem 1.5rem 1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.5rem', fontSize: '0.85rem' }}>
               {[
-                ['Requester', detailBooking.requesterName || detailBooking.requester],
-                ['Email', detailBooking.requesterEmail],
+                ['Requester', detailBooking.userId?.name || detailBooking.requesterName || detailBooking.requester],
+                ['Email', detailBooking.userId?.email || detailBooking.requesterEmail],
                 ['Date', formatDate(detailBooking.date)],
                 ['Time', detailBooking.time || `${detailBooking.startTime} – ${detailBooking.endTime}`],
-                ['Attendees', detailBooking.attendees],
+                ['Attendees', detailBooking.attendeesCount || detailBooking.attendees],
                 ['POC Name', detailBooking.pocName],
                 ['POC Contact', detailBooking.pocContact],
                 ['External', detailBooking.isExternal ? 'Yes' : 'No'],
                 ['Purpose', detailBooking.purpose],
                 ['Requirements', detailBooking.requirements || '—'],
-              ].map(([label, val]) => val !== undefined && (
-                <div key={label}>
+                detailBooking.approval && ['Actioned By', `${detailBooking.approval.approvedById?.name || 'Admin'} (${detailBooking.approval.approvedById?.role || 'admin'})`],
+                detailBooking.approval?.remarks && ['Reason/Remarks', detailBooking.approval.remarks],
+              ].filter(Boolean).map(([label, val]) => val !== undefined && (
+                <div key={label} style={{ gridColumn: (label === 'Purpose' || label === 'Requirements' || label === 'Reason/Remarks') ? 'span 2' : 'auto' }}>
                   <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>{label}</div>
                   <div style={{ fontWeight: 600 }}>{val ?? '—'}</div>
                 </div>
@@ -385,7 +416,100 @@ function ManagePage() {
 }
 
 export default function AdminPortal({ activePage = 'queue', onChangePassword }) {
-  const { user } = useAuth();
+  const { token, user } = useAuth();
+  const [activePopupBooking, setActivePopupBooking] = useState(null);
+  const [seenBookings, setSeenBookings] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('seen_bookings');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Poll for new pending bookings
+  useEffect(() => {
+    if (!token) return;
+
+    const poll = () => {
+      fetch(`${API_BASE_URL}/bookings?status=PENDING`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(d => {
+          const bookings = d.bookings || [];
+          if (bookings.length > 0) {
+            // Find first pending booking that we haven't seen yet and isn't currently populating the popup
+            const unseen = bookings.find(b => !seenBookings.includes(b._id || b.id));
+            if (unseen && (!activePopupBooking || (activePopupBooking.id !== unseen.id && activePopupBooking._id !== unseen._id))) {
+              setActivePopupBooking(unseen);
+            }
+          }
+        })
+        .catch(err => console.error('Error polling bookings:', err));
+    };
+
+    // Run immediately and poll every 8 seconds
+    poll();
+    const interval = setInterval(poll, 8000);
+    return () => clearInterval(interval);
+  }, [token, seenBookings, activePopupBooking]);
+
+  const markSeen = (id) => {
+    const updated = [...seenBookings, id];
+    setSeenBookings(updated);
+    sessionStorage.setItem('seen_bookings', JSON.stringify(updated));
+  };
+
+  const handlePopupAct = async (action) => {
+    if (!activePopupBooking) return;
+    const id = activePopupBooking._id || activePopupBooking.id;
+
+    if (action === 'reject' && !showRejectInput) {
+      setShowRejectInput(true);
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const status = action === 'approve' ? 'APPROVED' : 'REJECTED';
+      const res = await fetch(`${API_BASE_URL}/bookings/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status, remarks: action === 'reject' ? rejectReason : '' })
+      });
+      if (res.ok) {
+        markSeen(id);
+        setActivePopupBooking(null);
+        setShowRejectInput(false);
+        setRejectReason('');
+        // Notify other pages to reload bookings
+        window.dispatchEvent(new CustomEvent('reloadBookings'));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const closePopup = () => {
+    if (activePopupBooking) {
+      markSeen(activePopupBooking._id || activePopupBooking.id);
+    }
+    setActivePopupBooking(null);
+    setShowRejectInput(false);
+    setRejectReason('');
+  };
+
+  const popupRequester = activePopupBooking?.userId?.name || activePopupBooking?.requesterName || activePopupBooking?.requester || 'Unknown';
+  const popupFacility = activePopupBooking?.facilityId?.name || activePopupBooking?.facilityName || activePopupBooking?.facility || 'Unknown';
 
   return (
     <div id="adminPortal">
@@ -419,6 +543,72 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
             </div>
           </div>
         </>
+      )}
+
+      {/* Real-time New Booking Request Notification Popup Modal */}
+      {activePopupBooking && (
+        <div className="modal-overlay" style={{ display: 'flex', zIndex: 9999 }}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 450, border: '2px solid var(--primary)' }}>
+            <button className="modal-close" onClick={closePopup}>✕</button>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.75rem' }}>
+              <div className="modal-badge" style={{ background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '4px', animation: 'pulse 1.5s infinite' }}>
+                <span className="dot" style={{ width: 8, height: 8, background: 'white', borderRadius: '50%', display: 'inline-block' }} />
+                <span>New Booking Request</span>
+              </div>
+              <h3 style={{ marginTop: '0.5rem', fontSize: '1.2rem' }}>{popupFacility}</h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Requested by <strong>{popupRequester}</strong></p>
+            </div>
+            
+            <div style={{ padding: '1rem 1.5rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Date</span>
+                  <strong>{formatDate(activePopupBooking.date)}</strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Time Slot</span>
+                  <strong>{activePopupBooking.time || `${activePopupBooking.startTime} – ${activePopupBooking.endTime}`}</strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Purpose</span>
+                  <strong>{activePopupBooking.purpose}</strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Attendees</span>
+                  <strong>{activePopupBooking.attendeesCount || activePopupBooking.attendees} Ppl</strong>
+                </div>
+              </div>
+
+              {showRejectInput && (
+                <div style={{ marginTop: '1rem', borderTop: '1px solid var(--surface-border)', paddingTop: '1rem' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Reason for rejection:</label>
+                  <input
+                    type="text"
+                    value={rejectReason}
+                    onChange={e => setRejectReason(e.target.value)}
+                    placeholder="Enter reason..."
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem' }}
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '0 1.5rem 1.5rem' }}>
+              {showRejectInput ? (
+                <>
+                  <button className="btn btn-secondary" disabled={isProcessing} onClick={() => setShowRejectInput(false)} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>Cancel</button>
+                  <button className="btn btn-outline" disabled={isProcessing || !rejectReason.trim()} onClick={() => handlePopupAct('reject')} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>Submit Rejection</button>
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-outline" disabled={isProcessing} onClick={() => handlePopupAct('reject')} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>Reject</button>
+                  <button className="btn btn-primary" disabled={isProcessing} onClick={() => handlePopupAct('approve')} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', background: '#10b981', borderColor: '#10b981' }}>Approve</button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -65,7 +65,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           startTime: sorted[0],
           endTime: sorted[sorted.length - 1],
           time: getTimeRange(),
-          purpose, attendees: parseInt(attendees) || 0, requirements,
+          purpose, attendeesCount: parseInt(attendees) || 0, requirements,
           pocName, pocContact, isExternal,
         }),
       });

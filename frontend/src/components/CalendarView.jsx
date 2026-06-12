@@ -3,21 +3,23 @@ import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
 
 export default function CalendarView() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+    const bookingsUrl = isAdmin ? `${API_BASE_URL}/bookings` : `${API_BASE_URL}/bookings/public`;
     Promise.all([
-      fetch(`${API_BASE_URL}/bookings`, { headers }).then(r => r.json()).catch(() => ({ bookings: [] })),
+      fetch(bookingsUrl, { headers }).then(r => r.json()).catch(() => ({ bookings: [] })),
       fetch(`${API_BASE_URL}/facilities`, { headers }).then(r => r.json()).catch(() => ({ facilities: [] })),
     ]).then(([bd, fd]) => {
       setBookings(bd.bookings || []);
       setFacilities(fd.facilities || []);
     });
-  }, [token]);
+  }, [token, user]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -28,7 +30,10 @@ export default function CalendarView() {
 
   const getBookingsForDay = (day) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return bookings.filter(b => b.date === dateStr && (b.status === 'APPROVED' || b.status === 'PENDING'));
+    return bookings.filter(b => {
+      const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
+      return bDate === dateStr && (b.status === 'APPROVED' || b.status === 'PENDING');
+    });
   };
 
   const statusColor = { APPROVED: '#10b981', PENDING: '#f59e0b' };
@@ -69,7 +74,7 @@ export default function CalendarView() {
               <div style={{ fontSize: '0.8rem', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--primary)' : 'var(--text-main)', marginBottom: '0.25rem' }}>{day}</div>
               {dayBookings.slice(0, 3).map((b, i) => (
                 <div key={i} style={{ fontSize: '0.6rem', fontWeight: 600, color: 'white', background: statusColor[b.status] || '#64748b', borderRadius: 4, padding: '1px 4px', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {b.facilityName || b.facility}
+                  {b.facilityId?.name || b.facilityName || b.facility}
                 </div>
               ))}
               {dayBookings.length > 3 && <div style={{ fontSize: '0.55rem', color: 'var(--text-muted)' }}>+{dayBookings.length - 3} more</div>}

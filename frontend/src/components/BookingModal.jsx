@@ -185,9 +185,9 @@ export default function BookingModal({ facility, onClose, onBooked }) {
             <button key={slot} type="button" disabled={booked} onClick={() => toggleSlot(slot)}
               style={{
                 padding: '0.45rem 0.3rem', borderRadius: 10,
-                border: selected ? '2px solid var(--primary)' : booked ? '1px dashed #cbd5e1' : '1px solid var(--surface-border)',
-                background: selected ? 'var(--primary)' : booked ? '#f1f5f9' : 'white',
-                color: selected ? 'white' : booked ? '#94a3b8' : 'var(--text-main)',
+                border: selected ? '2px solid var(--primary)' : booked ? '1.5px solid #fca5a5' : '1.5px solid #bbf7d0',
+                background: selected ? 'var(--primary)' : booked ? '#fef2f2' : '#f0fdf4',
+                color: selected ? 'white' : booked ? '#dc2626' : '#16a34a',
                 fontWeight: selected ? 800 : 600, fontSize: '0.72rem',
                 cursor: booked ? 'not-allowed' : 'pointer', textAlign: 'center',
                 transition: 'all 0.15s ease',
@@ -295,10 +295,10 @@ export default function BookingModal({ facility, onClose, onBooked }) {
                     <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: 'var(--primary)' }} /> Selected
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: '#f1f5f9', border: '1px dashed #cbd5e1' }} /> Already Booked
+                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: '#fef2f2', border: '1.5px solid #fca5a5' }} /> Already Booked
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: 'white', border: '1px solid var(--surface-border)' }} /> Available
+                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: '#f0fdf4', border: '1.5px solid #bbf7d0' }} /> Available
                   </span>
                 </div>
               </div>

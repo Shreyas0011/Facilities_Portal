@@ -1,7 +1,6 @@
 /* =========================================
-   SUPABASE IMPORT
+   IMPORTS
    ========================================= */
-import { supabase } from './supabase.js';
 import { API_BASE_URL } from './src/config.js';
 import { createIcons } from 'lucide';
 import * as icons from 'lucide';
@@ -9,7 +8,6 @@ window.lucide = {
   createIcons: (options = {}) => createIcons({ icons, ...options })
 };
 console.log("MAIN LOADED");
-console.log("SUPABASE LOADED");
 
 /* =========================================
    DATA
@@ -50,7 +48,7 @@ let myBookingsFilter  = "all";
 let pendingCancellationBookingId = null;
 let pendingCancellationStatus = "REJECTED";
 let uploadedVenueImageBase64 = null;
-let supabaseUsers     = [];           // profiles fetched from Supabase for Manage page
+let managedUsers      = [];           // profiles fetched from MongoDB for Manage page
 
 /* =========================================
    DOM REFS
@@ -100,7 +98,7 @@ function hideAllViews() {
 }
 
 /* =========================================
-   AUTH FLOW — Supabase
+   AUTH FLOW
    ========================================= */
 
 // ── Login form submit ──────────────────────────────────────────────────
@@ -443,7 +441,7 @@ logoutBtn.addEventListener("click", async () => {
   localStorage.removeItem('token');
   currentRole        = null;
   currentUserProfile = null;
-  supabaseUsers      = [];
+  managedUsers       = [];
   hideAllViews();
   loginView.classList.remove("hidden");
   lucide.createIcons();
@@ -476,7 +474,7 @@ if (loginViewCalendarBtn) {
 function showLoginPage() {
   currentRole        = null;
   currentUserProfile = null;
-  supabaseUsers      = [];
+  managedUsers       = [];
   hideAllViews();
   loginView.classList.remove("hidden");
   lucide.createIcons();
@@ -2346,7 +2344,7 @@ function renderAdminManage() {
       role: u.role,
       first_login: u.firstLogin || u.first_login
     }));
-    supabaseUsers = profiles;
+    managedUsers = profiles;
 
     if (!profiles.length) {
       usersList.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No users found.</td></tr>`;

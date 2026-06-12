@@ -586,25 +586,13 @@ function ManagePage() {
 export default function AdminPortal({ activePage = 'queue', onChangePassword }) {
   const { token, user } = useAuth();
   const [activePopupBooking, setActivePopupBooking] = useState(null);
-  const [seenBookings, setSeenBookings] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem('seen_bookings');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [seenBookings, setSeenBookings] = useState([]);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('seen_bookings');
-      setSeenBookings(saved ? JSON.parse(saved) : []);
-    } catch {
-      setSeenBookings([]);
-    }
+    setSeenBookings([]);
   }, [token]);
 
   // Poll for new pending bookings
@@ -636,9 +624,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
   }, [token, seenBookings, activePopupBooking]);
 
   const markSeen = (id) => {
-    const updated = [...seenBookings, id];
-    setSeenBookings(updated);
-    sessionStorage.setItem('seen_bookings', JSON.stringify(updated));
+    setSeenBookings(prev => [...prev, id]);
   };
 
   const handlePopupAct = async (action) => {
@@ -725,62 +711,170 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
       {/* Real-time New Booking Request Notification Popup Modal */}
       {activePopupBooking && (
         <div className="modal-overlay active" style={{ zIndex: 9999 }}>
-          <div className="modal animate-scale-in" style={{ maxWidth: 450, border: '2px solid var(--primary)' }}>
-            <button className="modal-close" onClick={closePopup}>✕</button>
-            <div className="modal-header" style={{ borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.75rem' }}>
-              <div className="modal-badge" style={{ background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '4px', animation: 'pulse 1.5s infinite' }}>
-                <span className="dot" style={{ width: 8, height: 8, background: 'white', borderRadius: '50%', display: 'inline-block' }} />
-                <span>New Booking Request</span>
-              </div>
-              <h3 style={{ marginTop: '0.5rem', fontSize: '1.2rem' }}>{popupFacility}</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Requested by <strong>{popupRequester}</strong></p>
-            </div>
+          <div className="modal animate-scale-in" style={{ maxWidth: 480, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid var(--primary)' }}>
             
-            <div style={{ padding: '1rem 1.5rem', fontSize: '0.85rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Date</span>
-                  <strong>{formatDate(activePopupBooking.date)}</strong>
+            {/* Pulsing indicator banner */}
+            <div style={{
+              height: 6,
+              background: 'var(--primary)',
+              animation: 'pulse 2s infinite'
+            }} />
+
+            <button className="modal-close" onClick={closePopup} style={{ top: 16, right: 16 }}>✕</button>
+
+            {/* Header */}
+            <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                <span style={{
+                  background: 'var(--primary)', color: 'white', fontSize: '0.68rem', fontWeight: 800,
+                  padding: '0.2rem 0.6rem', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 5
+                }}>
+                  <span style={{ width: 6, height: 6, background: 'white', borderRadius: '50%', display: 'inline-block', animation: 'pulse 1s infinite' }} />
+                  NEW BOOKING REQUEST
+                </span>
+                {activePopupBooking.isRecurring && (
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7c3aed', background: '#faf5ff', padding: '0.2rem 0.6rem', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <RefreshCw size={10} /> RECURRING
+                  </span>
+                )}
+              </div>
+              <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                {popupFacility}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                Requested by <strong style={{ color: 'var(--text-main)' }}>{popupRequester}</strong>
+              </p>
+            </div>
+
+            {/* Content Body */}
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '60vh', overflowY: 'auto' }}>
+              
+              {/* Details Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <Calendar size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Date</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{formatDate(activePopupBooking.date)}</div>
+                  </div>
                 </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Time Slot</span>
-                  <strong>{activePopupBooking.time || `${activePopupBooking.startTime} – ${activePopupBooking.endTime}`}</strong>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Purpose</span>
-                  <strong>{activePopupBooking.purpose}</strong>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Attendees</span>
-                  <strong>{activePopupBooking.attendeesCount || activePopupBooking.attendees} Ppl</strong>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <Clock size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Time Slot</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+                      {activePopupBooking.time || `${activePopupBooking.startTime} – ${activePopupBooking.endTime}`}
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Recurring schedule card */}
+              {activePopupBooking.isRecurring && activePopupBooking.recurringDays && activePopupBooking.recurringDays.length > 0 && (
+                <div style={{
+                  background: '#faf5ff', borderRadius: 12, padding: '0.75rem 1rem',
+                  border: '1px solid #7c3aed20', display: 'flex', alignItems: 'center', gap: '0.6rem',
+                }}>
+                  <RefreshCw size={16} style={{ color: '#7c3aed' }} />
+                  <div style={{ fontSize: '0.8rem', color: '#7c3aed', fontWeight: 600 }}>
+                    Repeats every {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].filter((_, i) => activePopupBooking.recurringDays.includes(i)).join(', ')}
+                    {activePopupBooking.recurringEndDate && ` until ${formatDate(activePopupBooking.recurringEndDate)}`}
+                  </div>
+                </div>
+              )}
+
+              {/* External meeting alert card */}
+              {activePopupBooking.isExternal && (
+                <div style={{
+                  background: 'rgba(37,99,235,0.06)', borderRadius: 12, padding: '0.75rem 1rem',
+                  border: '1px solid rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', gap: '0.6rem',
+                }}>
+                  <Globe size={16} style={{ color: 'var(--primary)' }} />
+                  <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
+                    External Meeting (Guests from outside the institution are attending)
+                  </div>
+                </div>
+              )}
+
+              {/* Purpose Block */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                  <FileText size={12} /> Purpose of Booking
+                </div>
+                <div style={{
+                  background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: 12,
+                  border: '1px solid var(--surface-border)', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)',
+                  lineHeight: 1.5,
+                }}>
+                  {activePopupBooking.purpose}
+                </div>
+              </div>
+
+              {/* Supplies Block */}
+              {activePopupBooking.requirements && activePopupBooking.requirements.trim() && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                    <Package size={12} /> Supplies Requested
+                  </div>
+                  <div style={{
+                    background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: 12,
+                    border: '1px solid var(--surface-border)', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)',
+                    lineHeight: 1.5,
+                  }}>
+                    {activePopupBooking.requirements}
+                  </div>
+                </div>
+              )}
+
+              {/* Rejection input box */}
               {showRejectInput && (
-                <div style={{ marginTop: '1rem', borderTop: '1px solid var(--surface-border)', paddingTop: '1rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Reason for rejection:</label>
+                <div style={{ marginTop: '0.5rem', borderTop: '1px dashed var(--surface-border)', paddingTop: '1rem' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', display: 'block', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                    Rejection Reason (Mandatory)
+                  </label>
                   <input
                     type="text"
                     value={rejectReason}
                     onChange={e => setRejectReason(e.target.value)}
-                    placeholder="Enter reason..."
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem' }}
+                    placeholder="Enter why this booking is being rejected..."
+                    style={{
+                      width: '100%', padding: '0.6rem 0.8rem', border: '1px solid #ef444450',
+                      borderRadius: 10, fontSize: '0.85rem', background: 'rgba(239,68,68,0.02)',
+                      outline: 'none',
+                    }}
                     autoFocus
                   />
                 </div>
               )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '0 1.5rem 1.5rem' }}>
+            {/* Footer buttons */}
+            <div style={{
+              background: '#f8fafc',
+              padding: '1rem 1.5rem',
+              borderTop: '1px solid var(--surface-border)',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '0.5rem',
+            }}>
               {showRejectInput ? (
                 <>
-                  <button className="btn btn-secondary" disabled={isProcessing} onClick={() => setShowRejectInput(false)} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>Cancel</button>
-                  <button className="btn btn-outline" disabled={isProcessing || !rejectReason.trim()} onClick={() => handlePopupAct('reject')} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>Submit Rejection</button>
+                  <button className="btn btn-secondary" disabled={isProcessing} onClick={() => { setShowRejectInput(false); setRejectReason(''); }} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-outline" disabled={isProcessing || !rejectReason.trim()} onClick={() => handlePopupAct('reject')} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>
+                    Submit Rejection
+                  </button>
                 </>
               ) : (
                 <>
-                  <button className="btn btn-outline" disabled={isProcessing} onClick={() => handlePopupAct('reject')} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>Reject</button>
-                  <button className="btn btn-primary" disabled={isProcessing} onClick={() => handlePopupAct('approve')} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', background: '#10b981', borderColor: '#10b981' }}>Approve</button>
+                  <button className="btn btn-outline" disabled={isProcessing} onClick={() => handlePopupAct('reject')} style={{ padding: '0.45rem 1.2rem', fontSize: '0.8rem', borderColor: '#ef4444', color: '#ef4444' }}>
+                    Reject
+                  </button>
+                  <button className="btn btn-primary" disabled={isProcessing} onClick={() => handlePopupAct('approve')} style={{ padding: '0.45rem 1.2rem', fontSize: '0.8rem', background: '#10b981', borderColor: '#10b981' }}>
+                    Approve
+                  </button>
                 </>
               )}
             </div>

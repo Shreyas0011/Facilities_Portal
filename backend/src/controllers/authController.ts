@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { User } from '../models/User';
+import { Booking } from '../models/Booking';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 
@@ -116,7 +117,6 @@ export const getProfile = async (req: AuthRequest, res: Response, next: NextFunc
     if (!user) throw new AppError('User not found', 404);
 
     // Count bookings separately
-    const { Booking } = await import('../models/Booking');
     const bookingCount = await Booking.countDocuments({ userId: req.user!.id });
 
     res.json({

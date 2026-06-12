@@ -102,7 +102,7 @@ const login = async (req, res, next) => {
 exports.login = login;
 const getProfile = async (req, res, next) => {
     try {
-        const user = await User_1.User.findById(req.user.id).select('-password +firstLogin');
+        const user = await User_1.User.findById(req.user.id);
         if (!user)
             throw new errorHandler_1.AppError('User not found', 404);
         // Count bookings separately
@@ -130,7 +130,7 @@ exports.getProfile = getProfile;
 const updateProfile = async (req, res, next) => {
     try {
         const { name, department, avatar } = req.body;
-        const user = await User_1.User.findByIdAndUpdate(req.user.id, { name, department, avatar }, { new: true, runValidators: true }).select('-password');
+        const user = await User_1.User.findByIdAndUpdate(req.user.id, { name, department, avatar }, { new: true, runValidators: true });
         if (!user)
             throw new errorHandler_1.AppError('User not found', 404);
         res.json({

@@ -113,7 +113,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 
 export const getProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const user = await User.findById(req.user!.id).select('-password +firstLogin');
+    const user = await User.findById(req.user!.id);
     if (!user) throw new AppError('User not found', 404);
 
     // Count bookings separately
@@ -146,7 +146,7 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
       req.user!.id,
       { name, department, avatar },
       { new: true, runValidators: true }
-    ).select('-password');
+    );
 
     if (!user) throw new AppError('User not found', 404);
 

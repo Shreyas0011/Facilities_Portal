@@ -127,7 +127,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
     e.preventDefault();
     if (!selectedDate) { setError('Please select a date.'); return; }
     if (!selectedSlots.length) { setError('Please select at least one time slot.'); return; }
-    if (!purpose.trim()) { setError('Please enter the purpose.'); return; }
+    if (purpose.trim().length < 2) { setError('Purpose must be at least 2 characters.'); return; }
     if (isRecurring && recurringDays.length === 0) { setError('Please select at least one day for recurring booking.'); return; }
     if (isRecurring && !recurringEndDate) { setError('Please select an end date for the recurring booking.'); return; }
     setError(''); setSubmitting(true);
@@ -152,7 +152,13 @@ export default function BookingModal({ facility, onClose, onBooked }) {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Booking failed');
+      if (!res.ok) {
+        let msg = data.error || 'Booking failed';
+        if (data.details && data.details.length > 0) {
+          msg = data.details.map(d => d.message).join(', ');
+        }
+        throw new Error(msg);
+      }
       onBooked();
     } catch (err) {
       setError(err.message);

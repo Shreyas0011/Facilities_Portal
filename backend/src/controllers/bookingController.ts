@@ -15,7 +15,7 @@ const bookingSchema = z.object({
   date:          z.string().min(1),
   startTime:     z.string().regex(/^\d{2}:\d{2}$/, 'Format: HH:MM'),
   endTime:       z.string().regex(/^\d{2}:\d{2}$/, 'Format: HH:MM'),
-  purpose:       z.string().min(5, 'Purpose must be at least 5 characters'),
+  purpose:       z.string().min(2, 'Purpose must be at least 2 characters'),
   attendeesCount: z.number().optional(),
   notes:         z.string().optional(),
   requirements:  z.string().optional(),

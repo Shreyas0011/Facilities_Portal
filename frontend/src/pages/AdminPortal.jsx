@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, Layers, Calendar, Database, BarChart3, Lock, CheckCircle2, XCircle, Clock4, Users, Building, UserPlus, PlusCircle, Settings } from 'lucide-react';
+import { Shield, Layers, Calendar, Database, BarChart3, Lock, CheckCircle2, XCircle, Clock4, Users, Building, UserPlus, PlusCircle, Settings, Globe, RefreshCw, FileText, Package, Clock, User, Mail } from 'lucide-react';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
 import CalendarView from '../components/CalendarView';
 
 function formatDate(d) {
   if (!d) return '';
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const dateOnlyStr = d.includes('T') ? d.split('T')[0] : d;
+  const parsed = new Date(dateOnlyStr + 'T00:00:00');
+  if (isNaN(parsed.getTime())) {
+    const fallback = new Date(d);
+    if (isNaN(fallback.getTime())) return d;
+    return fallback.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  return parsed.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 // ── Queue Page ────────────────────────────────────────────────────────────────
@@ -121,33 +128,179 @@ function QueuePage() {
       </table>
       {detailBooking && (
         <div className="modal-overlay active" onClick={e => e.target === e.currentTarget && setDetailBooking(null)}>
-          <div className="modal" style={{ maxWidth: 480 }}>
-            <button className="modal-close" onClick={() => setDetailBooking(null)}>✕</button>
-            <div className="modal-header">
-              <div className="modal-badge">Booking Detail</div>
-              <h3>{detailBooking.facilityId?.name || detailBooking.facilityName || detailBooking.facility}</h3>
-              <p><span className={`feed-status ${(detailBooking.status || '').toLowerCase()}`}>{detailBooking.status}</span></p>
+          <div className="modal animate-scale-in" style={{ maxWidth: 520, borderRadius: 20, padding: 0, overflow: 'hidden' }}>
+            {/* Top status bar indicator */}
+            <div style={{
+              height: 6,
+              background: detailBooking.status === 'APPROVED' ? '#10b981' : detailBooking.status === 'REJECTED' ? '#ef4444' : '#f59e0b'
+            }} />
+
+            <button className="modal-close" onClick={() => setDetailBooking(null)} style={{ top: 16, right: 16 }}>✕</button>
+
+            {/* Header */}
+            <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                <span className={`feed-status ${(detailBooking.status || '').toLowerCase()}`} style={{ textTransform: 'uppercase', fontSize: '0.68rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: 20 }}>
+                  {detailBooking.status}
+                </span>
+                {detailBooking.isRecurring && (
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7c3aed', background: '#faf5ff', padding: '0.2rem 0.6rem', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <RefreshCw size={10} /> RECURRING
+                  </span>
+                )}
+              </div>
+              <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                {detailBooking.facilityId?.name || detailBooking.facilityName || detailBooking.facility}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                {detailBooking.facilityId?.location || 'Campus Facility'}
+              </p>
             </div>
-            <div style={{ padding: '1rem 1.5rem 1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.5rem', fontSize: '0.85rem' }}>
-              {[
-                ['Requester', detailBooking.userId?.name || detailBooking.requesterName || detailBooking.requester],
-                ['Email', detailBooking.userId?.email || detailBooking.requesterEmail],
-                ['Date', formatDate(detailBooking.date)],
-                ['Time', detailBooking.time || `${detailBooking.startTime} – ${detailBooking.endTime}`],
-                ['Attendees', detailBooking.attendeesCount || detailBooking.attendees],
-                ['POC Name', detailBooking.pocName],
-                ['POC Contact', detailBooking.pocContact],
-                ['External', detailBooking.isExternal ? 'Yes' : 'No'],
-                ['Purpose', detailBooking.purpose],
-                ['Requirements', detailBooking.requirements || '—'],
-                detailBooking.approval && ['Actioned By', `${detailBooking.approval.approvedById?.name || 'Admin'} (${detailBooking.approval.approvedById?.role || 'admin'})`],
-                detailBooking.approval?.remarks && ['Reason/Remarks', detailBooking.approval.remarks],
-              ].filter(Boolean).map(([label, val]) => val !== undefined && (
-                <div key={label} style={{ gridColumn: (label === 'Purpose' || label === 'Requirements' || label === 'Reason/Remarks') ? 'span 2' : 'auto' }}>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontWeight: 600 }}>{val ?? '—'}</div>
+
+            {/* Content Body */}
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '65vh', overflowY: 'auto', scrollbarWidth: 'thin' }}>
+              
+              {/* Details Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <User size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Requester</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{detailBooking.userId?.name || detailBooking.requesterName || detailBooking.requester || 'Unknown'}</div>
+                  </div>
                 </div>
-              ))}
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <Mail size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Email</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={detailBooking.userId?.email || detailBooking.requesterEmail}>
+                      {detailBooking.userId?.email || detailBooking.requesterEmail || '—'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <Calendar size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Date</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{formatDate(detailBooking.date)}</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <Clock size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Time Slot</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+                      {detailBooking.time || `${detailBooking.startTime} – ${detailBooking.endTime}`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recurring schedule card */}
+              {detailBooking.isRecurring && detailBooking.recurringDays && detailBooking.recurringDays.length > 0 && (
+                <div style={{
+                  background: '#faf5ff', borderRadius: 12, padding: '0.75rem 1rem',
+                  border: '1px solid #7c3aed20', display: 'flex', alignItems: 'center', gap: '0.6rem',
+                }}>
+                  <RefreshCw size={16} style={{ color: '#7c3aed' }} />
+                  <div style={{ fontSize: '0.8rem', color: '#7c3aed', fontWeight: 600 }}>
+                    Repeats every {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].filter((_, i) => detailBooking.recurringDays.includes(i)).join(', ')}
+                    {detailBooking.recurringEndDate && ` until ${formatDate(detailBooking.recurringEndDate)}`}
+                  </div>
+                </div>
+              )}
+
+              {/* External meeting alert card */}
+              {detailBooking.isExternal && (
+                <div style={{
+                  background: 'rgba(37,99,235,0.06)', borderRadius: 12, padding: '0.75rem 1rem',
+                  border: '1px solid rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', gap: '0.6rem',
+                }}>
+                  <Globe size={16} style={{ color: 'var(--primary)' }} />
+                  <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
+                    External Meeting (Guests from outside the institution are attending)
+                  </div>
+                </div>
+              )}
+
+              {/* Purpose Block */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                  <FileText size={12} /> Purpose of Booking
+                </div>
+                <div style={{
+                  background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: 12,
+                  border: '1px solid var(--surface-border)', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)',
+                  lineHeight: 1.5,
+                }}>
+                  {detailBooking.purpose}
+                </div>
+              </div>
+
+              {/* Supplies Block */}
+              {detailBooking.requirements && detailBooking.requirements.trim() && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                    <Package size={12} /> Additional Supplies Needed
+                  </div>
+                  <div style={{
+                    background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: 12,
+                    border: '1px solid var(--surface-border)', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)',
+                    lineHeight: 1.5,
+                  }}>
+                    {detailBooking.requirements}
+                  </div>
+                </div>
+              )}
+
+              {/* Action/Approval Logs */}
+              {detailBooking.approval && (
+                <div style={{
+                  marginTop: '0.5rem',
+                  borderTop: '1px dashed var(--surface-border)',
+                  paddingTop: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.4rem',
+                }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Approval Log
+                  </div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    {detailBooking.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {detailBooking.approval.approvedById?.name || 'Admin'} ({detailBooking.approval.approvedById?.role || 'admin'})
+                  </div>
+                  {detailBooking.approval.remarks && (
+                    <div style={{
+                      background: detailBooking.status === 'APPROVED' ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)',
+                      border: `1px solid ${detailBooking.status === 'APPROVED' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}`,
+                      padding: '0.6rem 0.8rem',
+                      borderRadius: 10,
+                      fontSize: '0.78rem',
+                      color: detailBooking.status === 'APPROVED' ? '#059669' : '#dc2626',
+                      fontWeight: 600,
+                      lineHeight: 1.4,
+                    }}>
+                      Remarks: "{detailBooking.approval.remarks}"
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer / Close Area */}
+            <div style={{
+              background: '#f8fafc',
+              padding: '1rem 1.5rem',
+              borderTop: '1px solid var(--surface-border)',
+              display: 'flex',
+              justifyContent: 'flex-end',
+            }}>
+              <button className="btn btn-secondary" onClick={() => setDetailBooking(null)} style={{ padding: '0.45rem 1.2rem', fontSize: '0.8rem' }}>
+                Close Details
+              </button>
             </div>
           </div>
         </div>

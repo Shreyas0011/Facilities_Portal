@@ -7,8 +7,14 @@ import BookingModal from '../components/BookingModal';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const dateOnlyStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+  const parsed = new Date(dateOnlyStr + 'T00:00:00');
+  if (isNaN(parsed.getTime())) {
+    const fallback = new Date(dateStr);
+    if (isNaN(fallback.getTime())) return dateStr;
+    return fallback.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  return parsed.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function AmenitiesPage({ onChangePassword }) {

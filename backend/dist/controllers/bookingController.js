@@ -18,12 +18,16 @@ const bookingSchema = zod_1.z.object({
     date: zod_1.z.string().min(1),
     startTime: zod_1.z.string().regex(/^\d{2}:\d{2}$/, 'Format: HH:MM'),
     endTime: zod_1.z.string().regex(/^\d{2}:\d{2}$/, 'Format: HH:MM'),
-    purpose: zod_1.z.string().min(5, 'Purpose must be at least 5 characters'),
-    attendeesCount: zod_1.z.number().min(1),
+    purpose: zod_1.z.string().min(2, 'Purpose must be at least 2 characters'),
+    attendeesCount: zod_1.z.number().optional(),
     notes: zod_1.z.string().optional(),
     requirements: zod_1.z.string().optional(),
     pocName: zod_1.z.string().optional(),
     pocContact: zod_1.z.string().optional(),
+    isExternal: zod_1.z.boolean().optional(),
+    isRecurring: zod_1.z.boolean().optional(),
+    recurringDays: zod_1.z.array(zod_1.z.number()).optional(),
+    recurringEndDate: zod_1.z.string().nullable().optional(),
 });
 const timeToMinutes = (time) => {
     const [h, m] = time.split(':').map(Number);
@@ -122,7 +126,7 @@ const createBooking = async (req, res, next) => {
         const facility = await Facility_1.Facility.findOne({ _id: validated.facilityId, isActive: true });
         if (!facility)
             throw new errorHandler_1.AppError('Facility not found or inactive', 404);
-        if (validated.attendeesCount > facility.capacity) {
+        if (validated.attendeesCount !== undefined && validated.attendeesCount > facility.capacity) {
             res.status(400).json({ error: `Attendees count exceeds facility capacity of ${facility.capacity}` });
             return;
         }
@@ -156,6 +160,10 @@ const createBooking = async (req, res, next) => {
             requirements: validated.requirements,
             pocName: validated.pocName,
             pocContact: validated.pocContact,
+            isExternal: validated.isExternal,
+            isRecurring: validated.isRecurring,
+            recurringDays: validated.recurringDays,
+            recurringEndDate: validated.recurringEndDate ? new Date(validated.recurringEndDate) : null,
             status: approvalRequired ? 'PENDING' : 'APPROVED',
             approvalRequired,
         });

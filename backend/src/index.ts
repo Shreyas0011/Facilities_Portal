@@ -20,14 +20,33 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // ─── Security middleware ───────────────────────────────────────────────────────
-// CORS before helmet — reflects request origin, supports credentials in dev
+// Allowed origins: localhost dev + Vercel production + any env-configured domain
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://facilities-portal-mu.vercel.app',
+  // Pull any extra origin set in Render environment variables
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.trim()] : []),
+];
+
 const corsOptions: cors.CorsOptions = {
-  origin: true,   // reflect request origin; lock down in production via env
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`[CORS] Blocked request from origin: ${origin}`);
+    return callback(new Error(`CORS policy: origin ${origin} not allowed`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
 };
 
+// Handle ALL preflight OPTIONS requests FIRST — before any other middleware
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Helmet after CORS so it doesn't strip Access-Control-* headers
@@ -46,9 +65,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Logging ──────────────────────────────────────────────────────────────────
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
-}
+// Use 'combined' (Apache format) in production for Render log visibility
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {

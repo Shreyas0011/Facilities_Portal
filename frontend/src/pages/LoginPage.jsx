@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config.js';
 
 export default function LoginPage({ onLogin }) {
   const { login } = useAuth();
@@ -9,6 +10,22 @@ export default function LoginPage({ onLogin }) {
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [serverWaking, setServerWaking] = useState(false);
+
+  // Ping the backend on mount to wake Render from sleep before the user tries to login
+  useEffect(() => {
+    const wakeServer = async () => {
+      try {
+        setServerWaking(true);
+        await fetch(`${API_BASE_URL.replace('/api', '')}/health`, { method: 'GET' });
+      } catch {
+        // Silently ignore — server may already be awake or ping may fail
+      } finally {
+        setServerWaking(false);
+      }
+    };
+    wakeServer();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,7 +80,14 @@ export default function LoginPage({ onLogin }) {
 
           {error && <div className="auth-error">{error}</div>}
 
-          <button type="submit" className="btn btn-primary btn-submit" disabled={loading} style={{ width: '100%', marginTop: '0.25rem' }}>
+          {serverWaking && (
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.4rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+              <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', animation: 'pulse 1.2s ease-in-out infinite' }} />
+              Connecting to server…
+            </div>
+          )}
+
+          <button type="submit" className="btn btn-primary btn-submit" disabled={loading || serverWaking} style={{ width: '100%', marginTop: '0.25rem' }}>
             <span>{loading ? 'Signing in…' : 'Sign In'}</span>
             <ArrowRight size={16} />
           </button>

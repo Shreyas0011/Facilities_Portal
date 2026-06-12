@@ -35,7 +35,7 @@ function QueuePage() {
     load();
   };
 
-  const BookingRow = ({ b, showActions }) => (
+  const BookingRow = ({ b, showActions, onView }) => (
     <tr>
       <td><div style={{ fontWeight: 700 }}>{b.requesterName || b.requester}</div><div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{b.requesterEmail}</div></td>
       <td>{b.facilityName || b.facility}</td>
@@ -53,11 +53,13 @@ function QueuePage() {
             <button className="btn btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => { const r = prompt('Reason for rejection:'); if (r !== null) act(b._id || b.id, 'reject', r); }}>Reject</button>
           </div>
         ) : (
-          <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => alert(JSON.stringify(b, null, 2))}>View</button>
+          <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }} onClick={() => onView(b)}>View</button>
         )}
       </td>
     </tr>
   );
+
+  const [detailBooking, setDetailBooking] = useState(null);
 
   const Table = ({ rows, showActions, emptyMsg }) => (
     <div className="admin-table-container">
@@ -69,10 +71,41 @@ function QueuePage() {
         <tbody>
           {rows.length === 0
             ? <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>{emptyMsg}</td></tr>
-            : rows.map(b => <BookingRow key={b._id || b.id} b={b} showActions={showActions} />)
+            : rows.map(b => <BookingRow key={b._id || b.id} b={b} showActions={showActions} onView={setDetailBooking} />)
           }
         </tbody>
       </table>
+      {detailBooking && (
+        <div className="modal-overlay" style={{ display: 'flex' }} onClick={e => e.target === e.currentTarget && setDetailBooking(null)}>
+          <div className="modal" style={{ maxWidth: 480 }}>
+            <button className="modal-close" onClick={() => setDetailBooking(null)}>✕</button>
+            <div className="modal-header">
+              <div className="modal-badge">Booking Detail</div>
+              <h3>{detailBooking.facilityName || detailBooking.facility}</h3>
+              <p><span className={`feed-status ${(detailBooking.status || '').toLowerCase()}`}>{detailBooking.status}</span></p>
+            </div>
+            <div style={{ padding: '1rem 1.5rem 1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.5rem', fontSize: '0.85rem' }}>
+              {[
+                ['Requester', detailBooking.requesterName || detailBooking.requester],
+                ['Email', detailBooking.requesterEmail],
+                ['Date', formatDate(detailBooking.date)],
+                ['Time', detailBooking.time || `${detailBooking.startTime} – ${detailBooking.endTime}`],
+                ['Attendees', detailBooking.attendees],
+                ['POC Name', detailBooking.pocName],
+                ['POC Contact', detailBooking.pocContact],
+                ['External', detailBooking.isExternal ? 'Yes' : 'No'],
+                ['Purpose', detailBooking.purpose],
+                ['Requirements', detailBooking.requirements || '—'],
+              ].map(([label, val]) => val !== undefined && (
+                <div key={label}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>{label}</div>
+                  <div style={{ fontWeight: 600 }}>{val ?? '—'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -351,18 +384,14 @@ function ManagePage() {
   );
 }
 
-export default function AdminPortal({ onChangePassword }) {
+export default function AdminPortal({ activePage = 'queue', onChangePassword }) {
   const { user } = useAuth();
-  const [page, setPage] = useState('queue');
-
-  // Expose setPage so Navbar can drive navigation — we use a forwarded ref pattern via window
-  useEffect(() => { window.__adminSetPage = setPage; return () => { delete window.__adminSetPage; }; }, []);
 
   return (
     <div id="adminPortal">
-      {page === 'queue' && <QueuePage />}
-      {page === 'dashboard' && <DashboardPage />}
-      {page === 'calendar' && (
+      {activePage === 'queue' && <QueuePage />}
+      {activePage === 'dashboard' && <DashboardPage />}
+      {activePage === 'calendar' && (
         <>
           <header className="hero">
             <div className="hero-badge animate-fade"><Calendar size={16} /><span>Admin Control Center</span></div>
@@ -372,8 +401,8 @@ export default function AdminPortal({ onChangePassword }) {
           <div className="content-container animate-fade delay-2"><CalendarView /></div>
         </>
       )}
-      {page === 'manage' && user?.role === 'superadmin' && <ManagePage />}
-      {page === 'settings' && (
+      {activePage === 'manage' && user?.role === 'superadmin' && <ManagePage />}
+      {activePage === 'settings' && (
         <>
           <header className="hero">
             <div className="hero-badge animate-fade"><Settings size={16} /><span>System Preferences</span></div>
@@ -393,10 +422,4 @@ export default function AdminPortal({ onChangePassword }) {
       )}
     </div>
   );
-}
-
-export { AdminPortal };
-export function useAdminPage() {
-  const [page, setPage] = useState('queue');
-  return [page, setPage];
 }

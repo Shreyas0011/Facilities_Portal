@@ -38,7 +38,7 @@ export default function Navbar({ activePage, onNavigate, onLogout, onChangePassw
     <nav className="navbar">
       <div className="nav-container">
         <div className="logo">
-          <img src="./logo.png" alt="Transcend Logo" className="logo-img" />
+          <img src="/logo.png" alt="Transcend Logo" className="logo-img" />
         </div>
         <div className="nav-links">
           {links.map(({ page, label }) => (

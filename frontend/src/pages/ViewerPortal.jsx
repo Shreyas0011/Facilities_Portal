@@ -11,7 +11,7 @@ export default function ViewerPortal({ onLogout }) {
       <div className="cal-view-topbar">
         <div className="cal-view-topbar-inner">
           <div className="logo">
-            <img src="./logo.png" alt="Transcend Logo" className="logo-img" />
+            <img src="/logo.png" alt="Transcend Logo" className="logo-img" />
           </div>
           <div className="cal-view-topbar-title">
             <CalendarDays size={18} style={{ color: 'var(--primary)' }} />

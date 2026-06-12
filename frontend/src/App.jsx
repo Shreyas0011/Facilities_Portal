@@ -19,21 +19,42 @@ export default function App() {
     fetchMe().then(u => {
       if (!u) { setView('login'); return; }
       if (u.first_login) { setView('changePassword'); return; }
-      setActivePage(u.role === 'faculty' ? 'amenities' : 'queue');
+      const role = u.role;
+      if (role === 'admin' || role === 'superadmin') {
+        setActivePage('queue');
+      } else if (role === 'faculty') {
+        setActivePage('amenities');
+      } else if (role === 'calendarView' || role === 'viewer') {
+        setActivePage('calendar');
+      }
       setView('portal');
     });
   }, []);
 
   const handleLogin = (u) => {
-    if (u.role === 'calendarView') { setActivePage('calendar'); setView('portal'); return; }
+    const role = u.role;
+    if (role === 'calendarView' || role === 'viewer') {
+      setActivePage('calendar');
+      setView('portal');
+      return;
+    }
     if (u.first_login) { setView('changePassword'); return; }
-    setActivePage(u.role === 'faculty' ? 'amenities' : 'queue');
+    if (role === 'admin' || role === 'superadmin') {
+      setActivePage('queue');
+    } else {
+      setActivePage('amenities');
+    }
     setView('portal');
   };
 
   const handlePasswordChanged = () => {
     setUser(prev => ({ ...prev, first_login: false }));
-    setActivePage(user?.role === 'faculty' ? 'amenities' : 'queue');
+    const role = user?.role;
+    if (role === 'admin' || role === 'superadmin') {
+      setActivePage('queue');
+    } else {
+      setActivePage('amenities');
+    }
     setView('portal');
   };
 
@@ -52,8 +73,7 @@ export default function App() {
   }
 
   const role = user?.role;
-  const isCalendarView = role === 'calendarView' || (!role && view === 'portal');
-  const isViewer = role === 'viewer';
+  const isCalendarView = role === 'calendarView' || role === 'viewer';
   const isFaculty = role === 'faculty';
   const isAdmin = role === 'admin' || role === 'superadmin';
 
@@ -65,7 +85,7 @@ export default function App() {
       <div className="bg-orb orb-2" />
 
       {/* Navbar — shown for logged-in non-viewer users */}
-      {view === 'portal' && !isViewer && !isCalendarView && (
+      {view === 'portal' && !isCalendarView && (
         <Navbar
           activePage={activePage}
           onNavigate={handleNavigate}
@@ -85,7 +105,7 @@ export default function App() {
           />
         )}
 
-        {view === 'portal' && (isViewer || isCalendarView) && (
+        {view === 'portal' && isCalendarView && (
           <ViewerPortal onLogout={handleLogout} />
         )}
 

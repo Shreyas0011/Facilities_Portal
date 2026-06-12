@@ -34,6 +34,7 @@ export default function App() {
   const handleLogin = (u) => {
     const role = u.role;
     if (role === 'calendarView' || role === 'viewer') {
+      setUser(u);
       setActivePage('calendar');
       setView('portal');
       return;

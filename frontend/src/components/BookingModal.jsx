@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, CalendarPlus, FileText, Users, Phone, User, ChevronLeft, ChevronRight, Send, Package, Globe, Clock } from 'lucide-react';
+import { X, CalendarPlus, FileText, Phone, User, ChevronLeft, ChevronRight, Send, Package, Globe, Clock, RefreshCw } from 'lucide-react';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,7 +13,7 @@ const PM_SLOTS = [
   '18:00','18:30','19:00','19:30','20:00','20:30',
 ];
 
-
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function buildDateStrip(anchor) {
   const days = [];
@@ -32,17 +32,53 @@ function to12h(time24) {
   return `${h12}:${m.toString().padStart(2, '0')} ${suffix}`;
 }
 
+function ToggleCard({ icon, title, subtitle, value, onChange, color = 'var(--primary)' }) {
+  return (
+    <div
+      onClick={() => onChange(!value)}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0.75rem 1rem', borderRadius: 14, cursor: 'pointer',
+        border: value ? `1.5px solid ${color}` : '1.5px solid var(--surface-border)',
+        background: value ? `${color}0f` : '#f8fafc',
+        transition: 'all 0.2s', userSelect: 'none',
+      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div style={{ color: value ? color : 'var(--text-muted)' }}>{icon}</div>
+        <div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: value ? color : 'var(--text-main)' }}>{title}</div>
+          <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)' }}>{subtitle}</div>
+        </div>
+      </div>
+      {/* Toggle switch */}
+      <div style={{
+        width: 40, height: 22, borderRadius: 11,
+        background: value ? color : '#cbd5e1',
+        position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+      }}>
+        <div style={{
+          position: 'absolute', top: 3, left: value ? 21 : 3,
+          width: 16, height: 16, borderRadius: '50%', background: 'white',
+          transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
 export default function BookingModal({ facility, onClose, onBooked }) {
   const { token, user } = useAuth();
   const [anchorDate, setAnchorDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [purpose, setPurpose] = useState('');
-  const [attendees, setAttendees] = useState('');
   const [supplies, setSupplies] = useState('');
   const [pocName, setPocName] = useState(user?.name || '');
   const [pocContact, setPocContact] = useState('');
   const [isExternal, setIsExternal] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringDays, setRecurringDays] = useState([]);
+  const [recurringEndDate, setRecurringEndDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [existingBookings, setExistingBookings] = useState([]);
@@ -65,25 +101,23 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   }, [selectedDate, facility, token]);
 
   const days = buildDateStrip(anchorDate);
-
   const timeToMinutes = (t) => { if (!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
-
   const isSlotBooked = (slot) => {
     const s = timeToMinutes(slot);
     return existingBookings.some(b => s >= timeToMinutes(b.startTime) && s < timeToMinutes(b.endTime));
   };
-
   const toggleSlot = (slot) => {
     if (isSlotBooked(slot)) return;
     setSelectedSlots(prev => prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot].sort());
   };
-
+  const toggleRecurringDay = (dayIdx) => {
+    setRecurringDays(prev => prev.includes(dayIdx) ? prev.filter(d => d !== dayIdx) : [...prev, dayIdx].sort((a, b) => a - b));
+  };
   const getTimeRange = () => {
     if (!selectedSlots.length) return '';
     const sorted = [...selectedSlots].sort();
     return `${to12h(sorted[0])} – ${to12h(sorted[sorted.length - 1])}`;
   };
-
   const formatDay = (d) => ({
     day: d.toLocaleDateString('en-US', { weekday: 'short' }),
     date: d.getDate(),
@@ -96,6 +130,8 @@ export default function BookingModal({ facility, onClose, onBooked }) {
     if (!selectedDate) { setError('Please select a date.'); return; }
     if (!selectedSlots.length) { setError('Please select at least one time slot.'); return; }
     if (!purpose.trim()) { setError('Please enter the purpose.'); return; }
+    if (isRecurring && recurringDays.length === 0) { setError('Please select at least one day for recurring booking.'); return; }
+    if (isRecurring && !recurringEndDate) { setError('Please select an end date for the recurring booking.'); return; }
     setError(''); setSubmitting(true);
     try {
       const sorted = [...selectedSlots].sort();
@@ -110,9 +146,11 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           endTime: sorted[sorted.length - 1],
           time: getTimeRange(),
           purpose,
-          attendeesCount: parseInt(attendees) || 0,
           requirements: supplies,
           pocName, pocContact, isExternal,
+          isRecurring,
+          recurringDays: isRecurring ? recurringDays : [],
+          recurringEndDate: isRecurring ? recurringEndDate : null,
         }),
       });
       const data = await res.json();
@@ -134,40 +172,23 @@ export default function BookingModal({ facility, onClose, onBooked }) {
       }}>
         <Clock size={11} /> {label}
       </div>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
-        gap: '0.35rem',
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '0.35rem' }}>
         {slots.map(slot => {
           const booked = isSlotBooked(slot);
           const selected = selectedSlots.includes(slot);
           return (
-            <button key={slot} type="button" disabled={booked}
-              onClick={() => toggleSlot(slot)}
+            <button key={slot} type="button" disabled={booked} onClick={() => toggleSlot(slot)}
               style={{
-                padding: '0.45rem 0.3rem',
-                borderRadius: 10,
-                border: selected
-                  ? '2px solid var(--primary)'
-                  : booked
-                  ? '1px dashed #cbd5e1'
-                  : '1px solid var(--surface-border)',
-                background: selected
-                  ? 'var(--primary)'
-                  : booked
-                  ? '#f1f5f9'
-                  : 'white',
+                padding: '0.45rem 0.3rem', borderRadius: 10,
+                border: selected ? '2px solid var(--primary)' : booked ? '1px dashed #cbd5e1' : '1px solid var(--surface-border)',
+                background: selected ? 'var(--primary)' : booked ? '#f1f5f9' : 'white',
                 color: selected ? 'white' : booked ? '#94a3b8' : 'var(--text-main)',
-                fontWeight: selected ? 800 : 600,
-                fontSize: '0.72rem',
-                cursor: booked ? 'not-allowed' : 'pointer',
-                textAlign: 'center',
+                fontWeight: selected ? 800 : 600, fontSize: '0.72rem',
+                cursor: booked ? 'not-allowed' : 'pointer', textAlign: 'center',
                 transition: 'all 0.15s ease',
                 boxShadow: selected ? '0 2px 8px rgba(37,99,235,0.25)' : 'none',
                 position: 'relative',
-              }}
-            >
+              }}>
               {to12h(slot)}
               {booked && (
                 <div style={{
@@ -202,7 +223,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
 
           {/* ── DATE STRIP ── */}
           <div className="form-group">
-            <label>Select Date</label>
+            <label>Select Start Date</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button type="button" onClick={() => setAnchorDate(d => { const nd = new Date(d); nd.setDate(d.getDate() - 7); return nd; })}
                 style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--surface-border)', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
@@ -252,8 +273,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
                 </span>
               )}
             </label>
-
-            {!selectedDate && (
+            {!selectedDate ? (
               <div style={{
                 padding: '1rem', borderRadius: 12, background: '#f8fafc',
                 border: '1px dashed var(--surface-border)', textAlign: 'center',
@@ -261,13 +281,8 @@ export default function BookingModal({ facility, onClose, onBooked }) {
               }}>
                 👆 Select a date above to view available time slots
               </div>
-            )}
-
-            {selectedDate && (
-              <div style={{
-                background: '#f8fafc', borderRadius: 14, padding: '0.75rem',
-                border: '1px solid var(--surface-border)',
-              }}>
+            ) : (
+              <div style={{ background: '#f8fafc', borderRadius: 14, padding: '0.75rem', border: '1px solid var(--surface-border)' }}>
                 <SlotGroup label="Morning (6 AM – 12 PM)" slots={AM_SLOTS} />
                 <SlotGroup label="Afternoon & Evening (12 PM – 9 PM)" slots={PM_SLOTS} />
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
@@ -292,16 +307,6 @@ export default function BookingModal({ facility, onClose, onBooked }) {
               <FileText size={16} />
               <input type="text" placeholder="e.g., Guest Lecture / Team Workshop"
                 value={purpose} onChange={e => setPurpose(e.target.value)} required />
-            </div>
-          </div>
-
-          {/* ── ATTENDEES ── */}
-          <div className="form-group">
-            <label>Number of Attendees</label>
-            <div className="input-wrapper">
-              <Users size={16} />
-              <input type="number" placeholder="e.g., 25" min="1"
-                value={attendees} onChange={e => setAttendees(e.target.value)} required />
             </div>
           </div>
 
@@ -347,44 +352,91 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           </div>
 
           {/* ── EXTERNAL MEETING TOGGLE ── */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div
-              onClick={() => setIsExternal(p => !p)}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '0.75rem 1rem', borderRadius: 14,
-                border: isExternal ? '1.5px solid var(--primary)' : '1.5px solid var(--surface-border)',
-                background: isExternal ? 'rgba(37,99,235,0.06)' : '#f8fafc',
-                cursor: 'pointer', transition: 'all 0.2s',
-                userSelect: 'none',
-              }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Globe size={17} style={{ color: isExternal ? 'var(--primary)' : 'var(--text-muted)' }} />
-                <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isExternal ? 'var(--primary)' : 'var(--text-main)' }}>External Meeting</div>
-                  <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)' }}>Guests from outside the institution are attending</div>
+          <ToggleCard
+            icon={<Globe size={17} />}
+            title="External Meeting"
+            subtitle="Guests from outside the institution are attending"
+            value={isExternal}
+            onChange={setIsExternal}
+          />
+
+          {/* ── RECURRING BOOKING TOGGLE ── */}
+          <ToggleCard
+            icon={<RefreshCw size={17} />}
+            title="Recurring Booking"
+            subtitle="Repeat this booking on selected days every week"
+            value={isRecurring}
+            onChange={setIsRecurring}
+            color="#7c3aed"
+          />
+
+          {/* Recurring Options (shown only when toggled on) */}
+          {isRecurring && (
+            <div style={{
+              background: '#faf5ff', borderRadius: 14, padding: '1rem',
+              border: '1.5px solid #7c3aed30', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+            }}>
+              {/* Day picker */}
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Repeat on days
+                </div>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {WEEK_DAYS.map((day, idx) => {
+                    const active = recurringDays.includes(idx);
+                    return (
+                      <button key={day} type="button" onClick={() => toggleRecurringDay(idx)}
+                        style={{
+                          width: 40, height: 40, borderRadius: '50%',
+                          border: active ? '2px solid #7c3aed' : '1.5px solid var(--surface-border)',
+                          background: active ? '#7c3aed' : 'white',
+                          color: active ? 'white' : 'var(--text-muted)',
+                          fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}>
+                        {day}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-              {/* Custom toggle switch */}
-              <div style={{
-                width: 40, height: 22, borderRadius: 11,
-                background: isExternal ? 'var(--primary)' : '#cbd5e1',
-                position: 'relative', transition: 'background 0.2s', flexShrink: 0,
-              }}>
-                <div style={{
-                  position: 'absolute', top: 3, left: isExternal ? 21 : 3,
-                  width: 16, height: 16, borderRadius: '50%', background: 'white',
-                  transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                }} />
+
+              {/* End date */}
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Repeat until
+                </div>
+                <input
+                  type="date"
+                  value={recurringEndDate}
+                  min={selectedDate || new Date().toISOString().split('T')[0]}
+                  onChange={e => setRecurringEndDate(e.target.value)}
+                  style={{
+                    padding: '0.55rem 0.9rem', borderRadius: 10,
+                    border: '1.5px solid #7c3aed40', background: 'white',
+                    fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none',
+                    color: 'var(--text-main)', width: '100%', boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#7c3aed'}
+                  onBlur={e => e.target.style.borderColor = '#7c3aed40'}
+                />
               </div>
+
+              {recurringDays.length > 0 && recurringEndDate && (
+                <div style={{ fontSize: '0.72rem', color: '#7c3aed', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <RefreshCw size={11} />
+                  Repeats every {recurringDays.map(d => WEEK_DAYS[d]).join(', ')} until {new Date(recurringEndDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {error && <div className="auth-error" style={{ marginBottom: '1rem' }}>{error}</div>}
 
           <button type="submit" className="btn btn-primary btn-submit" disabled={submitting}
             style={{ width: '100%', justifyContent: 'center', gap: '0.5rem' }}>
-            <span>{submitting ? 'Submitting…' : 'Send for Approval'}</span>
+            <span>{submitting ? 'Submitting…' : isRecurring ? 'Send Recurring Request' : 'Send for Approval'}</span>
             <Send size={16} />
           </button>
         </form>

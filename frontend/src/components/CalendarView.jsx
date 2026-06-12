@@ -117,6 +117,8 @@ export default function CalendarView() {
   };
 
   const statusColor = { APPROVED: '#10b981', PENDING: '#f59e0b' };
+  const recurringColor = '#7c3aed'; // Purple for recurring bookings
+  const getEventColor = (b) => b.isRecurring ? recurringColor : (statusColor[b.status] || '#64748b');
 
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
@@ -211,24 +213,32 @@ export default function CalendarView() {
                 .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
                 .map((b, i) => (
                   <div key={b._id || b.id || i} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '1rem 1.25rem', background: 'white', border: '1px solid var(--surface-border)',
-                    borderRadius: 14, boxShadow: 'var(--surface-shadow)', borderLeft: `4px solid ${statusColor[b.status] || '#64748b'}`
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                    padding: '1rem 1.25rem', background: b.isRecurring ? '#faf5ff' : 'white',
+                    border: `1px solid ${b.isRecurring ? '#7c3aed30' : 'var(--surface-border)'}`,
+                    borderRadius: 14, boxShadow: 'var(--surface-shadow)',
+                    borderLeft: `4px solid ${getEventColor(b)}`
                   }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {b.isRecurring && <span title="Recurring booking" style={{ fontSize: '0.85rem' }}>🔁</span>}
                         {b.facilityId?.name || b.facilityName || b.facility}
                       </div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                         {b.purpose} {b.userId?.name ? `· Requested by ${b.userId.name}` : ''}
                       </div>
+                      {b.isRecurring && b.recurringDays && b.recurringDays.length > 0 && (
+                        <div style={{ fontSize: '0.68rem', color: recurringColor, fontWeight: 600, marginTop: '3px' }}>
+                          Repeats: {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].filter((_, i) => b.recurringDays.includes(i)).join(', ')}
+                        </div>
+                      )}
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', display: 'block' }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: getEventColor(b), display: 'block' }}>
                         {b.startTime || b.time?.split(' – ')[0]} – {b.endTime || b.time?.split(' – ')[1]}
                       </span>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: statusColor[b.status], background: `${statusColor[b.status]}12`, padding: '2px 8px', borderRadius: 50, display: 'inline-block', marginTop: '4px' }}>
-                        {b.status}
+                      <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: getEventColor(b), background: `${getEventColor(b)}12`, padding: '2px 8px', borderRadius: 50, display: 'inline-block', marginTop: '4px' }}>
+                        {b.isRecurring ? 'RECURRING' : b.status}
                       </span>
                     </div>
                   </div>
@@ -276,19 +286,21 @@ export default function CalendarView() {
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '2rem' }}>No events</div>
                   ) : (
                     dayBookings.map((b, i) => (
-                      <div key={i} style={{ 
-                        fontSize: '0.65rem', padding: '4px 6px', borderRadius: 6, color: 'white', 
-                        background: statusColor[b.status] || '#64748b', fontWeight: 600,
-                        overflow: 'hidden', textOverflow: 'ellipsis'
-                      }}>
-                        <div style={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {b.startTime || b.time?.split(' – ')[0]}
+                        <div key={i} style={{ 
+                          fontSize: '0.65rem', padding: '4px 6px', borderRadius: 6, color: 'white', 
+                          background: getEventColor(b), fontWeight: 600,
+                          overflow: 'hidden', textOverflow: 'ellipsis',
+                          borderLeft: b.isRecurring ? '3px solid rgba(255,255,255,0.5)' : 'none',
+                        }}>
+                          <div style={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 2 }}>
+                            {b.isRecurring && <span style={{ fontSize: '0.6rem' }}>🔁</span>}
+                            {b.startTime || b.time?.split(' – ')[0]}
+                          </div>
+                          <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {b.facilityId?.name || b.facilityName || b.facility}
+                          </div>
                         </div>
-                        <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {b.facilityId?.name || b.facilityName || b.facility}
-                        </div>
-                      </div>
-                    ))
+                      ))
                   )}
                 </div>
               </div>
@@ -328,8 +340,16 @@ export default function CalendarView() {
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--primary)' : 'var(--text-main)', marginBottom: '0.25rem' }}>{day}</div>
                   {dayBookings.slice(0, 3).map((b, i) => (
-                    <div key={i} style={{ fontSize: '0.6rem', fontWeight: 600, color: 'white', background: statusColor[b.status] || '#64748b', borderRadius: 4, padding: '1px 4px', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {b.facilityId?.name || b.facilityName || b.facility}
+                    <div key={i} style={{
+                      fontSize: '0.6rem', fontWeight: 600, color: 'white',
+                      background: getEventColor(b),
+                      borderRadius: 4, padding: '1px 4px', marginBottom: 2,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      display: 'flex', alignItems: 'center', gap: 2,
+                      borderLeft: b.isRecurring ? '3px solid rgba(255,255,255,0.4)' : 'none',
+                    }}>
+                      {b.isRecurring && <span style={{ fontSize: '0.55rem', flexShrink: 0 }}>🔁</span>}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.facilityId?.name || b.facilityName || b.facility}</span>
                     </div>
                   ))}
                   {dayBookings.length > 3 && <div style={{ fontSize: '0.55rem', color: 'var(--text-muted)' }}>+{dayBookings.length - 3} more</div>}

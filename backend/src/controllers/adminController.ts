@@ -241,3 +241,26 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
     next(error);
   }
 };
+
+export const resetUserPassword = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user!.role !== 'superadmin') throw new AppError('Only super admins can reset passwords', 403);
+
+    const id = req.params.id as string;
+    if (!mongoose.Types.ObjectId.isValid(id)) throw new AppError('Invalid user ID', 400);
+
+    const { newPassword } = req.body;
+    if (!newPassword || (newPassword as string).length < 6) throw new AppError('New password must be at least 6 characters', 400);
+
+    const bcrypt = await import('bcryptjs');
+    const hashed = await bcrypt.default.hash(newPassword as string, 10);
+
+    const user = await User.findByIdAndUpdate(id, { password: hashed, firstLogin: true }, { new: true })
+      .select('id name email role');
+    if (!user) throw new AppError('User not found', 404);
+
+    res.json({ message: `Password reset successfully for ${user.name}. They will be prompted to change it on next login.` });
+  } catch (error) {
+    next(error);
+  }
+};

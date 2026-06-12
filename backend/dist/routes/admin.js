@@ -10,6 +10,7 @@ router.get('/pending-approvals', adminController_1.getPendingApprovals);
 router.get('/users', (0, auth_1.authorize)('superadmin'), adminController_1.getUsers);
 router.patch('/users/:id', (0, auth_1.authorize)('superadmin'), adminController_1.updateUser);
 router.delete('/users/:id', (0, auth_1.authorize)('superadmin'), adminController_1.deleteUser);
+router.post('/users/:id/reset-password', (0, auth_1.authorize)('superadmin'), adminController_1.resetUserPassword);
 router.post('/maintenance', adminController_1.createMaintenanceBlock);
 router.get('/maintenance', adminController_1.getMaintenanceBlocks);
 router.delete('/maintenance/:id', adminController_1.deleteMaintenanceBlock);

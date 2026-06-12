@@ -5,6 +5,7 @@ import {
   getUsers,
   updateUser,
   deleteUser,
+  resetUserPassword,
   createMaintenanceBlock,
   getMaintenanceBlocks,
   deleteMaintenanceBlock,
@@ -20,6 +21,7 @@ router.get('/pending-approvals', getPendingApprovals);
 router.get('/users', authorize('superadmin'), getUsers);
 router.patch('/users/:id', authorize('superadmin'), updateUser);
 router.delete('/users/:id', authorize('superadmin'), deleteUser);
+router.post('/users/:id/reset-password', authorize('superadmin'), resetUserPassword);
 router.post('/maintenance', createMaintenanceBlock);
 router.get('/maintenance', getMaintenanceBlocks);
 router.delete('/maintenance/:id', deleteMaintenanceBlock);

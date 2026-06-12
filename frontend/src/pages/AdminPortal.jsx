@@ -477,6 +477,12 @@ function ManagePage() {
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'faculty', password: 'Transcend@2026' });
   const [newVenue, setNewVenue] = useState({ name: '', capacity: '', category: 'academic', icon: 'building', description: '' });
   const [userError, setUserError] = useState('');
+  // Reset password modal state
+  const [resetTarget, setResetTarget] = useState(null); // { _id, name, email }
+  const [resetPwd, setResetPwd] = useState('');
+  const [resetMsg, setResetMsg] = useState('');
+  const [resetErr, setResetErr] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   const loadUsers = () => fetch(`${API_BASE_URL}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).then(d => setUsers(d.users || []));
   const loadVenues = () => fetch(`${API_BASE_URL}/facilities`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).then(d => setVenues(d.facilities || []));
@@ -514,6 +520,24 @@ function ManagePage() {
     await fetch(`${API_BASE_URL}/facilities/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     loadVenues();
   };
+
+  const handleResetPassword = async () => {
+    if (!resetTarget || !resetPwd.trim()) return;
+    setResetLoading(true); setResetErr(''); setResetMsg('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/users/${resetTarget._id || resetTarget.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ newPassword: resetPwd }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setResetErr(d.error || 'Failed to reset password'); }
+      else { setResetMsg(d.message || 'Password reset!'); setResetPwd(''); }
+    } catch { setResetErr('Network error.'); }
+    finally { setResetLoading(false); }
+  };
+
+  const closeResetModal = () => { setResetTarget(null); setResetPwd(''); setResetMsg(''); setResetErr(''); };
 
   const roleColors = { superadmin: '#8b5cf6', admin: '#2563eb', faculty: '#059669', viewer: '#64748b' };
 
@@ -570,7 +594,14 @@ function ManagePage() {
                       <td><div style={{ fontWeight: 700 }}>{u.name}</div><div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{u.email}</div></td>
                       <td><span style={{ fontSize: '0.72rem', fontWeight: 700, color: roleColors[u.role] || '#64748b', textTransform: 'uppercase' }}>{u.role}</span></td>
                       <td><span style={{ fontSize: '0.72rem', fontWeight: 700, color: u.isActive ? '#10b981' : '#ef4444' }}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
-                      <td><button className="btn btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => deleteUser(u._id || u.id)}>Remove</button></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                          <button className="btn btn-secondary" style={{ padding: '0.22rem 0.55rem', fontSize: '0.7rem' }} onClick={() => { setResetTarget(u); setResetPwd(''); setResetMsg(''); setResetErr(''); }}>
+                            🔑 Reset Pwd
+                          </button>
+                          <button className="btn btn-outline" style={{ padding: '0.22rem 0.55rem', fontSize: '0.7rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => deleteUser(u._id || u.id)}>Remove</button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -633,6 +664,47 @@ function ManagePage() {
           </div>
         </div>
       </div>
+
+      {/* Reset Password Modal — superadmin only */}
+      {resetTarget && createPortal(
+        <div className="modal-overlay active" style={{ zIndex: 10000 }} onClick={e => e.target === e.currentTarget && closeResetModal()}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 420, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid #7c3aed' }}>
+            <div style={{ height: 6, background: 'linear-gradient(90deg,#7c3aed,#a78bfa)' }} />
+            <button className="modal-close" onClick={closeResetModal} style={{ top: 16, right: 16 }}>✕</button>
+
+            <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                <span style={{ background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', color: 'white', fontSize: '0.68rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: 20 }}>🔑 RESET PASSWORD</span>
+              </div>
+              <h3 style={{ margin: '0 0 0.2rem', fontSize: '1.1rem', fontWeight: 800 }}>{resetTarget.name}</h3>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>{resetTarget.email} · <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{resetTarget.role}</span></p>
+            </div>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>Set a temporary password. The user will be <strong>required to change it</strong> on their next login.</p>
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#7c3aed', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>New Password</label>
+                <input type="text" value={resetPwd} onChange={e => setResetPwd(e.target.value)}
+                  placeholder="Enter new password (min 6 chars)…" autoFocus
+                  style={{ width: '100%', padding: '0.6rem 0.8rem', border: '1px solid #7c3aed40', borderRadius: 10, fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              {resetErr && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '0.6rem 0.8rem', fontSize: '0.8rem', color: '#dc2626', fontWeight: 600 }}>{resetErr}</div>}
+              {resetMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '0.6rem 0.8rem', fontSize: '0.8rem', color: '#16a34a', fontWeight: 600 }}>✓ {resetMsg}</div>}
+            </div>
+
+            <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button className="btn btn-secondary" disabled={resetLoading} onClick={closeResetModal} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>Cancel</button>
+              <button className="btn btn-primary"
+                disabled={resetLoading || !resetPwd.trim() || resetPwd.length < 6}
+                onClick={handleResetPassword}
+                style={{ padding: '0.45rem 1.2rem', fontSize: '0.8rem', background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', borderColor: '#7c3aed' }}>
+                {resetLoading ? 'Resetting…' : 'Set Password'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }

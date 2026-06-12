@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Shield, Layers, Calendar, Database, BarChart3, Lock, CheckCircle2, XCircle, Clock4, Users, Building, UserPlus, PlusCircle, Settings, Globe, RefreshCw, FileText, Package, Clock, User, Mail } from 'lucide-react';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
@@ -113,7 +114,7 @@ function QueuePage() {
           </td>
         </tr>
 
-        {showRejectModal && (
+        {showRejectModal && createPortal(
           <div className="modal-overlay active" style={{ zIndex: 10000 }} onClick={(e) => e.target === e.currentTarget && setShowRejectModal(false)}>
             <div className="modal animate-scale-in" style={{ maxWidth: 420, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid #ef4444' }}>
               <div style={{ height: 6, background: '#ef4444' }} />
@@ -155,7 +156,8 @@ function QueuePage() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </>
     );

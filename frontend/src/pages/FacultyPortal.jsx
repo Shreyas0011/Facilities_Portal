@@ -90,7 +90,7 @@ function AmenitiesPage({ onChangePassword }) {
 
   const filtered = search
     ? facilities.filter(f => [f.label || f.name, f.desc || f.description, f.category, f.capacity]
-        .some(v => v?.toLowerCase().includes(search.toLowerCase())))
+        .some(v => v != null && String(v).toLowerCase().includes(search.toLowerCase())))
     : facilities;
 
   const recent = bookings.slice(-4).reverse();

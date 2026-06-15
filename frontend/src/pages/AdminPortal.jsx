@@ -17,6 +17,21 @@ function formatDate(d) {
   return parsed.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function formatDateTime(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return d;
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  }) + ' at ' + date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit' 
+  });
+}
+
+
 // ── Queue Page ────────────────────────────────────────────────────────────────
 function QueuePage() {
   const { token, user } = useAuth();
@@ -91,6 +106,7 @@ function QueuePage() {
                 {b.approval && (
                   <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
                     {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
+                    {b.approval.timestamp ? ` on ${formatDateTime(b.approval.timestamp)}` : ''}
                     {b.approval.remarks ? ` (${b.approval.remarks})` : ''}
                   </span>
                 )}
@@ -324,6 +340,7 @@ function QueuePage() {
                   </div>
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     {detailBooking.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {detailBooking.approval.approvedById?.name || 'Admin'} ({detailBooking.approval.approvedById?.role || 'admin'})
+                    {detailBooking.approval.timestamp ? ` on ${formatDateTime(detailBooking.approval.timestamp)}` : ''}
                   </div>
                   {detailBooking.approval.remarks && (
                     <div style={{

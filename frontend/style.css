@@ -56,6 +56,7 @@ body {
   z-index: -1;
   opacity: 0.5;
   animation: float 20s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 .orb-1 {
@@ -405,16 +406,16 @@ body {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 24px;
   border: 1px solid var(--surface-border);
   overflow: hidden;
   box-shadow: var(--surface-shadow);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
   display: flex;
   flex-direction: column;
   position: relative;
+  will-change: transform;
 }
 
 .card:hover {
@@ -642,8 +643,7 @@ body {
 }
 
 .feed-item {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   border: 1px solid var(--surface-border);
   padding: 1.5rem;
@@ -651,7 +651,8 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 1.5rem;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  will-change: transform;
 }
 
 .feed-item:hover {
@@ -1020,8 +1021,7 @@ body {
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(25px);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--surface-border);
   border-radius: 20px;
   padding: 1.5rem;
@@ -1029,7 +1029,8 @@ body {
   align-items: center;
   gap: 1.25rem;
   box-shadow: var(--surface-shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  will-change: transform;
 }
 
 .stat-card:hover {
@@ -1092,8 +1093,7 @@ body {
 
 /* Admin Table */
 .admin-table-container {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(25px);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 24px;
   border: 1px solid var(--surface-border);
   box-shadow: var(--surface-shadow);
@@ -1207,8 +1207,7 @@ body {
 }
 
 .admin-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(25px);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--surface-border);
   border-radius: 24px;
   padding: 1.75rem;

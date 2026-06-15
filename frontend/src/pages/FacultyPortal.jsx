@@ -17,6 +17,20 @@ function formatDate(dateStr) {
   return parsed.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function formatDateTime(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return d;
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  }) + ' at ' + date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit' 
+  });
+}
+
 function AmenitiesPage({ onChangePassword }) {
   const { user, token } = useAuth();
   const [facilities, setFacilities] = useState([]);
@@ -173,9 +187,10 @@ function AmenitiesPage({ onChangePassword }) {
                         <span>{b.attendeesCount || b.attendees} Ppl</span>
                       </div>
                       {b.approval && (
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '4px', marginTop: '2px' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
                           <span>
                             {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
+                            {b.approval.timestamp ? ` on ${formatDateTime(b.approval.timestamp)}` : ''}
                           </span>
                           {b.approval.remarks && (
                             <span style={{ fontStyle: 'italic' }}>({b.approval.remarks})</span>
@@ -247,9 +262,10 @@ function MyBookingsPage() {
                       <span>{b.attendeesCount || b.attendees} Attendees</span>
                     </div>
                     {b.approval && (
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '4px', marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
                         <span>
                           {b.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {b.approval.approvedById?.name || 'Admin'}
+                          {b.approval.timestamp ? ` on ${formatDateTime(b.approval.timestamp)}` : ''}
                         </span>
                         {b.approval.remarks && (
                           <span style={{ fontStyle: 'italic' }}>({b.approval.remarks})</span>

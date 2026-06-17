@@ -37,41 +37,99 @@ const checkConflict = async (
   date: Date,
   startTime: string,
   endTime: string,
+  isRecurring?: boolean,
+  recurringDays?: number[],
+  recurringEndDate?: Date | null,
   excludeBookingId?: string
 ): Promise<{ conflict: boolean; reason?: string }> => {
-  const startOfDay = new Date(date); startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay   = new Date(date); endOfDay.setHours(23, 59, 59, 999);
+  const getYYYYMMDD = (d: Date) => d.toISOString().split('T')[0];
 
-  const bookingFilter: Record<string, any> = {
+  // 1. Generate target dates to check
+  const targetDates: Date[] = [];
+  if (isRecurring && recurringDays && recurringDays.length > 0) {
+    const start = new Date(date);
+    const end = recurringEndDate ? new Date(recurringEndDate) : new Date(start.getTime() + 365 * 24 * 60 * 60 * 1000);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    const current = new Date(start);
+    while (current <= end) {
+      if (recurringDays.includes(current.getDay())) {
+        targetDates.push(new Date(current));
+      }
+      current.setDate(current.getDate() + 1);
+    }
+  } else {
+    targetDates.push(new Date(date));
+  }
+
+  if (targetDates.length === 0) return { conflict: false };
+
+  // 2. Fetch all active bookings for this facility
+  const candidateFilter: Record<string, any> = {
     facilityId,
-    date:   { $gte: startOfDay, $lte: endOfDay },
     status: { $in: ['APPROVED', 'PENDING'] },
   };
-  if (excludeBookingId) bookingFilter._id = { $ne: new mongoose.Types.ObjectId(excludeBookingId) };
+  if (excludeBookingId) candidateFilter._id = { $ne: new mongoose.Types.ObjectId(excludeBookingId) };
 
-  const existingBookings = await Booking.find(bookingFilter).select('startTime endTime');
+  const existingBookings = await Booking.find(candidateFilter);
+
+  // 3. Fetch all maintenance blocks for this facility
+  const blocks = await MaintenanceBlock.find({ facilityId });
 
   const newStart = timeToMinutes(startTime);
   const newEnd   = timeToMinutes(endTime);
 
-  for (const b of existingBookings) {
-    const bStart = timeToMinutes(b.startTime);
-    const bEnd   = timeToMinutes(b.endTime);
-    if (bStart < newEnd && newStart < bEnd) {
-      return { conflict: true, reason: 'Time slot conflicts with an existing booking' };
+  // 4. Check each target occurrence date for overlaps
+  for (const targetDate of targetDates) {
+    const targetYMD = getYYYYMMDD(targetDate);
+    const targetDayOfWeek = targetDate.getDay();
+
+    // Check bookings
+    for (const b of existingBookings) {
+      const bDateStr = getYYYYMMDD(b.date);
+      let overlapsDate = false;
+
+      if (b.isRecurring) {
+        if (targetYMD >= bDateStr) {
+          const endYMD = b.recurringEndDate ? getYYYYMMDD(b.recurringEndDate) : null;
+          if (!endYMD || targetYMD <= endYMD) {
+            if (b.recurringDays && b.recurringDays.includes(targetDayOfWeek)) {
+              overlapsDate = true;
+            }
+          }
+        }
+      } else {
+        if (bDateStr === targetYMD) {
+          overlapsDate = true;
+        }
+      }
+
+      if (overlapsDate) {
+        const bStart = timeToMinutes(b.startTime);
+        const bEnd   = timeToMinutes(b.endTime);
+        if (bStart < newEnd && newStart < bEnd) {
+          return {
+            conflict: true,
+            reason: `Time slot conflicts with an existing booking on ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+          };
+        }
+      }
     }
-  }
 
-  const blocks = await MaintenanceBlock.find({
-    facilityId,
-    blockedDate: { $gte: startOfDay, $lte: endOfDay },
-  }).select('startTime endTime reason');
-
-  for (const block of blocks) {
-    const bStart = timeToMinutes(block.startTime);
-    const bEnd   = timeToMinutes(block.endTime);
-    if (bStart < newEnd && newStart < bEnd) {
-      return { conflict: true, reason: `Facility is under maintenance: ${block.reason}` };
+    // Check maintenance blocks
+    for (const block of blocks) {
+      const blockYMD = getYYYYMMDD(block.blockedDate);
+      if (blockYMD === targetYMD) {
+        const bStart = timeToMinutes(block.startTime);
+        const bEnd   = timeToMinutes(block.endTime);
+        if (bStart < newEnd && newStart < bEnd) {
+          return {
+            conflict: true,
+            reason: `Facility is under maintenance on ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}: ${block.reason}`,
+          };
+        }
+      }
     }
   }
 
@@ -84,7 +142,7 @@ export const getPublicBookings = async (_req: Request, res: Response, next: Next
       .populate('facilityId', 'id name location type')
       .populate('userId', 'name role')
       .sort({ date: 1 })
-      .select('facilityId userId date startTime endTime purpose status isExternal');
+      .select('facilityId userId date startTime endTime purpose status isExternal isRecurring recurringDays recurringEndDate');
 
     res.json({ bookings });
   } catch (error) {
@@ -129,7 +187,15 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
 
     // Per-facility window intentionally removed — global 06:00–22:00 rule above applies
 
-    const conflict = await checkConflict(validated.facilityId, date, validated.startTime, validated.endTime);
+    const conflict = await checkConflict(
+      validated.facilityId,
+      date,
+      validated.startTime,
+      validated.endTime,
+      validated.isRecurring,
+      validated.recurringDays,
+      validated.recurringEndDate ? new Date(validated.recurringEndDate) : null
+    );
     if (conflict.conflict) { res.status(409).json({ error: conflict.reason }); return; }
 
     // Check permission: viewers are read-only and cannot book
@@ -289,7 +355,14 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response, next:
 
       if (status === 'APPROVED') {
         const conflict = await checkConflict(
-          booking.facilityId.toString(), booking.date, booking.startTime, booking.endTime, id
+          booking.facilityId.toString(),
+          booking.date,
+          booking.startTime,
+          booking.endTime,
+          booking.isRecurring,
+          booking.recurringDays,
+          booking.recurringEndDate,
+          id
         );
         if (conflict.conflict) { res.status(409).json({ error: conflict.reason }); return; }
       }

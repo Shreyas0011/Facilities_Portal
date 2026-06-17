@@ -97,22 +97,38 @@ export default function CalendarView() {
     return true;
   };
 
-  const getBookingsForDay = (day) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return bookings.filter(b => {
-      const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
-      return bDate === dateStr && (b.status === 'APPROVED' || b.status === 'PENDING') && filterBooking(b);
-    });
-  };
-
-  const getBookingsForDateObj = (dateObj) => {
+  const isBookingActiveOnDate = (b, dateObj) => {
     const y = dateObj.getFullYear();
     const m = dateObj.getMonth();
     const d = dateObj.getDate();
     const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    
+    const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
+    if (!bDate) return false;
+
+    if (b.isRecurring) {
+      if (dateStr < bDate) return false;
+      if (b.recurringEndDate) {
+        const endYMD = b.recurringEndDate.includes('T') ? b.recurringEndDate.split('T')[0] : b.recurringEndDate;
+        if (dateStr > endYMD) return false;
+      }
+      const dayOfWeek = dateObj.getDay(); // 0 = Sun, 1 = Mon, etc.
+      return Array.isArray(b.recurringDays) && b.recurringDays.includes(dayOfWeek);
+    }
+
+    return bDate === dateStr;
+  };
+
+  const getBookingsForDay = (day) => {
+    const dateObj = new Date(year, month, day);
     return bookings.filter(b => {
-      const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
-      return bDate === dateStr && (b.status === 'APPROVED' || b.status === 'PENDING') && filterBooking(b);
+      return isBookingActiveOnDate(b, dateObj) && (b.status === 'APPROVED' || b.status === 'PENDING') && filterBooking(b);
+    });
+  };
+
+  const getBookingsForDateObj = (dateObj) => {
+    return bookings.filter(b => {
+      return isBookingActiveOnDate(b, dateObj) && (b.status === 'APPROVED' || b.status === 'PENDING') && filterBooking(b);
     });
   };
 

@@ -65,7 +65,21 @@ function AmenitiesPage({ onChangePassword }) {
     const todayBookings = allBookings.filter(b => {
       const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
       const bFacilityId = b.facilityId?._id || b.facilityId?.id || b.facilityId;
-      return bDate === todayStr && b.status === 'APPROVED' && bFacilityId === facilityId;
+      if (bFacilityId !== facilityId || b.status !== 'APPROVED') return false;
+
+      if (b.isRecurring) {
+        if (todayStr < bDate) return false;
+        if (b.recurringEndDate) {
+          const endYMD = b.recurringEndDate.includes('T') ? b.recurringEndDate.split('T')[0] : b.recurringEndDate;
+          if (todayStr > endYMD) return false;
+        }
+        const [y, m, d] = todayStr.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        const dayOfWeek = dateObj.getDay();
+        return Array.isArray(b.recurringDays) && b.recurringDays.includes(dayOfWeek);
+      }
+
+      return bDate === todayStr;
     });
 
     if (todayBookings.length === 0) return false;

@@ -93,7 +93,21 @@ export default function BookingModal({ facility, onClose, onBooked }) {
         setExistingBookings(list.filter(b => {
           const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
           const bFacId = b.facilityId?._id || b.facilityId?.id || b.facilityId;
-          return bDate === selectedDate && bFacId === facId && b.status === 'APPROVED';
+          if (bFacId !== facId || b.status !== 'APPROVED') return false;
+
+          if (b.isRecurring) {
+            if (selectedDate < bDate) return false;
+            if (b.recurringEndDate) {
+              const endYMD = b.recurringEndDate.includes('T') ? b.recurringEndDate.split('T')[0] : b.recurringEndDate;
+              if (selectedDate > endYMD) return false;
+            }
+            const [y, m, d] = selectedDate.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            const dayOfWeek = dateObj.getDay();
+            return Array.isArray(b.recurringDays) && b.recurringDays.includes(dayOfWeek);
+          }
+
+          return bDate === selectedDate;
         }));
       })
       .catch(() => {});

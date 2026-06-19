@@ -18,6 +18,7 @@ export interface IBooking extends Document {
   isRecurring?: boolean;
   recurringDays?: number[];
   recurringEndDate?: Date;
+  cancelledDates?: string[];
   status: BookingStatus;
   approvalRequired: boolean;
   createdAt: Date;
@@ -41,6 +42,7 @@ const BookingSchema = new Schema<IBooking>(
     isRecurring:     { type: Boolean, default: false },
     recurringDays:   { type: [Number], default: [] },
     recurringEndDate:{ type: Date },
+    cancelledDates:  { type: [String], default: [] },
     status: {
       type: String,
       enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'],

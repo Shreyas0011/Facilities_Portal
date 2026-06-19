@@ -6,6 +6,7 @@ import {
   getPublicBookings,
   updateBookingStatus,
   deleteBooking,
+  cancelBookingOccurrence,
 } from '../controllers/bookingController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -21,6 +22,7 @@ router.post('/', createBooking);
 router.get('/my-bookings', getMyBookings);
 router.get('/', authorize('admin', 'superadmin'), getAllBookings);
 router.patch('/:id/status', updateBookingStatus);
+router.patch('/:id/cancel-occurrence', cancelBookingOccurrence);
 router.delete('/:id', deleteBooking);
 
 export default router;

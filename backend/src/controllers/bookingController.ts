@@ -431,3 +431,37 @@ export const deleteBooking = async (req: AuthRequest, res: Response, next: NextF
     next(error);
   }
 };
+
+export const cancelBookingOccurrence = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const { date } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) throw new AppError('Invalid booking ID', 400);
+    if (!date) throw new AppError('Date is required to cancel occurrence', 400);
+
+    const booking = await Booking.findById(id);
+    if (!booking) throw new AppError('Booking not found', 404);
+
+    if (!booking.isRecurring) {
+      throw new AppError('Cannot cancel occurrence of a non-recurring booking', 400);
+    }
+
+    if (booking.userId.toString() !== req.user!.id && !['admin', 'superadmin'].includes(req.user!.role)) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    if (!booking.cancelledDates) {
+      booking.cancelledDates = [];
+    }
+
+    if (!booking.cancelledDates.includes(date)) {
+      booking.cancelledDates.push(date);
+      await booking.save();
+    }
+
+    res.json({ message: 'Occurrence cancelled successfully', booking });
+  } catch (error) {
+    next(error);
+  }
+};

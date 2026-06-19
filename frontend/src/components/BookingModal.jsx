@@ -131,12 +131,20 @@ export default function BookingModal({ facility, onClose, onBooked }) {
     const sorted = [...selectedSlots].sort();
     return `${to12h(sorted[0])} – ${to12h(sorted[sorted.length - 1])}`;
   };
+  const getLocalYYYYMMDD = (dateObj) => {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const dayVal = String(dateObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dayVal}`;
+  };
+
   const formatDay = (d) => ({
     day: d.toLocaleDateString('en-US', { weekday: 'short' }),
     date: d.getDate(),
     month: d.toLocaleDateString('en-US', { month: 'short' }),
-    full: d.toISOString().split('T')[0],
+    full: getLocalYYYYMMDD(d),
   });
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

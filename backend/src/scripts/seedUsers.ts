@@ -84,7 +84,12 @@ const seedDB = async () => {
         console.log(`Added user: ${userData.email}`);
         addedCount++;
       } else {
-        console.log(`User already exists: ${userData.email}`);
+        existing.password = hashedPassword;
+        existing.firstLogin = true;
+        existing.isActive = true;
+        existing.role = userData.role as any;
+        await existing.save();
+        console.log(`Reset user: ${userData.email}`);
       }
     }
 

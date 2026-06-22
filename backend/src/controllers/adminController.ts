@@ -159,7 +159,7 @@ export const getUsers = async (req: AuthRequest, res: Response, next: NextFuncti
 export const updateUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const id              = req.params.id as string;
-    const { role, isActive }  = req.body;
+    const { name, email, role, isActive }  = req.body;
     if (!mongoose.Types.ObjectId.isValid(id)) throw new AppError('Invalid user ID', 400);
 
     // Super admin only for role changes
@@ -168,6 +168,8 @@ export const updateUser = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     const update: Record<string, any> = {};
+    if (name     !== undefined) update.name     = name;
+    if (email    !== undefined) update.email    = email;
     if (role     !== undefined) update.role     = role;
     if (isActive !== undefined) update.isActive = isActive;
 

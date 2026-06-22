@@ -3,6 +3,12 @@ import { createPortal } from 'react-dom';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
 
+const FILTER_TIME_OPTIONS = [
+  '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+  '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
+  '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'
+];
+
 export default function CalendarView() {
   const { token, user } = useAuth();
   const [bookings, setBookings] = useState([]);
@@ -10,13 +16,44 @@ export default function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Filters State
-  const [selectedVenue, setSelectedVenue] = useState('all');
+  const [selectedVenues, setSelectedVenues] = useState(['all']);
+  const [venueDropdownOpen, setVenueDropdownOpen] = useState(false);
   const [viewMode, setViewMode] = useState('month'); // 'month' | 'week' | 'day'
-  const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
+  const [filterStartTime, setFilterStartTime] = useState('06:00');
+  const [filterEndTime, setFilterEndTime] = useState('22:00');
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [selectedBookingDetails, setSelectedBookingDetails] = useState(null);
   const [layoutMode, setLayoutMode] = useState('calendar'); // 'calendar' | 'excel'
   const [selectedExcelCell, setSelectedExcelCell] = useState(null); // { rowIndex, colIndex }
+  const [displayType, setDisplayType] = useState('bookings'); // 'bookings' | 'available' | 'both'
+
+  const handleVenueToggle = (venueId) => {
+    if (venueId === 'all') {
+      setSelectedVenues(['all']);
+    } else {
+      setSelectedVenues(prev => {
+        let next = prev.filter(v => v !== 'all');
+        const venueIdStr = venueId.toString();
+        const prevStr = prev.map(id => id.toString());
+        if (prevStr.includes(venueIdStr)) {
+          next = next.filter(v => v.toString() !== venueIdStr);
+        } else {
+          next.push(venueId);
+        }
+        if (next.length === 0) return ['all'];
+        return next;
+      });
+    }
+  };
+
+  const getVenueFilterLabel = () => {
+    if (selectedVenues.includes('all')) return 'All Venues';
+    if (selectedVenues.length === 1) {
+      const found = facilities.find(f => (f._id || f.id) === selectedVenues[0]);
+      return found ? (found.label || found.name) : '1 Venue Selected';
+    }
+    return `${selectedVenues.length} Venues Selected`;
+  };
 
   const formatModalDate = (dateStr) => {
     if (!dateStr) return '';
@@ -166,27 +203,19 @@ export default function CalendarView() {
   // Main Filter Handler
   const filterBooking = (b) => {
     // 1. Venue Filter
-    if (selectedVenue !== 'all') {
+    if (!selectedVenues.includes('all')) {
       const bVenueId = b.facilityId?._id || b.facilityId?.id || b.facilityId;
-      if (bVenueId !== selectedVenue) return false;
+      const bVenueIdStr = bVenueId?.toString();
+      if (!selectedVenues.some(id => id.toString() === bVenueIdStr)) return false;
     }
 
     // 2. Time Filter
-    if (selectedTimeFilter !== 'all') {
-      const startMins = timeToMinutes(b.startTime || b.time?.split(' – ')[0]);
-      const morningStart = timeToMinutes('06:00');
-      const noonStart = timeToMinutes('12:00');
-      const eveningStart = timeToMinutes('17:00');
-      const eveningEnd = timeToMinutes('22:00');
+    const bStartMins = timeToMinutes(b.startTime || b.time?.split(' – ')[0]);
+    const bEndMins = timeToMinutes(b.endTime || b.time?.split(' – ')[1] || b.startTime || b.time?.split(' – ')[0]);
+    const fStartMins = timeToMinutes(filterStartTime);
+    const fEndMins = timeToMinutes(filterEndTime);
 
-      if (selectedTimeFilter === 'morning') {
-        if (startMins < morningStart || startMins >= noonStart) return false;
-      } else if (selectedTimeFilter === 'afternoon') {
-        if (startMins < noonStart || startMins >= eveningStart) return false;
-      } else if (selectedTimeFilter === 'evening') {
-        if (startMins < eveningStart || startMins > eveningEnd) return false;
-      }
-    }
+    if (bStartMins >= fEndMins || bEndMins <= fStartMins) return false;
 
     return true;
   };
@@ -243,9 +272,9 @@ export default function CalendarView() {
   };
 
   const getUnbookedVenuesForDateObj = (dateObj) => {
-    const candidateFacilities = selectedVenue === 'all'
+    const candidateFacilities = selectedVenues.includes('all')
       ? facilities
-      : facilities.filter(f => (f._id || f.id) === selectedVenue);
+      : facilities.filter(f => selectedVenues.includes(f._id || f.id));
 
     const dayBookings = bookings.filter(b => {
       return isBookingActiveOnDate(b, dateObj) &&
@@ -351,26 +380,160 @@ export default function CalendarView() {
           </div>
         )}
 
+        {/* Display Mode Filter */}
+        {layoutMode === 'calendar' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Show</label>
+            <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: 8, padding: 2 }}>
+              <button className={`btn ${displayType === 'bookings' ? 'btn-primary' : 'btn-ghost'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', borderRadius: 6 }} onClick={() => setDisplayType('bookings')}>Bookings</button>
+              <button className={`btn ${displayType === 'available' ? 'btn-primary' : 'btn-ghost'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', borderRadius: 6 }} onClick={() => setDisplayType('available')}>Available Venues</button>
+              <button className={`btn ${displayType === 'both' ? 'btn-primary' : 'btn-ghost'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', borderRadius: 6 }} onClick={() => setDisplayType('both')}>Both</button>
+            </div>
+          </div>
+        )}
+
         {/* Venue Filter */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: 150 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: 150, position: 'relative' }}>
           <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Venue / Facility</label>
-          <select value={selectedVenue} onChange={e => setSelectedVenue(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 34, width: '100%' }}>
-            <option value="all">All Venues</option>
-            {facilities.map(f => (
-              <option key={f._id || f.id} value={f._id || f.id}>{f.label || f.name}</option>
-            ))}
-          </select>
+          <div 
+            onClick={() => setVenueDropdownOpen(!venueDropdownOpen)}
+            style={{ 
+              padding: '0.4rem 0.6rem', 
+              border: '1px solid var(--surface-border)', 
+              borderRadius: 8, 
+              fontSize: '0.85rem', 
+              height: 34, 
+              width: '100%', 
+              background: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxSizing: 'border-box',
+              userSelect: 'none'
+            }}
+          >
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {getVenueFilterLabel()}
+            </span>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>▼</span>
+          </div>
+          
+          {venueDropdownOpen && (
+            <>
+              {/* Invisible backdrop to close the dropdown when clicking outside */}
+              <div 
+                onClick={() => setVenueDropdownOpen(false)}
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+              />
+              <div style={{ 
+                position: 'absolute', 
+                top: '100%', 
+                left: 0, 
+                right: 0, 
+                marginTop: '4px', 
+                background: 'white', 
+                border: '1px solid var(--surface-border)', 
+                borderRadius: 8, 
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                zIndex: 1000,
+                maxHeight: '250px',
+                overflowY: 'auto',
+                padding: '4px'
+              }}>
+                <div 
+                  onClick={() => handleVenueToggle('all')}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    padding: '6px 8px', 
+                    borderRadius: 4, 
+                    cursor: 'pointer',
+                    background: selectedVenues.includes('all') ? '#f1f5f9' : 'transparent',
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={selectedVenues.includes('all')}
+                    onChange={() => {}}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                  <span style={{ fontWeight: selectedVenues.includes('all') ? 700 : 500 }}>All Venues</span>
+                </div>
+                
+                {facilities.map(f => {
+                  const fId = f._id || f.id;
+                  const isChecked = selectedVenues.includes(fId);
+                  return (
+                    <div 
+                      key={fId}
+                      onClick={() => handleVenueToggle(fId)}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        padding: '6px 8px', 
+                        borderRadius: 4, 
+                        cursor: 'pointer',
+                        background: isChecked ? '#f1f5f9' : 'transparent',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked}
+                        onChange={() => {}}
+                        style={{ pointerEvents: 'none' }}
+                      />
+                      <span style={{ fontWeight: isChecked ? 700 : 500 }}>{f.label || f.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Time Filter */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 140 }}>
-          <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Time Slot</label>
-          <select value={selectedTimeFilter} onChange={e => setSelectedTimeFilter(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 34 }}>
-            <option value="all">All Day</option>
-            <option value="morning">Morning (6 AM - 12 PM)</option>
-            <option value="afternoon">Afternoon (12 PM - 5 PM)</option>
-            <option value="evening">Evening (5 PM - 10 PM)</option>
-          </select>
+        <div style={{ display: 'flex', gap: '0.5rem', minWidth: 280, flex: '1 1 auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Start Time</label>
+            <select 
+              value={filterStartTime} 
+              onChange={e => {
+                const val = e.target.value;
+                setFilterStartTime(val);
+                // Ensure end time is at least 30 minutes after start time
+                const startIdx = FILTER_TIME_OPTIONS.indexOf(val);
+                const endIdx = FILTER_TIME_OPTIONS.indexOf(filterEndTime);
+                if (startIdx >= endIdx && startIdx < FILTER_TIME_OPTIONS.length - 1) {
+                  setFilterEndTime(FILTER_TIME_OPTIONS[startIdx + 1]);
+                }
+              }} 
+              style={{ padding: '0.4rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 34, width: '100%' }}
+            >
+              {FILTER_TIME_OPTIONS.slice(0, -1).map(t => (
+                <option key={t} value={t}>{formatTime12(t)}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>End Time</label>
+            <select 
+              value={filterEndTime} 
+              onChange={e => setFilterEndTime(e.target.value)} 
+              style={{ padding: '0.4rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 34, width: '100%' }}
+            >
+              {FILTER_TIME_OPTIONS.slice(1).map(t => {
+                const isDisabled = timeToMinutes(t) <= timeToMinutes(filterStartTime);
+                return (
+                  <option key={t} value={t} disabled={isDisabled}>{formatTime12(t)}</option>
+                );
+              })}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -423,17 +586,18 @@ export default function CalendarView() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
               {/* Bookings Section */}
-              <div>
-                <h4 style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
-                  Bookings / Reservations ({dayBookings.length})
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {dayBookings.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'rgba(255,255,255,0.3)', borderRadius: 12, border: '1px dashed var(--surface-border)' }}>
-                      No reservations scheduled for this day matching filters.
-                    </div>
-                  ) : (
-                    dayBookings.map((b, i) => (
+              {displayType !== 'available' && (
+                <div>
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                    Bookings / Reservations ({dayBookings.length})
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {dayBookings.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'rgba(255,255,255,0.3)', borderRadius: 12, border: '1px dashed var(--surface-border)' }}>
+                        No reservations scheduled for this day matching filters.
+                      </div>
+                    ) : (
+                      dayBookings.map((b, i) => (
                         <div key={b._id || b.id || i} 
                           onClick={() => {
                             const y = year;
@@ -494,48 +658,51 @@ export default function CalendarView() {
                           </div>
                         </div>
                       ))
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Available Venues Section */}
-              <div>
-                <h4 style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
-                  Available / Unbooked Venues ({unbooked.length})
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
-                  {unbooked.length === 0 ? (
-                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'rgba(255,255,255,0.3)', borderRadius: 12, border: '1px dashed var(--surface-border)' }}>
-                      All venues are fully booked matching current filters.
-                    </div>
-                  ) : (
-                    unbooked.map((f, i) => (
-                      <div key={f._id || f.id || i} style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '1rem 1.25rem', background: '#eff6ff',
-                        border: '1px solid #bfdbfe',
-                        borderRadius: 14, boxShadow: 'var(--surface-shadow)',
-                        borderLeft: '4px solid #3b82f6'
-                      }}>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span style={{ fontSize: '0.85rem' }}>🟢</span>
-                            {f.label || f.name}
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: '#60a5fa', marginTop: '2px', fontWeight: 500 }}>
-                            {f.location || 'No location set'}
-                          </div>
-                        </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: '#1d4ed8', background: '#dbeafe', padding: '2px 8px', borderRadius: 50, display: 'inline-block' }}>
-                            AVAILABLE
-                          </span>
-                        </div>
+              {displayType !== 'bookings' && (
+                <div>
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                    Available / Unbooked Venues ({unbooked.length})
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                    {unbooked.length === 0 ? (
+                      <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'rgba(255,255,255,0.3)', borderRadius: 12, border: '1px dashed var(--surface-border)' }}>
+                        All venues are fully booked matching current filters.
                       </div>
-                    ))
-                  )}
+                    ) : (
+                      unbooked.map((f, i) => (
+                        <div key={f._id || f.id || i} style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '1rem 1.25rem', background: '#eff6ff',
+                          border: '1px solid #bfdbfe',
+                          borderRadius: 14, boxShadow: 'var(--surface-shadow)',
+                          borderLeft: '4px solid #3b82f6'
+                        }}>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <span style={{ fontSize: '0.85rem' }}>🟢</span>
+                              {f.label || f.name}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#60a5fa', marginTop: '2px', fontWeight: 500 }}>
+                              {f.location || 'No location set'}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: '#1d4ed8', background: '#dbeafe', padding: '2px 8px', borderRadius: 50, display: 'inline-block' }}>
+                              AVAILABLE
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
             </div>
           </div>
@@ -547,8 +714,8 @@ export default function CalendarView() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
           {weekDays.map((dateObj, idx) => {
             const isToday = today.getDate() === dateObj.getDate() && today.getMonth() === dateObj.getMonth() && today.getFullYear() === dateObj.getFullYear();
-            const dayBookings = getBookingsForDateObj(dateObj);
-            const unbooked = getUnbookedVenuesForDateObj(dateObj);
+            const dayBookings = displayType !== 'available' ? getBookingsForDateObj(dateObj) : [];
+            const unbooked = displayType !== 'bookings' ? getUnbookedVenuesForDateObj(dateObj) : [];
             
             return (
               <div key={idx}
@@ -666,8 +833,8 @@ export default function CalendarView() {
               if (!day) return <div key={`empty-${idx}`} />;
               const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
               const dateObj = new Date(year, month, day);
-              const dayBookings = getBookingsForDay(day);
-              const unbooked = getUnbookedVenuesForDateObj(dateObj);
+              const dayBookings = displayType !== 'available' ? getBookingsForDay(day) : [];
+              const unbooked = displayType !== 'bookings' ? getUnbookedVenuesForDateObj(dateObj) : [];
 
               const totalItems = [
                 ...dayBookings.map(b => ({ type: 'booking', data: b })),
@@ -746,119 +913,141 @@ export default function CalendarView() {
       )}
 
       {/* Excel Layout */}
-      {layoutMode === 'excel' && (
-        <div className="excel-container" style={{ marginBottom: '1.5rem' }}>
-          <table className="excel-table">
-            <thead>
-              {/* Column Letter Row (A, B, C...) */}
-              <tr className="excel-col-letter-row">
-                <th className="excel-corner" />
-                <th className="excel-header-cell excel-header-letter-date">A</th>
-                <th className="excel-header-cell excel-header-letter-day">B</th>
-                {facilities.map((_, fIdx) => (
-                  <th key={`letter-${fIdx}`} className="excel-header-cell">
-                    {getExcelColLetter(fIdx + 2)}
-                  </th>
-                ))}
-              </tr>
-              {/* Table Column Name Row (Date, Day, Facility Names) */}
-              <tr className="excel-header-row">
-                <th className="excel-row-num-header">1</th>
-                <th className="excel-header-cell excel-header-date">Date</th>
-                <th className="excel-header-cell excel-header-day">Day</th>
-                {facilities.map((f, fIdx) => (
-                  <th key={`name-${fIdx}`} className="excel-header-cell" style={{ background: '#f8fafc', fontWeight: 700, minWidth: 200 }}>
-                    {f.label || f.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: daysInMonth }).map((_, dIdx) => {
-                const dayVal = dIdx + 1;
-                const dateObj = new Date(year, month, dayVal);
-                const dateStr = dateObj.toLocaleDateString('en-GB'); // DD/MM/YYYY
-                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                const rowNum = dayVal + 1;
+      {layoutMode === 'excel' && (() => {
+        const displayedFacilities = selectedVenues.includes('all')
+          ? facilities
+          : facilities.filter(f => selectedVenues.includes(f._id || f.id));
+        return (
+          <div className="excel-container" style={{ marginBottom: '1.5rem' }}>
+            <table className="excel-table">
+              <thead>
+                {/* Column Letter Row (A, B, C...) */}
+                <tr className="excel-col-letter-row">
+                  <th className="excel-corner" />
+                  <th className="excel-header-cell excel-header-letter-date">A</th>
+                  <th className="excel-header-cell excel-header-letter-day">B</th>
+                  {displayedFacilities.map((_, fIdx) => (
+                    <th key={`letter-${fIdx}`} className="excel-header-cell">
+                      {getExcelColLetter(fIdx + 2)}
+                    </th>
+                  ))}
+                </tr>
+                {/* Table Column Name Row (Date, Day, Facility Names) */}
+                <tr className="excel-header-row">
+                  <th className="excel-row-num-header">1</th>
+                  <th className="excel-header-cell excel-header-date">Date</th>
+                  <th className="excel-header-cell excel-header-day">Day</th>
+                  {displayedFacilities.map((f, fIdx) => (
+                    <th key={`name-${fIdx}`} className="excel-header-cell" style={{ background: '#f8fafc', fontWeight: 700, minWidth: 200 }}>
+                      {f.label || f.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: daysInMonth }).map((_, dIdx) => {
+                  const dayVal = dIdx + 1;
+                  const dateObj = new Date(year, month, dayVal);
+                  const dateStr = dateObj.toLocaleDateString('en-GB'); // DD/MM/YYYY
+                  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                  const rowNum = dayVal + 1;
 
-                return (
-                  <tr key={`row-${dayVal}`}>
-                    <td className="excel-row-num">{rowNum}</td>
-                    
-                    {/* Date Cell */}
-                    <td 
-                      className={`excel-col-date ${isCellSelected(dayVal, 0) ? 'excel-selected-cell' : ''}`}
-                      onClick={() => setSelectedExcelCell({ rowIndex: dayVal, colIndex: 0 })}
-                      style={{ textAlign: 'center' }}
-                    >
-                      {dateStr}
-                      {isCellSelected(dayVal, 0) && <div className="excel-fill-handle" />}
-                    </td>
+                  return (
+                    <tr key={`row-${dayVal}`}>
+                      <td className="excel-row-num">{rowNum}</td>
+                      
+                      {/* Date Cell */}
+                      <td 
+                        className={`excel-col-date ${isCellSelected(dayVal, 0) ? 'excel-selected-cell' : ''}`}
+                        onClick={() => setSelectedExcelCell({ rowIndex: dayVal, colIndex: 0 })}
+                        style={{ textAlign: 'center' }}
+                      >
+                        {dateStr}
+                        {isCellSelected(dayVal, 0) && <div className="excel-fill-handle" />}
+                      </td>
 
-                    {/* Day Cell */}
-                    <td 
-                      className={`excel-col-day ${isCellSelected(dayVal, 1) ? 'excel-selected-cell' : ''}`}
-                      onClick={() => setSelectedExcelCell({ rowIndex: dayVal, colIndex: 1 })}
-                      style={{ textAlign: 'center' }}
-                    >
-                      {dayName}
-                      {isCellSelected(dayVal, 1) && <div className="excel-fill-handle" />}
-                    </td>
+                      {/* Day Cell */}
+                      <td 
+                        className={`excel-col-day ${isCellSelected(dayVal, 1) ? 'excel-selected-cell' : ''}`}
+                        onClick={() => setSelectedExcelCell({ rowIndex: dayVal, colIndex: 1 })}
+                        style={{ textAlign: 'center' }}
+                      >
+                        {dayName}
+                        {isCellSelected(dayVal, 1) && <div className="excel-fill-handle" />}
+                      </td>
 
-                    {/* Facility Cells */}
-                    {facilities.map((f, fIdx) => {
-                      const facilityId = f._id || f.id;
-                      const cellBookings = getBookingsForDayAndFacility(dayVal, facilityId);
-                      const colIndex = fIdx + 2;
+                      {/* Facility Cells */}
+                      {displayedFacilities.map((f, fIdx) => {
+                        const facilityId = f._id || f.id;
+                        const cellBookings = getBookingsForDayAndFacility(dayVal, facilityId);
+                        const colIndex = fIdx + 2;
 
-                      return (
-                        <td 
-                          key={`cell-${dayVal}-${fIdx}`}
-                          className={`excel-cell ${isCellSelected(dayVal, colIndex) ? 'excel-selected-cell' : ''}`}
-                          onClick={() => setSelectedExcelCell({ rowIndex: dayVal, colIndex })}
-                          style={{ minWidth: 220 }}
-                        >
-                          {cellBookings.length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                              {cellBookings.map((b, bIdx) => (
-                                <span 
-                                  key={b._id || b.id || bIdx}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const y = year;
-                                    const m = String(month + 1).padStart(2, '0');
-                                    const d = String(dayVal).padStart(2, '0');
-                                    setSelectedBookingDetails({ ...b, occurrenceDate: `${y}-${m}-${d}` });
-                                  }}
-                                  style={{
-                                    cursor: 'pointer',
-                                    color: getEventColor(b),
-                                    fontWeight: 600,
-                                    textDecoration: 'underline',
-                                    display: 'inline'
-                                  }}
-                                  title="Click to view details"
-                                >
-                                  {formatTime12(b.startTime)} to {formatTime12(b.endTime)}: {b.purpose}
-                                  {bIdx < cellBookings.length - 1 ? ', ' : ''}
-                                </span>
-                              ))}
-                            </div>
-                          ) : null}
-                          {isCellSelected(dayVal, colIndex) && <div className="excel-fill-handle" />}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                        return (
+                          <td 
+                            key={`cell-${dayVal}-${fIdx}`}
+                            className={`excel-cell ${isCellSelected(dayVal, colIndex) ? 'excel-selected-cell' : ''}`}
+                            onClick={() => setSelectedExcelCell({ rowIndex: dayVal, colIndex })}
+                            style={{ minWidth: 220 }}
+                          >
+                            {cellBookings.length > 0 ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {cellBookings.map((b, bIdx) => (
+                                  <span 
+                                    key={b._id || b.id || bIdx}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const y = year;
+                                      const m = String(month + 1).padStart(2, '0');
+                                      const d = String(dayVal).padStart(2, '0');
+                                      setSelectedBookingDetails({ ...b, occurrenceDate: `${y}-${m}-${d}` });
+                                    }}
+                                    className="excel-booking-badge"
+                                    style={{
+                                      cursor: 'pointer',
+                                      color: getEventColor(b),
+                                      background: `${getEventColor(b)}15`,
+                                      border: `1px solid ${getEventColor(b)}30`,
+                                      borderRadius: '6px',
+                                      padding: '4px 8px',
+                                      fontSize: '0.75rem',
+                                      fontWeight: 600,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      transition: 'all 0.15s ease-in-out',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                    title="Click to view details"
+                                  >
+                                    {b.isRecurring && <span style={{ marginRight: '4px', fontSize: '0.7rem' }}>🔁</span>}
+                                    {formatTime12(b.startTime)} to {formatTime12(b.endTime)}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                            {isCellSelected(dayVal, colIndex) && <div className="excel-fill-handle" />}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
 
       {/* CSS Animations & Excel Styles */}
       <style>{`
+        .excel-booking-badge:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+          filter: brightness(0.95);
+        }
+        .excel-booking-badge:active {
+          transform: translateY(0);
+        }
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }

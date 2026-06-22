@@ -492,14 +492,48 @@ function ManagePage() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showAddVenue, setShowAddVenue] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'faculty', password: 'Transcend@2026' });
-  const [newVenue, setNewVenue] = useState({ name: '', capacity: '', category: 'academic', icon: 'building', description: '' });
+  const [newVenue, setNewVenue] = useState({
+    name: '',
+    capacity: '',
+    category: 'academic',
+    icon: 'building',
+    description: '',
+    location: 'Campus Main Building',
+    type: 'CLASSROOM',
+    availabilityStart: '08:00',
+    availabilityEnd: '20:00'
+  });
   const [userError, setUserError] = useState('');
+  
   // Reset password modal state
   const [resetTarget, setResetTarget] = useState(null); // { _id, name, email }
   const [resetPwd, setResetPwd] = useState('');
   const [resetMsg, setResetMsg] = useState('');
   const [resetErr, setResetErr] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
+
+  // Edit User modal state
+  const [editUserTarget, setEditUserTarget] = useState(null);
+  const [editUserName, setEditUserName] = useState('');
+  const [editUserEmail, setEditUserEmail] = useState('');
+  const [editUserRole, setEditUserRole] = useState('faculty');
+  const [editUserIsActive, setEditUserIsActive] = useState(true);
+  const [editUserErr, setEditUserErr] = useState('');
+  const [editUserMsg, setEditUserMsg] = useState('');
+  const [editUserLoading, setEditUserLoading] = useState(false);
+
+  // Edit Venue modal state
+  const [editVenueTarget, setEditVenueTarget] = useState(null);
+  const [editVenueName, setEditVenueName] = useState('');
+  const [editVenueCapacity, setEditVenueCapacity] = useState('');
+  const [editVenueLocation, setEditVenueLocation] = useState('');
+  const [editVenueCategory, setEditVenueCategory] = useState('academic');
+  const [editVenueIcon, setEditVenueIcon] = useState('building');
+  const [editVenueDescription, setEditVenueDescription] = useState('');
+  const [editVenueType, setEditVenueType] = useState('CLASSROOM');
+  const [editVenueErr, setEditVenueErr] = useState('');
+  const [editVenueMsg, setEditVenueMsg] = useState('');
+  const [editVenueLoading, setEditVenueLoading] = useState(false);
 
   const loadUsers = () => fetch(`${API_BASE_URL}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).then(d => setUsers(d.users || []));
   const loadVenues = () => fetch(`${API_BASE_URL}/facilities`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).then(d => setVenues(d.facilities || []));
@@ -527,15 +561,87 @@ function ManagePage() {
   const createVenue = async () => {
     const res = await fetch(`${API_BASE_URL}/facilities`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...newVenue, label: newVenue.name }),
+      body: JSON.stringify({
+        ...newVenue,
+        label: newVenue.name,
+        capacity: parseInt(newVenue.capacity) || 0
+      }),
     });
-    if (res.ok) { setShowAddVenue(false); setNewVenue({ name: '', capacity: '', category: 'academic', icon: 'building', description: '' }); loadVenues(); }
+    if (res.ok) {
+      setShowAddVenue(false);
+      setNewVenue({
+        name: '',
+        capacity: '',
+        category: 'academic',
+        icon: 'building',
+        description: '',
+        location: 'Campus Main Building',
+        type: 'CLASSROOM',
+        availabilityStart: '08:00',
+        availabilityEnd: '20:00'
+      });
+      loadVenues();
+    }
   };
 
   const deleteVenue = async (id) => {
     if (!confirm('Delete this venue?')) return;
     await fetch(`${API_BASE_URL}/facilities/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     loadVenues();
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editUserTarget) return;
+    setEditUserLoading(true); setEditUserErr(''); setEditUserMsg('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/users/${editUserTarget._id || editUserTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: editUserName,
+          email: editUserEmail,
+          role: editUserRole,
+          isActive: editUserIsActive,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setEditUserErr(d.error || 'Failed to update user'); }
+      else {
+        setEditUserMsg('User updated successfully!');
+        loadUsers();
+        setTimeout(() => setEditUserTarget(null), 1000);
+      }
+    } catch { setEditUserErr('Network error.'); }
+    finally { setEditUserLoading(false); }
+  };
+
+  const handleUpdateVenue = async () => {
+    if (!editVenueTarget) return;
+    setEditVenueLoading(true); setEditVenueErr(''); setEditVenueMsg('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/facilities/${editVenueTarget._id || editVenueTarget.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: editVenueName,
+          label: editVenueName,
+          capacity: parseInt(editVenueCapacity) || 0,
+          location: editVenueLocation,
+          category: editVenueCategory,
+          icon: editVenueIcon,
+          description: editVenueDescription,
+          type: editVenueType,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setEditVenueErr(d.error || 'Failed to update venue'); }
+      else {
+        setEditVenueMsg('Venue updated successfully!');
+        loadVenues();
+        setTimeout(() => setEditVenueTarget(null), 1000);
+      }
+    } catch { setEditVenueErr('Network error.'); }
+    finally { setEditVenueLoading(false); }
   };
 
   const handleResetPassword = async () => {
@@ -616,6 +722,18 @@ function ManagePage() {
                           <button className="btn btn-secondary" style={{ padding: '0.22rem 0.55rem', fontSize: '0.7rem' }} onClick={() => { setResetTarget(u); setResetPwd(''); setResetMsg(''); setResetErr(''); }}>
                             🔑 Reset Pwd
                           </button>
+                          <button className="btn btn-secondary" style={{ padding: '0.22rem 0.55rem', fontSize: '0.7rem', background: '#3b82f6', borderColor: '#3b82f6', color: 'white' }} 
+                            onClick={() => { 
+                              setEditUserTarget(u);
+                              setEditUserName(u.name || '');
+                              setEditUserEmail(u.email || '');
+                              setEditUserRole(u.role || 'faculty');
+                              setEditUserIsActive(u.isActive ?? true);
+                              setEditUserMsg('');
+                              setEditUserErr('');
+                            }}>
+                            ✏️ Edit
+                          </button>
                           <button className="btn btn-outline" style={{ padding: '0.22rem 0.55rem', fontSize: '0.7rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => deleteUser(u._id || u.id)}>Remove</button>
                         </div>
                       </td>
@@ -637,7 +755,7 @@ function ManagePage() {
             {showAddVenue && (
               <div style={{ marginBottom: '1.5rem', padding: '1.25rem', border: '1px dashed var(--surface-border)', borderRadius: 16, background: 'rgba(255,255,255,0.4)' }}>
                 <h4 style={{ fontWeight: 800, marginBottom: '0.75rem' }}>Create New Venue</h4>
-                {[['Venue Name', 'name'], ['Capacity', 'capacity'], ['Icon (lucide)', 'icon']].map(([lbl, key]) => (
+                {[['Venue Name', 'name'], ['Capacity', 'capacity'], ['Location', 'location'], ['Icon (lucide)', 'icon']].map(([lbl, key]) => (
                   <div className="form-group" key={key}>
                     <label style={{ fontSize: '0.68rem' }}>{lbl}</label>
                     <input type="text" value={newVenue[key]} onChange={e => setNewVenue(p => ({ ...p, [key]: e.target.value }))}
@@ -651,6 +769,26 @@ function ManagePage() {
                     <option value="academic">Academic & Labs</option>
                     <option value="media">Performance & Media</option>
                     <option value="recreation">Recreation</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.68rem' }}>Type</label>
+                  <select value={newVenue.type} onChange={e => setNewVenue(p => ({ ...p, type: e.target.value }))}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 36 }}>
+                    <option value="CLASSROOM">Classroom</option>
+                    <option value="PROFESSIONAL_CLASSROOM">Professional Classroom</option>
+                    <option value="SEMINAR_HALL">Seminar Hall</option>
+                    <option value="THEATRE">Theatre</option>
+                    <option value="AUDITORIUM">Auditorium</option>
+                    <option value="LAB">Lab</option>
+                    <option value="SPORTS_FACILITY">Sports Facility</option>
+                    <option value="MUSIC_DANCE_ROOM">Music/Dance Room</option>
+                    <option value="PODCAST_STUDIO">Podcast Studio</option>
+                    <option value="CAMERA_EQUIPMENT">Camera Equipment</option>
+                    <option value="CONFERENCE_ROOM">Conference Room</option>
+                    <option value="PARKING_SLOT">Parking Slot</option>
+                    <option value="HOSTEL_COMMON_AREA">Hostel Common Area</option>
+                    <option value="OTHER">Other</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -672,7 +810,26 @@ function ManagePage() {
                     <tr key={v._id || v.id}>
                       <td><div style={{ fontWeight: 700 }}>#{i + 1} {v.label || v.name}</div></td>
                       <td><div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{v.category} · {v.capacity} seats</div></td>
-                      <td><button className="btn btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => deleteVenue(v._id || v.id)}>Delete</button></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                          <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', background: '#3b82f6', borderColor: '#3b82f6', color: 'white' }} 
+                            onClick={() => {
+                              setEditVenueTarget(v);
+                              setEditVenueName(v.name || '');
+                              setEditVenueCapacity(v.capacity || '');
+                              setEditVenueLocation(v.location || '');
+                              setEditVenueCategory(v.category || 'academic');
+                              setEditVenueIcon(v.icon || 'building');
+                              setEditVenueDescription(v.description || '');
+                              setEditVenueType(v.type || 'CLASSROOM');
+                              setEditVenueErr('');
+                              setEditVenueMsg('');
+                            }}>
+                            ✏️ Edit
+                          </button>
+                          <button className="btn btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => deleteVenue(v._id || v.id)}>Delete</button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -716,6 +873,157 @@ function ManagePage() {
                 onClick={handleResetPassword}
                 style={{ padding: '0.45rem 1.2rem', fontSize: '0.8rem', background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', borderColor: '#7c3aed' }}>
                 {resetLoading ? 'Resetting…' : 'Set Password'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit User Modal — superadmin only */}
+      {editUserTarget && createPortal(
+        <div className="modal-overlay active" style={{ zIndex: 10000 }} onClick={e => e.target === e.currentTarget && setEditUserTarget(null)}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 420, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid var(--primary)' }}>
+            <div style={{ height: 6, background: 'var(--primary)' }} />
+            <button className="modal-close" onClick={() => setEditUserTarget(null)} style={{ top: 16, right: 16 }}>✕</button>
+
+            <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid var(--surface-border)' }}>
+              <h3 style={{ margin: '0 0 0.2rem', fontSize: '1.1rem', fontWeight: 800 }}>Edit User Details</h3>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>{editUserTarget.email}</p>
+            </div>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Full Name</label>
+                <input type="text" value={editUserName} onChange={e => setEditUserName(e.target.value)}
+                  style={{ width: '100%', padding: '0.6rem 0.8rem', border: '1px solid var(--surface-border)', borderRadius: 10, fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Email Address</label>
+                <input type="email" value={editUserEmail} onChange={e => setEditUserEmail(e.target.value)}
+                  style={{ width: '100%', padding: '0.6rem 0.8rem', border: '1px solid var(--surface-border)', borderRadius: 10, fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Role</label>
+                <select value={editUserRole} onChange={e => setEditUserRole(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 36 }}>
+                  <option value="faculty">Faculty</option>
+                  <option value="admin">Admin</option>
+                  <option value="viewer">Viewer</option>
+                  <option value="superadmin">Super Admin</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <input type="checkbox" id="editUserIsActive" checked={editUserIsActive} onChange={e => setEditUserIsActive(e.target.checked)} />
+                <label htmlFor="editUserIsActive" style={{ fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Account Active</label>
+              </div>
+
+              {editUserErr && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '0.6rem 0.8rem', fontSize: '0.8rem', color: '#dc2626', fontWeight: 600 }}>{editUserErr}</div>}
+              {editUserMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '0.6rem 0.8rem', fontSize: '0.8rem', color: '#16a34a', fontWeight: 600 }}>✓ {editUserMsg}</div>}
+            </div>
+
+            <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button className="btn btn-secondary" disabled={editUserLoading} onClick={() => setEditUserTarget(null)} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>Cancel</button>
+              <button className="btn btn-primary"
+                disabled={editUserLoading || !editUserName.trim() || !editUserEmail.trim()}
+                onClick={handleUpdateUser}
+                style={{ padding: '0.45rem 1.2rem', fontSize: '0.8rem' }}>
+                {editUserLoading ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Venue Modal — superadmin only */}
+      {editVenueTarget && createPortal(
+        <div className="modal-overlay active" style={{ zIndex: 10000 }} onClick={e => e.target === e.currentTarget && setEditVenueTarget(null)}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 480, borderRadius: 20, padding: 0, overflow: 'hidden', border: '1px solid var(--primary)' }}>
+            <div style={{ height: 6, background: 'var(--primary)' }} />
+            <button className="modal-close" onClick={() => setEditVenueTarget(null)} style={{ top: 16, right: 16 }}>✕</button>
+
+            <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid var(--surface-border)' }}>
+              <h3 style={{ margin: '0 0 0.2rem', fontSize: '1.1rem', fontWeight: 800 }}>Edit Venue Details</h3>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Updating {editVenueTarget.name}</p>
+            </div>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '60vh', overflowY: 'auto' }}>
+              <div className="form-group">
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Venue Name</label>
+                <input type="text" value={editVenueName} onChange={e => setEditVenueName(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem' }} />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Capacity (Seats)</label>
+                <input type="number" value={editVenueCapacity} onChange={e => setEditVenueCapacity(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem' }} />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Location</label>
+                <input type="text" value={editVenueLocation} onChange={e => setEditVenueLocation(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem' }} />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Category</label>
+                <select value={editVenueCategory} onChange={e => setEditVenueCategory(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 36 }}>
+                  <option value="academic">Academic & Labs</option>
+                  <option value="media">Performance & Media</option>
+                  <option value="recreation">Recreation</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Type</label>
+                <select value={editVenueType} onChange={e => setEditVenueType(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 36 }}>
+                  <option value="CLASSROOM">Classroom</option>
+                  <option value="PROFESSIONAL_CLASSROOM">Professional Classroom</option>
+                  <option value="SEMINAR_HALL">Seminar Hall</option>
+                  <option value="THEATRE">Theatre</option>
+                  <option value="AUDITORIUM">Auditorium</option>
+                  <option value="LAB">Lab</option>
+                  <option value="SPORTS_FACILITY">Sports Facility</option>
+                  <option value="MUSIC_DANCE_ROOM">Music/Dance Room</option>
+                  <option value="PODCAST_STUDIO">Podcast Studio</option>
+                  <option value="CAMERA_EQUIPMENT">Camera Equipment</option>
+                  <option value="CONFERENCE_ROOM">Conference Room</option>
+                  <option value="PARKING_SLOT">Parking Slot</option>
+                  <option value="HOSTEL_COMMON_AREA">Hostel Common Area</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Icon (lucide)</label>
+                <input type="text" value={editVenueIcon} onChange={e => setEditVenueIcon(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem' }} />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Description</label>
+                <textarea value={editVenueDescription} onChange={e => setEditVenueDescription(e.target.value)}
+                  style={{ width: '100%', minHeight: 60, padding: '0.5rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', fontFamily: 'inherit' }} />
+              </div>
+
+              {editVenueErr && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '0.6rem 0.8rem', fontSize: '0.8rem', color: '#dc2626', fontWeight: 600 }}>{editVenueErr}</div>}
+              {editVenueMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '0.6rem 0.8rem', fontSize: '0.8rem', color: '#16a34a', fontWeight: 600 }}>✓ {editVenueMsg}</div>}
+            </div>
+
+            <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button className="btn btn-secondary" disabled={editVenueLoading} onClick={() => setEditVenueTarget(null)} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>Cancel</button>
+              <button className="btn btn-primary"
+                disabled={editVenueLoading || !editVenueName.trim() || !editVenueCapacity || !editVenueLocation.trim()}
+                onClick={handleUpdateVenue}
+                style={{ padding: '0.45rem 1.2rem', fontSize: '0.8rem' }}>
+                {editVenueLoading ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
+import { Clock } from 'lucide-react';
 
 const FILTER_TIME_OPTIONS = [
   '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -496,43 +497,93 @@ export default function CalendarView() {
           )}
         </div>
 
-        {/* Time Filter */}
-        <div style={{ display: 'flex', gap: '0.5rem', minWidth: 280, flex: '1 1 auto' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-            <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Start Time</label>
-            <select 
-              value={filterStartTime} 
-              onChange={e => {
-                const val = e.target.value;
-                setFilterStartTime(val);
-                // Ensure end time is at least 30 minutes after start time
-                const startIdx = FILTER_TIME_OPTIONS.indexOf(val);
-                const endIdx = FILTER_TIME_OPTIONS.indexOf(filterEndTime);
-                if (startIdx >= endIdx && startIdx < FILTER_TIME_OPTIONS.length - 1) {
-                  setFilterEndTime(FILTER_TIME_OPTIONS[startIdx + 1]);
-                }
-              }} 
-              style={{ padding: '0.4rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 34, width: '100%' }}
-            >
-              {FILTER_TIME_OPTIONS.slice(0, -1).map(t => (
-                <option key={t} value={t}>{formatTime12(t)}</option>
-              ))}
-            </select>
+        {/* Unified Time Filter Card */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          minWidth: 290,
+          background: '#ffffff',
+          border: '1.5px solid var(--surface-border)',
+          borderRadius: 14,
+          padding: '0.65rem 0.85rem',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+          flex: '1 1 auto',
+          transition: 'all 0.2s ease',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+            <Clock size={14} style={{ color: 'var(--primary, #2563eb)' }} />
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Active Time Range Filter
+            </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-            <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>End Time</label>
-            <select 
-              value={filterEndTime} 
-              onChange={e => setFilterEndTime(e.target.value)} 
-              style={{ padding: '0.4rem', border: '1px solid var(--surface-border)', borderRadius: 8, fontSize: '0.85rem', height: 34, width: '100%' }}
-            >
-              {FILTER_TIME_OPTIONS.slice(1).map(t => {
-                const isDisabled = timeToMinutes(t) <= timeToMinutes(filterStartTime);
-                return (
-                  <option key={t} value={t} disabled={isDisabled}>{formatTime12(t)}</option>
-                );
-              })}
-            </select>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input 
+                type="time"
+                value={filterStartTime} 
+                onChange={e => setFilterStartTime(e.target.value)} 
+                style={{ 
+                  padding: '0.45rem 0.65rem', 
+                  border: '1.5px solid var(--surface-border)', 
+                  borderRadius: 10, 
+                  fontSize: '0.85rem', 
+                  fontWeight: 600,
+                  height: 38, 
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#f8fafc',
+                  color: 'var(--text-main, #1e293b)',
+                  outline: 'none',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                }}
+                onFocus={e => {
+                  e.target.style.borderColor = 'var(--primary, #2563eb)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                  e.target.style.background = '#ffffff';
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor = 'var(--surface-border)';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.background = '#f8fafc';
+                }}
+              />
+            </div>
+            
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>to</span>
+            
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input 
+                type="time"
+                value={filterEndTime} 
+                onChange={e => setFilterEndTime(e.target.value)} 
+                style={{ 
+                  padding: '0.45rem 0.65rem', 
+                  border: '1.5px solid var(--surface-border)', 
+                  borderRadius: 10, 
+                  fontSize: '0.85rem', 
+                  fontWeight: 600,
+                  height: 38, 
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#f8fafc',
+                  color: 'var(--text-main, #1e293b)',
+                  outline: 'none',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                }}
+                onFocus={e => {
+                  e.target.style.borderColor = 'var(--primary, #2563eb)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                  e.target.style.background = '#ffffff';
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor = 'var(--surface-border)';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.background = '#f8fafc';
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

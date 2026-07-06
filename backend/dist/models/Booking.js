@@ -51,6 +51,7 @@ const BookingSchema = new mongoose_1.Schema({
     isRecurring: { type: Boolean, default: false },
     recurringDays: { type: [Number], default: [] },
     recurringEndDate: { type: Date },
+    cancelledDates: { type: [String], default: [] },
     status: {
         type: String,
         enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'],

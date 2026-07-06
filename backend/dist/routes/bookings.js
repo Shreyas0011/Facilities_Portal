@@ -12,5 +12,6 @@ router.post('/', bookingController_1.createBooking);
 router.get('/my-bookings', bookingController_1.getMyBookings);
 router.get('/', (0, auth_1.authorize)('admin', 'superadmin'), bookingController_1.getAllBookings);
 router.patch('/:id/status', bookingController_1.updateBookingStatus);
+router.patch('/:id/cancel-occurrence', bookingController_1.cancelBookingOccurrence);
 router.delete('/:id', bookingController_1.deleteBooking);
 exports.default = router;

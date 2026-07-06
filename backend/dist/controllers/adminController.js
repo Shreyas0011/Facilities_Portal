@@ -179,7 +179,7 @@ exports.getUsers = getUsers;
 const updateUser = async (req, res, next) => {
     try {
         const id = req.params.id;
-        const { role, isActive } = req.body;
+        const { name, email, role, isActive } = req.body;
         if (!mongoose_1.default.Types.ObjectId.isValid(id))
             throw new errorHandler_1.AppError('Invalid user ID', 400);
         // Super admin only for role changes
@@ -187,6 +187,10 @@ const updateUser = async (req, res, next) => {
             throw new errorHandler_1.AppError('Only super admins can change user roles', 403);
         }
         const update = {};
+        if (name !== undefined)
+            update.name = name;
+        if (email !== undefined)
+            update.email = email;
         if (role !== undefined)
             update.role = role;
         if (isActive !== undefined)

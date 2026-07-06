@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBooking = exports.updateBookingStatus = exports.getAllBookings = exports.getMyBookings = exports.createBooking = exports.getPublicBookings = void 0;
+exports.cancelBookingOccurrence = exports.deleteBooking = exports.updateBookingStatus = exports.getAllBookings = exports.getMyBookings = exports.createBooking = exports.getPublicBookings = void 0;
 const zod_1 = require("zod");
 const mongoose_1 = __importDefault(require("mongoose"));
 const Booking_1 = require("../models/Booking");
@@ -33,37 +33,87 @@ const timeToMinutes = (time) => {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
 };
-const checkConflict = async (facilityId, date, startTime, endTime, excludeBookingId) => {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-    const bookingFilter = {
+const checkConflict = async (facilityId, date, startTime, endTime, isRecurring, recurringDays, recurringEndDate, excludeBookingId) => {
+    const getYYYYMMDD = (d) => d.toISOString().split('T')[0];
+    // 1. Generate target dates to check
+    const targetDates = [];
+    if (isRecurring && recurringDays && recurringDays.length > 0) {
+        const start = new Date(date);
+        const end = recurringEndDate ? new Date(recurringEndDate) : new Date(start.getTime() + 365 * 24 * 60 * 60 * 1000);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        const current = new Date(start);
+        while (current <= end) {
+            if (recurringDays.includes(current.getDay())) {
+                targetDates.push(new Date(current));
+            }
+            current.setDate(current.getDate() + 1);
+        }
+    }
+    else {
+        targetDates.push(new Date(date));
+    }
+    if (targetDates.length === 0)
+        return { conflict: false };
+    // 2. Fetch all active bookings for this facility
+    const candidateFilter = {
         facilityId,
-        date: { $gte: startOfDay, $lte: endOfDay },
         status: { $in: ['APPROVED', 'PENDING'] },
     };
     if (excludeBookingId)
-        bookingFilter._id = { $ne: new mongoose_1.default.Types.ObjectId(excludeBookingId) };
-    const existingBookings = await Booking_1.Booking.find(bookingFilter).select('startTime endTime');
+        candidateFilter._id = { $ne: new mongoose_1.default.Types.ObjectId(excludeBookingId) };
+    const existingBookings = await Booking_1.Booking.find(candidateFilter);
+    // 3. Fetch all maintenance blocks for this facility
+    const blocks = await MaintenanceBlock_1.MaintenanceBlock.find({ facilityId });
     const newStart = timeToMinutes(startTime);
     const newEnd = timeToMinutes(endTime);
-    for (const b of existingBookings) {
-        const bStart = timeToMinutes(b.startTime);
-        const bEnd = timeToMinutes(b.endTime);
-        if (bStart < newEnd && newStart < bEnd) {
-            return { conflict: true, reason: 'Time slot conflicts with an existing booking' };
+    // 4. Check each target occurrence date for overlaps
+    for (const targetDate of targetDates) {
+        const targetYMD = getYYYYMMDD(targetDate);
+        const targetDayOfWeek = targetDate.getDay();
+        // Check bookings
+        for (const b of existingBookings) {
+            const bDateStr = getYYYYMMDD(b.date);
+            let overlapsDate = false;
+            if (b.isRecurring) {
+                if (targetYMD >= bDateStr) {
+                    const endYMD = b.recurringEndDate ? getYYYYMMDD(b.recurringEndDate) : null;
+                    if (!endYMD || targetYMD <= endYMD) {
+                        if (b.recurringDays && b.recurringDays.includes(targetDayOfWeek)) {
+                            overlapsDate = true;
+                        }
+                    }
+                }
+            }
+            else {
+                if (bDateStr === targetYMD) {
+                    overlapsDate = true;
+                }
+            }
+            if (overlapsDate) {
+                const bStart = timeToMinutes(b.startTime);
+                const bEnd = timeToMinutes(b.endTime);
+                if (bStart < newEnd && newStart < bEnd) {
+                    return {
+                        conflict: true,
+                        reason: `Time slot conflicts with an existing booking on ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+                    };
+                }
+            }
         }
-    }
-    const blocks = await MaintenanceBlock_1.MaintenanceBlock.find({
-        facilityId,
-        blockedDate: { $gte: startOfDay, $lte: endOfDay },
-    }).select('startTime endTime reason');
-    for (const block of blocks) {
-        const bStart = timeToMinutes(block.startTime);
-        const bEnd = timeToMinutes(block.endTime);
-        if (bStart < newEnd && newStart < bEnd) {
-            return { conflict: true, reason: `Facility is under maintenance: ${block.reason}` };
+        // Check maintenance blocks
+        for (const block of blocks) {
+            const blockYMD = getYYYYMMDD(block.blockedDate);
+            if (blockYMD === targetYMD) {
+                const bStart = timeToMinutes(block.startTime);
+                const bEnd = timeToMinutes(block.endTime);
+                if (bStart < newEnd && newStart < bEnd) {
+                    return {
+                        conflict: true,
+                        reason: `Facility is under maintenance on ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}: ${block.reason}`,
+                    };
+                }
+            }
         }
     }
     return { conflict: false };
@@ -74,7 +124,7 @@ const getPublicBookings = async (_req, res, next) => {
             .populate('facilityId', 'id name location type')
             .populate('userId', 'name role')
             .sort({ date: 1 })
-            .select('facilityId userId date startTime endTime purpose status isExternal');
+            .select('facilityId userId date startTime endTime purpose status isExternal isRecurring recurringDays recurringEndDate');
         res.json({ bookings });
     }
     catch (error) {
@@ -115,6 +165,25 @@ const createBooking = async (req, res, next) => {
             });
             return;
         }
+        // Restrict bookings after 8:00 PM local time (IST) to Padmaja N
+        const getLocalHour = () => {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Kolkata',
+                hour: 'numeric',
+                hour12: false
+            });
+            return parseInt(formatter.format(new Date()), 10);
+        };
+        const currentHour = getLocalHour();
+        if (currentHour >= 20 || currentHour < 6) {
+            const isPadmaja = req.user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
+            if (!isPadmaja) {
+                res.status(403).json({
+                    error: 'Booking after 8pm is not allowed, please contact Padmaja N in case of any booking, Thank You',
+                });
+                return;
+            }
+        }
         const facility = await Facility_1.Facility.findOne({ _id: validated.facilityId, isActive: true });
         if (!facility)
             throw new errorHandler_1.AppError('Facility not found or inactive', 404);
@@ -123,7 +192,7 @@ const createBooking = async (req, res, next) => {
             return;
         }
         // Per-facility window intentionally removed — global 06:00–22:00 rule above applies
-        const conflict = await checkConflict(validated.facilityId, date, validated.startTime, validated.endTime);
+        const conflict = await checkConflict(validated.facilityId, date, validated.startTime, validated.endTime, validated.isRecurring, validated.recurringDays, validated.recurringEndDate ? new Date(validated.recurringEndDate) : null);
         if (conflict.conflict) {
             res.status(409).json({ error: conflict.reason });
             return;
@@ -276,7 +345,7 @@ const updateBookingStatus = async (req, res, next) => {
                 throw new errorHandler_1.AppError('Only admins can approve or reject bookings', 403);
             }
             if (status === 'APPROVED') {
-                const conflict = await checkConflict(booking.facilityId.toString(), booking.date, booking.startTime, booking.endTime, id);
+                const conflict = await checkConflict(booking.facilityId.toString(), booking.date, booking.startTime, booking.endTime, booking.isRecurring, booking.recurringDays, booking.recurringEndDate, id);
                 if (conflict.conflict) {
                     res.status(409).json({ error: conflict.reason });
                     return;
@@ -339,3 +408,34 @@ const deleteBooking = async (req, res, next) => {
     }
 };
 exports.deleteBooking = deleteBooking;
+const cancelBookingOccurrence = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const { date } = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(id))
+            throw new errorHandler_1.AppError('Invalid booking ID', 400);
+        if (!date)
+            throw new errorHandler_1.AppError('Date is required to cancel occurrence', 400);
+        const booking = await Booking_1.Booking.findById(id);
+        if (!booking)
+            throw new errorHandler_1.AppError('Booking not found', 404);
+        if (!booking.isRecurring) {
+            throw new errorHandler_1.AppError('Cannot cancel occurrence of a non-recurring booking', 400);
+        }
+        if (booking.userId.toString() !== req.user.id && !['admin', 'superadmin'].includes(req.user.role)) {
+            throw new errorHandler_1.AppError('Not authorized', 403);
+        }
+        if (!booking.cancelledDates) {
+            booking.cancelledDates = [];
+        }
+        if (!booking.cancelledDates.includes(date)) {
+            booking.cancelledDates.push(date);
+            await booking.save();
+        }
+        res.json({ message: 'Occurrence cancelled successfully', booking });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.cancelBookingOccurrence = cancelBookingOccurrence;

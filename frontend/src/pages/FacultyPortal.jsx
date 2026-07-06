@@ -31,7 +31,7 @@ function formatDateTime(d) {
   });
 }
 
-function AmenitiesPage({ onChangePassword }) {
+export function AmenitiesPage({ onChangePassword }) {
   const { user, token } = useAuth();
   const [facilities, setFacilities] = useState([]);
   const [bookings, setBookings] = useState([]);

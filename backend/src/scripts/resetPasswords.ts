@@ -16,9 +16,10 @@ const resetPasswords = async () => {
 
     const defaultPassword = 'Transcend@2026';
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    const padmajaHashedPassword = await bcrypt.hash('Transcend@26', 10);
 
-    const result = await User.updateMany(
-      {},
+    const resultDefault = await User.updateMany(
+      { email: { $ne: 'padmaja@transcendgroup.org' } },
       {
         $set: {
           password: hashedPassword,
@@ -27,8 +28,19 @@ const resetPasswords = async () => {
       }
     );
 
-    console.log(`\n✅ Reset password for ${result.modifiedCount} users.`);
-    console.log(`All users can now log in with: Transcend@2026`);
+    const resultPadmaja = await User.updateMany(
+      { email: 'padmaja@transcendgroup.org' },
+      {
+        $set: {
+          password: padmajaHashedPassword,
+          firstLogin: true,
+        }
+      }
+    );
+
+    console.log(`\n✅ Reset password for ${resultDefault.modifiedCount + resultPadmaja.modifiedCount} users.`);
+    console.log(`Padmaja N can now log in with: Transcend@26`);
+    console.log(`Other users can now log in with: Transcend@2026`);
     process.exit(0);
   } catch (err) {
     console.error('Error resetting passwords:', err);

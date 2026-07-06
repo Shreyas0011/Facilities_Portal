@@ -115,12 +115,36 @@ export default function BookingModal({ facility, onClose, onBooked }) {
 
   const days = buildDateStrip(anchorDate);
   const timeToMinutes = (t) => { if (!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
+  const getLocalHour = () => {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        hour12: false
+      });
+      return parseInt(formatter.format(new Date()), 10);
+    } catch {
+      return new Date().getHours();
+    }
+  };
+  const isPadmaja = user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
+  const isTimeRestricted = (getLocalHour() >= 20 || getLocalHour() < 6) && !isPadmaja;
+
+  useEffect(() => {
+    if (isTimeRestricted) {
+      setError('Booking after 8pm is not allowed, please contact Padmaja N in case of any booking, Thank You');
+    } else {
+      setError('');
+    }
+  }, [isTimeRestricted]);
+
   const isSlotBooked = (slot) => {
     const s = timeToMinutes(slot);
     return existingBookings.some(b => s >= timeToMinutes(b.startTime) && s < timeToMinutes(b.endTime));
   };
   const toggleSlot = (slot) => {
     if (isSlotBooked(slot)) return;
+    if (isTimeRestricted) return;
     setSelectedSlots(prev => prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot].sort());
   };
   const toggleRecurringDay = (dayIdx) => {
@@ -148,6 +172,10 @@ export default function BookingModal({ facility, onClose, onBooked }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isTimeRestricted) {
+      setError('Booking after 8pm is not allowed, please contact Padmaja N in case of any booking, Thank You');
+      return;
+    }
     if (!selectedDate) { setError('Please select a date.'); return; }
     if (!selectedSlots.length) { setError('Please select at least one time slot.'); return; }
     if (purpose.trim().length < 2) { setError('Purpose must be at least 2 characters.'); return; }
@@ -203,25 +231,31 @@ export default function BookingModal({ facility, onClose, onBooked }) {
         {slots.map(slot => {
           const booked = isSlotBooked(slot);
           const selected = selectedSlots.includes(slot);
+          const isDisabled = booked || isTimeRestricted;
           return (
-            <button key={slot} type="button" disabled={booked} onClick={() => toggleSlot(slot)}
+            <button key={slot} type="button" disabled={isDisabled} onClick={() => toggleSlot(slot)}
               style={{
-                padding: '0.45rem 0.3rem', borderRadius: 10,
-                border: selected ? '2px solid var(--primary)' : booked ? '1.5px solid #fca5a5' : '1.5px solid #bbf7d0',
-                background: selected ? 'var(--primary)' : booked ? '#fef2f2' : '#f0fdf4',
-                color: selected ? 'white' : booked ? '#dc2626' : '#16a34a',
-                fontWeight: selected ? 800 : 600, fontSize: '0.72rem',
-                cursor: booked ? 'not-allowed' : 'pointer', textAlign: 'center',
+                padding: '0.45rem 0.25rem', borderRadius: 10,
+                border: selected ? '2px solid var(--primary)' : booked ? '1.5px solid #fca5a5' : isTimeRestricted ? '1.5px solid #cbd5e1' : '1.5px solid #bbf7d0',
+                background: selected ? 'var(--primary)' : booked ? '#fef2f2' : isTimeRestricted ? '#f1f5f9' : '#f0fdf4',
+                color: selected ? 'white' : booked ? '#dc2626' : isTimeRestricted ? '#64748b' : '#16a34a',
+                fontWeight: selected ? 800 : 600,
+                cursor: isDisabled ? 'not-allowed' : 'pointer', textAlign: 'center',
                 transition: 'all 0.15s ease',
                 boxShadow: selected ? '0 2px 8px rgba(37,99,235,0.25)' : 'none',
-                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '1px',
+                minHeight: '44px',
+                boxSizing: 'border-box',
               }}>
-              {to12h(slot)}
+              <span style={{ fontSize: '0.72rem', display: 'block', lineHeight: 1.1 }}>{to12h(slot)}</span>
               {booked && (
-                <div style={{
-                  position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)',
-                  fontSize: '0.5rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em',
-                }}>taken</div>
+                <span style={{
+                  fontSize: '0.5rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.03em', lineHeight: 1
+                }}>taken</span>
               )}
             </button>
           );

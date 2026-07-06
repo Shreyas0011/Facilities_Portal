@@ -37,12 +37,14 @@ const seedInMemoryDB = async () => {
     
     // Seed Users
     const hashedPassword = await bcrypt.hash('Transcend@2026', 10);
+    const padmajaHashedPassword = await bcrypt.hash('Transcend@26', 10);
     const users = [];
     for (const u of usersToSeed) {
+      const isPadmaja = u.email.toLowerCase() === 'padmaja@transcendgroup.org';
       const created = await User.create({
         name: u.name,
         email: u.email.toLowerCase(),
-        password: hashedPassword,
+        password: isPadmaja ? padmajaHashedPassword : hashedPassword,
         role: u.role,
         firstLogin: true,
       });

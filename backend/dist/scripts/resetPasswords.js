@@ -17,14 +17,22 @@ const resetPasswords = async () => {
         console.log('Connected to MongoDB');
         const defaultPassword = 'Transcend@2026';
         const hashedPassword = await bcryptjs_1.default.hash(defaultPassword, 10);
-        const result = await User_1.User.updateMany({}, {
+        const padmajaHashedPassword = await bcryptjs_1.default.hash('Transcend@26', 10);
+        const resultDefault = await User_1.User.updateMany({ email: { $ne: 'padmaja@transcendgroup.org' } }, {
             $set: {
                 password: hashedPassword,
                 firstLogin: true,
             }
         });
-        console.log(`\n✅ Reset password for ${result.modifiedCount} users.`);
-        console.log(`All users can now log in with: Transcend@2026`);
+        const resultPadmaja = await User_1.User.updateMany({ email: 'padmaja@transcendgroup.org' }, {
+            $set: {
+                password: padmajaHashedPassword,
+                firstLogin: true,
+            }
+        });
+        console.log(`\n✅ Reset password for ${resultDefault.modifiedCount + resultPadmaja.modifiedCount} users.`);
+        console.log(`Padmaja N can now log in with: Transcend@26`);
+        console.log(`Other users can now log in with: Transcend@2026`);
         process.exit(0);
     }
     catch (err) {

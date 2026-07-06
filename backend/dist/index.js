@@ -26,8 +26,8 @@ const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://facilities-portal-mu.vercel.app',
-    'https://www.tgi160.org',
-    'https://tgi160.org',
+    'https://www.tgi360.org',
+    'https://tgi360.org',
     // Pull any extra origin set in Render environment variables
     ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.trim()] : []),
 ];
@@ -36,7 +36,7 @@ const corsOptions = {
         // Allow requests with no origin (curl, Postman, server-to-server)
         if (!origin)
             return callback(null, true);
-        if (ALLOWED_ORIGINS.includes(origin)) {
+        if (ALLOWED_ORIGINS.includes(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
             return callback(null, true);
         }
         console.warn(`[CORS] Blocked request from origin: ${origin}`);
@@ -53,7 +53,7 @@ app.use((0, helmet_1.default)({ crossOriginResourcePolicy: { policy: 'cross-orig
 // ─── Rate limiting ─────────────────────────────────────────────────────────────
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200,
+    max: 10000,
     message: { error: 'Too many requests, please try again later.' },
 });
 app.use('/api/', limiter);

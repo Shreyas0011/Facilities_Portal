@@ -178,6 +178,26 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       return;
     }
 
+    // Restrict bookings after 8:00 PM local time (IST) to Padmaja N
+    const getLocalHour = () => {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        hour12: false
+      });
+      return parseInt(formatter.format(new Date()), 10);
+    };
+    const currentHour = getLocalHour();
+    if (currentHour >= 20 || currentHour < 6) {
+      const isPadmaja = req.user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
+      if (!isPadmaja) {
+        res.status(403).json({
+          error: 'Booking after 8pm is not allowed, please contact Padmaja N in case of any booking, Thank You',
+        });
+        return;
+      }
+    }
+
     const facility = await Facility.findOne({ _id: validated.facilityId, isActive: true });
     if (!facility) throw new AppError('Facility not found or inactive', 404);
 

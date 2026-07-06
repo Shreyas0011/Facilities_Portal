@@ -70,12 +70,14 @@ const seedInMemoryDB = async () => {
         console.log('Seeding in-memory database...');
         // Seed Users
         const hashedPassword = await bcryptjs_1.default.hash('Transcend@2026', 10);
+        const padmajaHashedPassword = await bcryptjs_1.default.hash('Transcend@26', 10);
         const users = [];
         for (const u of usersToSeed) {
+            const isPadmaja = u.email.toLowerCase() === 'padmaja@transcendgroup.org';
             const created = await User_1.User.create({
                 name: u.name,
                 email: u.email.toLowerCase(),
-                password: hashedPassword,
+                password: isPadmaja ? padmajaHashedPassword : hashedPassword,
                 role: u.role,
                 firstLogin: true,
             });

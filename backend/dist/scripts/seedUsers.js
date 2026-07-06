@@ -64,15 +64,18 @@ const seedDB = async () => {
         console.log('Connected to MongoDB');
         const defaultPassword = 'Transcend@2026';
         const hashedPassword = await bcryptjs_1.default.hash(defaultPassword, 10);
+        const padmajaHashedPassword = await bcryptjs_1.default.hash('Transcend@26', 10);
         console.log(`Seeding ${usersToSeed.length} users...`);
         let addedCount = 0;
         for (const userData of usersToSeed) {
             const existing = await User_1.User.findOne({ email: userData.email.toLowerCase() });
+            const isPadmaja = userData.email.toLowerCase() === 'padmaja@transcendgroup.org';
+            const targetHash = isPadmaja ? padmajaHashedPassword : hashedPassword;
             if (!existing) {
                 await User_1.User.create({
                     name: userData.name,
                     email: userData.email.toLowerCase(),
-                    password: hashedPassword,
+                    password: targetHash,
                     role: userData.role,
                     firstLogin: true, // Requires changing password on first login
                 });
@@ -80,7 +83,14 @@ const seedDB = async () => {
                 addedCount++;
             }
             else {
-                console.log(`User already exists: ${userData.email}`);
+                if (isPadmaja) {
+                    existing.password = targetHash;
+                    existing.firstLogin = true;
+                }
+                existing.isActive = true;
+                existing.role = userData.role;
+                await existing.save();
+                console.log(`Updated user: ${userData.email}`);
             }
         }
         console.log(`\nSeed Complete. Inserted ${addedCount} new users.`);

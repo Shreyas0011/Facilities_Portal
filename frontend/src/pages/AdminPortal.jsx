@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Shield, Layers, Calendar, Database, BarChart3, Lock, CheckCircle2, XCircle, Clock4, Users, Building, UserPlus, PlusCircle, Settings, Globe, RefreshCw, FileText, Package, Clock, User, Mail } from 'lucide-react';
+import { Shield, Layers, Calendar, Database, BarChart3, Lock, CheckCircle2, XCircle, Clock4, Users, Building, UserPlus, PlusCircle, Settings, Globe, RefreshCw, FileText, Package, Clock, User, Mail, Sparkles, History, Bookmark, Search, MapPin, ChevronRight } from 'lucide-react';
 import { API_BASE_URL } from '../config.js';
 import { useAuth } from '../context/AuthContext';
 import CalendarView from '../components/CalendarView';
+import { AmenitiesPage } from './FacultyPortal';
 
 function formatDate(d) {
   if (!d) return '';
@@ -1129,6 +1130,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
     <div id="adminPortal">
       {activePage === 'queue' && <QueuePage />}
       {activePage === 'dashboard' && <DashboardPage />}
+      {activePage === 'bookVenue' && user?.email?.toLowerCase() === 'padmaja@transcendgroup.org' && <AmenitiesPage onChangePassword={onChangePassword} />}
       {activePage === 'calendar' && (
         <>
           <header className="hero">

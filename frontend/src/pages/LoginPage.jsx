@@ -113,7 +113,7 @@ export default function LoginPage({ onLogin }) {
 
         <div className="login-footer" style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           <div style={{ fontWeight: 800, letterSpacing: '0.05em', color: 'var(--text-main)', marginBottom: '0.25rem' }}>OWNED BY TRANSCEND GROUP OF INSTITUTIONS</div>
-          <div>DEVELOPED BY <span style={{ color: 'var(--primary)', fontWeight: 700 }}>START SMART BY SE</span></div>
+          <div>Developed by <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Start Smart, SE</span></div>
         </div>
       </div>
     </div>

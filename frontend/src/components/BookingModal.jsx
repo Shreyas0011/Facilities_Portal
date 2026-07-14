@@ -184,6 +184,13 @@ export default function BookingModal({ facility, onClose, onBooked }) {
     setError(''); setSubmitting(true);
     try {
       const sorted = [...selectedSlots].sort();
+      // Compute the real end time: last slot's start + 30 minutes
+      const lastSlot = sorted[sorted.length - 1];
+      const [lh, lm] = lastSlot.split(':').map(Number);
+      const endTotalMins = lh * 60 + lm + 30;
+      const endHour = String(Math.floor(endTotalMins / 60)).padStart(2, '0');
+      const endMin  = String(endTotalMins % 60).padStart(2, '0');
+      const computedEndTime = `${endHour}:${endMin}`;
       const res = await fetch(`${API_BASE_URL}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -192,7 +199,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
           facilityName: facility.label || facility.name,
           date: selectedDate,
           startTime: sorted[0],
-          endTime: sorted[sorted.length - 1],
+          endTime: computedEndTime,
           time: getTimeRange(),
           purpose,
           requirements: supplies,

@@ -38,12 +38,10 @@ export default function Navbar({ activePage, onNavigate, onLogout, onChangePassw
     { page: 'settings', label: 'Settings' },
   ];
 
-  const isPadmaja = user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
-
   const adminLinks = [
     { page: 'dashboard', label: 'Dashboard' },
     { page: 'queue', label: 'Approval Queue' },
-    ...(isPadmaja ? [{ page: 'bookVenue', label: 'Book Venue' }] : []),
+    { page: 'bookVenue', label: 'Book Venue' },
     { page: 'calendar', label: 'Calendar' },
     ...(isSuperAdmin ? [{ page: 'manage', label: 'Manage' }] : []),
     { page: 'settings', label: 'Settings' },

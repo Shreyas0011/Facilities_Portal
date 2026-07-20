@@ -1130,7 +1130,7 @@ export default function AdminPortal({ activePage = 'queue', onChangePassword }) 
     <div id="adminPortal">
       {activePage === 'queue' && <QueuePage />}
       {activePage === 'dashboard' && <DashboardPage />}
-      {activePage === 'bookVenue' && user?.email?.toLowerCase() === 'padmaja@transcendgroup.org' && <AmenitiesPage onChangePassword={onChangePassword} />}
+      {activePage === 'bookVenue' && <AmenitiesPage onChangePassword={onChangePassword} />}
       {activePage === 'calendar' && (
         <>
           <header className="hero">

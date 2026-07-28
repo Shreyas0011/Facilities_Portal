@@ -33,25 +33,39 @@ const timeToMinutes = (time) => {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
 };
+const getYYYYMMDD = (d) => {
+    if (typeof d === 'string')
+        return d.split('T')[0];
+    return d.toISOString().split('T')[0];
+};
+const getDayOfWeekFromYMD = (ymdStr) => {
+    const [y, m, d] = ymdStr.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+};
 const checkConflict = async (facilityId, date, startTime, endTime, isRecurring, recurringDays, recurringEndDate, excludeBookingId) => {
-    const getYYYYMMDD = (d) => d.toISOString().split('T')[0];
-    // 1. Generate target dates to check
+    const startYMD = getYYYYMMDD(date);
+    // 1. Generate target dates to check with day of week (in UTC)
     const targetDates = [];
     if (isRecurring && recurringDays && recurringDays.length > 0) {
-        const start = new Date(date);
-        const end = recurringEndDate ? new Date(recurringEndDate) : new Date(start.getTime() + 365 * 24 * 60 * 60 * 1000);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-        const current = new Date(start);
+        const endYMD = recurringEndDate
+            ? getYYYYMMDD(recurringEndDate)
+            : getYYYYMMDD(new Date(new Date(date).getTime() + 365 * 24 * 60 * 60 * 1000));
+        const [sy, sm, sd] = startYMD.split('-').map(Number);
+        const [ey, em, ed] = endYMD.split('-').map(Number);
+        const current = new Date(Date.UTC(sy, sm - 1, sd));
+        const end = new Date(Date.UTC(ey, em - 1, ed));
         while (current <= end) {
-            if (recurringDays.includes(current.getDay())) {
-                targetDates.push(new Date(current));
+            const dayOfWeek = current.getUTCDay();
+            if (recurringDays.includes(dayOfWeek)) {
+                const ymd = current.toISOString().split('T')[0];
+                targetDates.push({ ymd, dayOfWeek });
             }
-            current.setDate(current.getDate() + 1);
+            current.setUTCDate(current.getUTCDate() + 1);
         }
     }
     else {
-        targetDates.push(new Date(date));
+        const dayOfWeek = getDayOfWeekFromYMD(startYMD);
+        targetDates.push({ ymd: startYMD, dayOfWeek });
     }
     if (targetDates.length === 0)
         return { conflict: false };
@@ -68,25 +82,28 @@ const checkConflict = async (facilityId, date, startTime, endTime, isRecurring, 
     const newStart = timeToMinutes(startTime);
     const newEnd = timeToMinutes(endTime);
     // 4. Check each target occurrence date for overlaps
-    for (const targetDate of targetDates) {
-        const targetYMD = getYYYYMMDD(targetDate);
-        const targetDayOfWeek = targetDate.getDay();
+    for (const target of targetDates) {
         // Check bookings
         for (const b of existingBookings) {
             const bDateStr = getYYYYMMDD(b.date);
             let overlapsDate = false;
             if (b.isRecurring) {
-                if (targetYMD >= bDateStr) {
+                if (target.ymd >= bDateStr) {
                     const endYMD = b.recurringEndDate ? getYYYYMMDD(b.recurringEndDate) : null;
-                    if (!endYMD || targetYMD <= endYMD) {
-                        if (b.recurringDays && b.recurringDays.includes(targetDayOfWeek)) {
-                            overlapsDate = true;
+                    if (!endYMD || target.ymd <= endYMD) {
+                        if (b.recurringDays && b.recurringDays.includes(target.dayOfWeek)) {
+                            if (b.cancelledDates && b.cancelledDates.includes(target.ymd)) {
+                                overlapsDate = false;
+                            }
+                            else {
+                                overlapsDate = true;
+                            }
                         }
                     }
                 }
             }
             else {
-                if (bDateStr === targetYMD) {
+                if (bDateStr === target.ymd) {
                     overlapsDate = true;
                 }
             }
@@ -94,9 +111,15 @@ const checkConflict = async (facilityId, date, startTime, endTime, isRecurring, 
                 const bStart = timeToMinutes(b.startTime);
                 const bEnd = timeToMinutes(b.endTime);
                 if (bStart < newEnd && newStart < bEnd) {
+                    const formattedDate = new Date(target.ymd + 'T00:00:00Z').toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        timeZone: 'UTC',
+                    });
                     return {
                         conflict: true,
-                        reason: `Time slot conflicts with an existing booking on ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+                        reason: `Time slot conflicts with an existing booking on ${formattedDate}`,
                     };
                 }
             }
@@ -104,13 +127,19 @@ const checkConflict = async (facilityId, date, startTime, endTime, isRecurring, 
         // Check maintenance blocks
         for (const block of blocks) {
             const blockYMD = getYYYYMMDD(block.blockedDate);
-            if (blockYMD === targetYMD) {
+            if (blockYMD === target.ymd) {
                 const bStart = timeToMinutes(block.startTime);
                 const bEnd = timeToMinutes(block.endTime);
                 if (bStart < newEnd && newStart < bEnd) {
+                    const formattedDate = new Date(target.ymd + 'T00:00:00Z').toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        timeZone: 'UTC',
+                    });
                     return {
                         conflict: true,
-                        reason: `Facility is under maintenance on ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}: ${block.reason}`,
+                        reason: `Facility is under maintenance on ${formattedDate}: ${block.reason}`,
                     };
                 }
             }

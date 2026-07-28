@@ -73,6 +73,8 @@ export function AmenitiesPage({ onChangePassword }) {
           const endYMD = b.recurringEndDate.includes('T') ? b.recurringEndDate.split('T')[0] : b.recurringEndDate;
           if (todayStr > endYMD) return false;
         }
+        if (b.cancelledDates && b.cancelledDates.includes(todayStr)) return false;
+
         const [y, m, d] = todayStr.split('-').map(Number);
         const dateObj = new Date(y, m - 1, d);
         const dayOfWeek = dateObj.getDay();

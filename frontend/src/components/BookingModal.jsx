@@ -93,7 +93,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
         setExistingBookings(list.filter(b => {
           const bDate = b.date ? (b.date.includes('T') ? b.date.split('T')[0] : b.date) : '';
           const bFacId = b.facilityId?._id || b.facilityId?.id || b.facilityId;
-          if (bFacId !== facId || b.status !== 'APPROVED') return false;
+          if (bFacId !== facId || (b.status !== 'APPROVED' && b.status !== 'PENDING')) return false;
 
           if (b.isRecurring) {
             if (selectedDate < bDate) return false;
@@ -101,9 +101,11 @@ export default function BookingModal({ facility, onClose, onBooked }) {
               const endYMD = b.recurringEndDate.includes('T') ? b.recurringEndDate.split('T')[0] : b.recurringEndDate;
               if (selectedDate > endYMD) return false;
             }
+            if (b.cancelledDates && b.cancelledDates.includes(selectedDate)) return false;
+
             const [y, m, d] = selectedDate.split('-').map(Number);
-            const dateObj = new Date(y, m - 1, d);
-            const dayOfWeek = dateObj.getDay();
+            const dateObj = new Date(Date.UTC(y, m - 1, d));
+            const dayOfWeek = dateObj.getUTCDay();
             return Array.isArray(b.recurringDays) && b.recurringDays.includes(dayOfWeek);
           }
 

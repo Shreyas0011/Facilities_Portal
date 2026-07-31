@@ -117,26 +117,55 @@ export default function BookingModal({ facility, onClose, onBooked }) {
 
   const days = buildDateStrip(anchorDate);
   const timeToMinutes = (t) => { if (!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
-  const getLocalHour = () => {
+  const checkNextDayRestricted = (selectedDateYMD) => {
+    if (!selectedDateYMD) return false;
+    const isPadmaja = user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
+    if (isPadmaja) return false;
+
+    const now = new Date();
+    let kolkataDateStr = '';
+    let currentHour = now.getHours();
+
     try {
-      const formatter = new Intl.DateTimeFormat('en-US', {
+      kolkataDateStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(now);
+
+      const hourStr = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Kolkata',
         hour: 'numeric',
-        hour12: false
-      });
-      return parseInt(formatter.format(new Date()), 10);
+        hour12: false,
+      }).format(now);
+      currentHour = parseInt(hourStr, 10);
     } catch {
-      return new Date().getHours();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      kolkataDateStr = `${y}-${m}-${d}`;
     }
+
+    if (currentHour >= 20) {
+      const [y, m, d] = kolkataDateStr.split('-').map(Number);
+      const tomorrowDate = new Date(Date.UTC(y, m - 1, d + 1));
+      const tomorrowStr = tomorrowDate.toISOString().split('T')[0];
+      if (selectedDateYMD <= tomorrowStr) return true;
+    } else if (currentHour < 6) {
+      if (selectedDateYMD <= kolkataDateStr) return true;
+    }
+
+    return false;
   };
-  const isPadmaja = user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
-  const isTimeRestricted = (getLocalHour() >= 20 || getLocalHour() < 6) && !isPadmaja;
+
+  const isTimeRestricted = checkNextDayRestricted(selectedDate);
 
   useEffect(() => {
     if (isTimeRestricted) {
-      setError('Booking after 8pm is not allowed, please contact Padmaja N in case of any booking, Thank You');
+      setError('Booking for the next day after 8pm is not allowed, please contact Padmaja N for it');
     } else {
-      setError('');
+      setError(prev => (prev && prev.includes('Padmaja') ? '' : prev));
     }
   }, [isTimeRestricted]);
 
@@ -175,7 +204,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isTimeRestricted) {
-      setError('Booking after 8pm is not allowed, please contact Padmaja N in case of any booking, Thank You');
+      setError('Booking for the next day after 8pm is not allowed, please contact Padmaja N for it');
       return;
     }
     if (!selectedDate) { setError('Please select a date.'); return; }

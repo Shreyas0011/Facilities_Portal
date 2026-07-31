@@ -194,24 +194,48 @@ const createBooking = async (req, res, next) => {
             });
             return;
         }
-        // Restrict bookings after 8:00 PM local time (IST) to Padmaja N
-        const getLocalHour = () => {
-            const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone: 'Asia/Kolkata',
-                hour: 'numeric',
-                hour12: false
-            });
-            return parseInt(formatter.format(new Date()), 10);
-        };
-        const currentHour = getLocalHour();
-        if (currentHour >= 20 || currentHour < 6) {
-            const isPadmaja = req.user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
-            if (!isPadmaja) {
-                res.status(403).json({
-                    error: 'Booking after 8pm is not allowed, please contact Padmaja N in case of any booking, Thank You',
-                });
-                return;
+        // Restrict bookings for the next day after 8:00 PM local time (IST) to Padmaja N
+        const checkNextDayRestricted = (bookingDateYMD, userEmail) => {
+            const isPadmaja = userEmail?.toLowerCase() === 'padmaja@transcendgroup.org';
+            if (isPadmaja) return false;
+            const now = new Date();
+            let kolkataDateStr = '';
+            let currentHour = now.getHours();
+            try {
+                kolkataDateStr = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Asia/Kolkata',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                }).format(now);
+                const hourStr = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Asia/Kolkata',
+                    hour: 'numeric',
+                    hour12: false,
+                }).format(now);
+                currentHour = parseInt(hourStr, 10);
+            } catch {
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                kolkataDateStr = `${y}-${m}-${d}`;
             }
+            if (currentHour >= 20) {
+                const [y, m, d] = kolkataDateStr.split('-').map(Number);
+                const tomorrowDate = new Date(Date.UTC(y, m - 1, d + 1));
+                const tomorrowStr = tomorrowDate.toISOString().split('T')[0];
+                if (bookingDateYMD <= tomorrowStr) return true;
+            } else if (currentHour < 6) {
+                if (bookingDateYMD <= kolkataDateStr) return true;
+            }
+            return false;
+        };
+        const bookingYMD = getYYYYMMDD(validated.date);
+        if (checkNextDayRestricted(bookingYMD, req.user?.email)) {
+            res.status(403).json({
+                error: 'Booking for the next day after 8pm is not allowed, please contact Padmaja N for it',
+            });
+            return;
         }
         const facility = await Facility_1.Facility.findOne({ _id: validated.facilityId, isActive: true });
         if (!facility)

@@ -194,10 +194,11 @@ const createBooking = async (req, res, next) => {
             });
             return;
         }
-        // Restrict bookings for the next day after 8:00 PM local time (IST) to Padmaja N
-        const checkNextDayRestricted = (bookingDateYMD, userEmail) => {
+        // Restrict bookings for the next day after 8:00 PM local time (IST) to Padmaja N and Superadmin
+        const checkNextDayRestricted = (bookingDateYMD, userEmail, userRole) => {
             const isPadmaja = userEmail?.toLowerCase() === 'padmaja@transcendgroup.org';
-            if (isPadmaja) return false;
+            const isSuperAdmin = userRole === 'superadmin';
+            if (isPadmaja || isSuperAdmin) return false;
             const now = new Date();
             let kolkataDateStr = '';
             let currentHour = now.getHours();
@@ -231,9 +232,9 @@ const createBooking = async (req, res, next) => {
             return false;
         };
         const bookingYMD = getYYYYMMDD(validated.date);
-        if (checkNextDayRestricted(bookingYMD, req.user?.email)) {
+        if (checkNextDayRestricted(bookingYMD, req.user?.email, req.user?.role)) {
             res.status(403).json({
-                error: 'Booking for the next day after 8pm is not allowed, please contact Padmaja N for it',
+                error: 'Booking for the next day after 8pm is not allowed, please contact Padmaja N or Super Admin for it',
             });
             return;
         }

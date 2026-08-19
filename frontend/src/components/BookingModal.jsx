@@ -120,7 +120,8 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   const checkNextDayRestricted = (selectedDateYMD) => {
     if (!selectedDateYMD) return false;
     const isPadmaja = user?.email?.toLowerCase() === 'padmaja@transcendgroup.org';
-    if (isPadmaja) return false;
+    const isSuperAdmin = user?.role === 'superadmin';
+    if (isPadmaja || isSuperAdmin) return false;
 
     const now = new Date();
     let kolkataDateStr = '';
@@ -163,9 +164,9 @@ export default function BookingModal({ facility, onClose, onBooked }) {
 
   useEffect(() => {
     if (isTimeRestricted) {
-      setError('Booking for the next day after 8pm is not allowed, please contact Padmaja N for it');
+      setError('Booking for the next day after 8pm is not allowed, please contact Padmaja N or Super Admin for it');
     } else {
-      setError(prev => (prev && prev.includes('Padmaja') ? '' : prev));
+      setError(prev => (prev && (prev.includes('Padmaja') || prev.includes('Super Admin')) ? '' : prev));
     }
   }, [isTimeRestricted]);
 
@@ -181,10 +182,21 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   const toggleRecurringDay = (dayIdx) => {
     setRecurringDays(prev => prev.includes(dayIdx) ? prev.filter(d => d !== dayIdx) : [...prev, dayIdx].sort((a, b) => a - b));
   };
+  const computeSlotEndTime = (slotStr) => {
+    if (!slotStr) return '';
+    const [h, m] = slotStr.split(':').map(Number);
+    const totalMins = h * 60 + m + 30;
+    const endH = String(Math.floor(totalMins / 60)).padStart(2, '0');
+    const endM = String(totalMins % 60).padStart(2, '0');
+    return `${endH}:${endM}`;
+  };
+
   const getTimeRange = () => {
     if (!selectedSlots.length) return '';
     const sorted = [...selectedSlots].sort();
-    return `${to12h(sorted[0])} – ${to12h(sorted[sorted.length - 1])}`;
+    const lastSlot = sorted[sorted.length - 1];
+    const endTimeStr = computeSlotEndTime(lastSlot);
+    return `${to12h(sorted[0])} – ${to12h(endTimeStr)}`;
   };
   const getLocalYYYYMMDD = (dateObj) => {
     const y = dateObj.getFullYear();
@@ -204,7 +216,7 @@ export default function BookingModal({ facility, onClose, onBooked }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isTimeRestricted) {
-      setError('Booking for the next day after 8pm is not allowed, please contact Padmaja N for it');
+      setError('Booking for the next day after 8pm is not allowed, please contact Padmaja N or Super Admin for it');
       return;
     }
     if (!selectedDate) { setError('Please select a date.'); return; }
@@ -215,13 +227,8 @@ export default function BookingModal({ facility, onClose, onBooked }) {
     setError(''); setSubmitting(true);
     try {
       const sorted = [...selectedSlots].sort();
-      // Compute the real end time: last slot's start + 30 minutes
       const lastSlot = sorted[sorted.length - 1];
-      const [lh, lm] = lastSlot.split(':').map(Number);
-      const endTotalMins = lh * 60 + lm + 30;
-      const endHour = String(Math.floor(endTotalMins / 60)).padStart(2, '0');
-      const endMin  = String(endTotalMins % 60).padStart(2, '0');
-      const computedEndTime = `${endHour}:${endMin}`;
+      const computedEndTime = computeSlotEndTime(lastSlot);
       const res = await fetch(`${API_BASE_URL}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
